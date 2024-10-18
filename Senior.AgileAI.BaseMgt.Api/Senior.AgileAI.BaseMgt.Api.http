@@ -1,0 +1,6 @@
+@Senior.AgileAI.BaseMgt.Api_HostAddress = http://localhost:5199
+
+GET {{Senior.AgileAI.BaseMgt.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
