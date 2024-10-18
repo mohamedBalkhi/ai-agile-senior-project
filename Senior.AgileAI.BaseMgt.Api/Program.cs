@@ -1,11 +1,13 @@
 using Senior.AgileAI.BaseMgt.Infrastructure.Extensions;
 using Senior.AgileAI.BaseMgt.Infrastructure;
+using Senior.AgileAI.BaseMgt.Application;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddPostgreSqlAppDbContext(builder.Configuration); // ? PostgreSql
 builder.Services.AddInfrastructureServices(); // ? DI Of Infrastrcture.
-builder.Services.AddControllers(); // ! Deprecated
+builder.Services.AddApplicationServices(); // ? DI Of Application.
+builder.Services.AddControllers(); 
 builder.Services.AddEndpointsApiExplorer(); 
 builder.Services.AddSwaggerGen();
 
