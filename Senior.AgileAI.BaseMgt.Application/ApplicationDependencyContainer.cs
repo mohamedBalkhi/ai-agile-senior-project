@@ -12,8 +12,7 @@ public static class InfrastructureDependencyContainer
 
         // Add MediaTr
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-        
-
+    
         return services;
     }
 }

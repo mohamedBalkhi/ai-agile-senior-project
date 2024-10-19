@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 
@@ -29,7 +30,7 @@ public class PostgreSqlAppDbContext : DbContext
     public DbSet<ProjectPrivilege> ProjectPrivileges { get; set; }
     public DbSet<Country> Countries { get; set; }
     public DbSet<ProjectRequirement> ProjectRequirements { get; set; }
-
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,11 +52,18 @@ public class PostgreSqlAppDbContext : DbContext
             {
                 modelBuilder.Entity(entityType.ClrType)
                     .Property(nameof(BaseEntity.CreatedDate))
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                    .HasColumnType("timestamp without time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd()
+                    .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
                 modelBuilder.Entity(entityType.ClrType)
                     .Property(nameof(BaseEntity.UpdatedDate))
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                    .HasColumnType("timestamp without time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+                
 
                 modelBuilder.Entity(entityType.ClrType)
                     .Property(nameof(BaseEntity.Id))
@@ -71,12 +79,21 @@ public class PostgreSqlAppDbContext : DbContext
         modelBuilder.Entity<Project>().ToTable("Projects");
         modelBuilder.Entity<ProjectPrivilege>().ToTable("ProjectPrivileges");
         modelBuilder.Entity<ProjectRequirement>().ToTable("ProjectRequirements");
+        modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens");
 
         // Configure relationships
         modelBuilder.Entity<User>()
             .HasOne(u => u.Country)
             .WithMany(c => c.Users)
             .HasForeignKey(u => u.Country_IdCountry);
+
+        modelBuilder.Entity<User>().Property(u => u.BirthDate)
+            .HasColumnType("timestamp without time zone");
+
+        modelBuilder.Entity<RefreshToken>().HasOne(rt => rt.User)
+            .WithMany(u => u.RefreshTokens)
+            .HasForeignKey(rt => rt.User_IdUser);
+        
 
         modelBuilder.Entity<OrganizationMember>()
             .HasOne(om => om.Organization)
