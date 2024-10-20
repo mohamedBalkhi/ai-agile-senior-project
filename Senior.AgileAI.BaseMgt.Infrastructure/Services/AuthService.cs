@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
@@ -13,17 +14,19 @@ public class AuthService : IAuthService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
+    private readonly IPasswordHasher<User> _passwordHasher;
 
-    public AuthService(IUnitOfWork unitOfWork, IConfiguration configuration)
+    public AuthService(IUnitOfWork unitOfWork, IConfiguration configuration, IPasswordHasher<User> passwordHasher)
     {
         _unitOfWork = unitOfWork;
         _configuration = configuration;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<AuthResult> LoginAsync(string email, string password)
     {
         User? user = await _unitOfWork.Users.GetUserByEmailAsync(email, includeOrganizationMember: true);
-        if (user == null || !VerifyPasswordHash(password, user.Password))
+        if (user == null || !VerifyPasswordHash(password, user))
         {
             throw new UnauthorizedAccessException("Invalid credentials");
         }
@@ -47,7 +50,6 @@ public class AuthService : IAuthService
 
     public async Task<AuthResult> RefreshTokenAsync(string refreshToken)
     {
-        
         var user = await _unitOfWork.Users.GetUserByRefreshTokenAsync(refreshToken);
 
         if (user == null)
@@ -62,8 +64,8 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid Refresh Token");
         }
         var isAdmin = user.isAdmin || 
-                       user.OrganizationMember.IsManager || 
-                       user.OrganizationMember.HasAdministrativePrivilege;
+                       (user.OrganizationMember?.IsManager ?? false) || 
+                       (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
         var newAccessToken = GenerateAccessToken(user, isAdmin);
 
 
@@ -120,50 +122,15 @@ public class AuthService : IAuthService
         };
     }
 
-    /// <summary>
-    /// Extracts the ClaimsPrincipal from an expired JWT token.
-    /// </summary>
-    /// <param name="token">The expired JWT token as a string.</param>
-    /// <returns>A ClaimsPrincipal object containing the claims from the token.</returns>
-    /// <remarks>
-    /// This method is used primarily for refreshing tokens. It allows us to validate
-    /// and extract information from an expired token without considering its expiration time.
-    /// The method performs the following steps:
-    /// 1. Sets up token validation parameters, disabling audience and issuer validation.
-    /// 2. Validates the token's signature using the application's secret key.
-    /// 3. Extracts the ClaimsPrincipal from the token.
-    /// 4. Verifies that the token is a valid JWT and uses the expected HMAC-SHA256 algorithm.
-    /// </remarks>
-    /// <exception cref="SecurityTokenException">Thrown if the token is invalid or uses an unexpected algorithm.</exception>
-    private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+    private bool VerifyPasswordHash(string password, User user)
     {
-        var tokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateAudience = false,
-            ValidateIssuer = false,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])),
-            ValidateLifetime = false
-        };
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-
-        if (securityToken is not JwtSecurityToken jwtSecurityToken || 
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-        {
-            throw new SecurityTokenException("Invalid token");
-        }
-
-        return principal;
+        var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
+        return result == PasswordVerificationResult.Success;
     }
 
-    private bool VerifyPasswordHash(string password, string storedHash)
+    public string HashPassword(User user, string password)
     {
-        return true;
-        // Implement password verification logic here
-        // For example, using BCrypt:
-        // return BCrypt.Net.BCrypt.Verify(password, storedHash);
-        throw new NotImplementedException("Password verification not implemented");
+        return _passwordHasher.HashPassword(user, password);
     }
+    
 }
