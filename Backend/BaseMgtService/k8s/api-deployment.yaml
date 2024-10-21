@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agileai-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: agileai-api
+  template:
+    metadata:
+      labels:
+        app: agileai-api
+    spec:
+      containers:
+      - name: agileai-api
+        image: mbalkhi169/agileai-api:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Production
+        - name: ConnectionStrings__PostgreSqlConnection
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: connection-string
