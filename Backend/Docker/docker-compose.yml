@@ -65,7 +65,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-    
+    restart: on-failure
 
 volumes:
   pgdata:

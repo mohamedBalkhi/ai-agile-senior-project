@@ -2,7 +2,6 @@ using MediatR;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
-using Senior.AgileAI.BaseMgt.Application.Constants;
 using Senior.AgileAI.BaseMgt.Application.Models;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 
@@ -37,7 +36,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
 
             var createdUser = await _unitOfWork.Users.AddAsync(user, cancellationToken);
             createdUser.Password = _authService.HashPassword(createdUser, createdUser.Password);
-            createdUser.Code = GenerateCode(createdUser.Id);
+            createdUser.Code = GenerateCode();
 
 
             await _unitOfWork.CompleteAsync();
@@ -54,7 +53,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
         }
 
 
-        public string GenerateCode(Guid userId)
+        public string GenerateCode()
         {
             var _random = new Random();
             var code = _random.Next(10000, 99999).ToString("D5");

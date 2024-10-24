@@ -6,6 +6,8 @@ using NotificationService.Models;
 using NotificationService.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using NotificationService.Options;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NotificationService.MessageHandlers
 {
@@ -42,17 +44,39 @@ namespace NotificationService.MessageHandlers
                 DispatchConsumersAsync = true // Enable asynchronous consumers
             };
 
-            _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();
-            _queueName = _rabbitMQOptions.QueueName;
+            int retryCount = 0;
+            const int maxRetries = 5;
+            const int retryDelayMs = 5000;
 
-            _channel.QueueDeclare(queue: _queueName,
-                                 durable: true,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
+            while (retryCount < maxRetries)
+            {
+                try
+                {
+                    _connection = factory.CreateConnection();
+                    _channel = _connection.CreateModel();
+                    _queueName = _rabbitMQOptions.QueueName;
 
-            _logger.LogInformation($"RabbitMQ Listener initialized. Queue '{_queueName}' declared.");
+                    _channel.QueueDeclare(queue: _queueName,
+                                         durable: true,
+                                         exclusive: false,
+                                         autoDelete: false,
+                                         arguments: null);
+
+                    _logger.LogInformation($"RabbitMQ Listener initialized. Queue '{_queueName}' declared.");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"Failed to connect to RabbitMQ. Retry attempt {retryCount + 1} of {maxRetries}. Error: {ex.Message}");
+                    retryCount++;
+                    if (retryCount >= maxRetries)
+                    {
+                        _logger.LogError($"Failed to connect to RabbitMQ after {maxRetries} attempts. Last error: {ex.Message}");
+                        throw;
+                    }
+                    Thread.Sleep(retryDelayMs);
+                }
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
