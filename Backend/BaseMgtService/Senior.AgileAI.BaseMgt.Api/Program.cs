@@ -3,10 +3,10 @@ using Senior.AgileAI.BaseMgt.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
+using Senior.AgileAI.BaseMgt.Infrastructure.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +41,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add authorization
 builder.Services.AddAuthorization();
 builder.WebHost.UseUrls("http://*:8080");
+
+// Add RabbitMQ configuration
+builder.Services.Configure<RabbitMQOptions>(builder.Configuration.GetSection("RabbitMQ"));
+
 var app = builder.Build();
 
 app.UseSwagger();

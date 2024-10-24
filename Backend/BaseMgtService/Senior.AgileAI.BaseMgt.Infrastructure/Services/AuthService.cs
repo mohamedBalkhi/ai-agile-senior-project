@@ -29,7 +29,7 @@ public class AuthService : IAuthService
         Console.WriteLine("User: " + user?.Email);
         Console.WriteLine("Password: " + password);
         Console.WriteLine("Email: " + email);
-        if (user == null || !VerifyPasswordHash(password, user))
+        if (user == null || !VerifyPasswordHash(user, password))
         {
             throw new UnauthorizedAccessException("Invalid credentials");
         }
@@ -125,16 +125,15 @@ public class AuthService : IAuthService
         };
     }
 
-    private bool VerifyPasswordHash(string password, User user)
-    {
-        return true;
-        var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
-        return result == PasswordVerificationResult.Success;
-    }
+   
 
     public string HashPassword(User user, string password)
     {
         return _passwordHasher.HashPassword(user, password);
     }
-    
+
+    public bool VerifyPasswordHash(User user, string password)
+    {
+        return _passwordHasher.VerifyHashedPassword(user, user.Password, password) == PasswordVerificationResult.Success;
+    }
 }

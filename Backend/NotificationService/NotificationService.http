@@ -1,0 +1,9 @@
+POST http://localhost:8080/api/email/send
+Content-Type: application/json
+
+{
+    "recipient": "test@example.com",
+    "subject": "Test Email",
+    "body": "This is a test email message.",
+    "type": "Email"
+}
