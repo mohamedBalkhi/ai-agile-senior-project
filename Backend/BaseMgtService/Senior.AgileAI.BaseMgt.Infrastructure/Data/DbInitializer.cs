@@ -73,7 +73,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     BirthDate = new DateOnly(1990, 1, 1),
                     Country = usCountry,
                     Status = "Active",
-                    isAdmin = true
+                    IsAdmin = true,
+                    IsTruster = true
                 },
                 new User 
                 {
@@ -83,7 +84,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     BirthDate = new DateOnly(2002, 9, 16),
                     Country = syCountry,
                     Status = "Active",
-                    isAdmin = true
+                        IsAdmin = true,
+                    IsTruster = true
                 },
                  new User 
                 {
@@ -93,7 +95,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     BirthDate = new DateOnly(2002, 7, 1),
                     Country = syCountry,
                     Status = "Active",
-                    isAdmin = true
+                    IsAdmin = true,
+                    IsTruster = true
                 },
                 new User
                 {
@@ -103,7 +106,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     BirthDate = new DateOnly(1995, 5, 5),
                     Country = usCountry,
                     Status = "Active",
-                    isAdmin = false
+                    IsAdmin = false,
+                    IsTruster = false
                 }
             };
         }

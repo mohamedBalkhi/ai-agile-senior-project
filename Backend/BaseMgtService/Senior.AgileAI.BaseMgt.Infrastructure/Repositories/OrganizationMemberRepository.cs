@@ -8,6 +8,13 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
 {
     public OrganizationMemberRepository(PostgreSqlAppDbContext context) : base(context)
     {
+
+    }
+
+    public async Task<OrganizationMember> AddOrganizationMemberAsync(OrganizationMember organizationMember, CancellationToken cancellationToken)
+    {
+        await _context.OrganizationMembers.AddAsync(organizationMember, cancellationToken);
+        return organizationMember;
     }
 
     // Implement custom methods for OrganizationMember repository

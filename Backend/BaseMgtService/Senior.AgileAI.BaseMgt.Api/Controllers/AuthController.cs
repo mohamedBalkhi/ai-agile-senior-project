@@ -1,8 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using Senior.AgileAI.BaseMgt.Application.Features.Test.Queries;
+using Senior.AgileAI.BaseMgt.Application.DTOs;
+using Senior.AgileAI.BaseMgt.Application.Common;
+
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers;
 
@@ -66,6 +70,35 @@ public class AuthController : ControllerBase
         Response.Cookies.Delete("refreshToken");
         return Ok();
     }
+
+
+    [HttpPost("SignUp")]
+    public async Task<ActionResult<Guid>> SignUp(SignUpDTO dto)
+    {
+        var command = new SignUpCommand(dto);
+        var result = await _mediator.Send(command);
+        return Ok(new ApiResponse(200, "User created successfully", result));
+    }
+
+    [HttpPost("VerifyEmail")]
+    public async Task<ActionResult<bool>> VerifyEmail(VerifyEmailDTO dto)
+    {
+        var command = new VerifyEmailCommand(dto);
+        var result = await _mediator.Send(command);
+        return Ok(new ApiResponse(200, "Email verified successfully", result));
+    }
+
+// if the user wants to resend the code, we need to send the code to the user's email.
+    [HttpPost("ResendCode")]
+    public async Task<ActionResult<bool>> ResendCode(Guid userId)
+    {
+        var command = new ResendCodeCommand(userId);
+        var result = await _mediator.Send(command);
+        return Ok(new ApiResponse(200, "Code resent successfully", result));
+    }
+
+
+
 
     private void SetRefreshTokenCookie(string refreshToken)
     {

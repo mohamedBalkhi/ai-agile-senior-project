@@ -33,7 +33,7 @@ public class AuthService : IAuthService
         {
             throw new UnauthorizedAccessException("Invalid credentials");
         }
-        bool isAdmin = user.isAdmin || 
+        bool isAdmin = user.IsAdmin || 
                        (user.OrganizationMember?.IsManager ?? false) || 
                        (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
         
@@ -66,7 +66,7 @@ public class AuthService : IAuthService
         {
             throw new UnauthorizedAccessException("Invalid Refresh Token");
         }
-        var isAdmin = user.isAdmin || 
+        var isAdmin = user.IsAdmin || 
                        (user.OrganizationMember?.IsManager ?? false) || 
                        (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
         var newAccessToken = GenerateAccessToken(user, isAdmin);
