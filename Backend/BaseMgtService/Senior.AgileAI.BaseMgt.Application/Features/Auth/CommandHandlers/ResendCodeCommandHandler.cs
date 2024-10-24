@@ -10,15 +10,15 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
 {
     public class ResendCodeCommandHandler : IRequestHandler<ResendCodeCommand, Guid>
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ResendCodeCommandHandler(IUserRepository userRepository)
+        public ResendCodeCommandHandler(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
         public async Task<Guid> Handle(ResendCodeCommand command, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByIdAsync(command.UserID);
+            var user = await _unitOfWork.Users.GetByIdAsync(command.UserID);
             if (user == null)
             {
                 throw new NotFoundException($"User with ID {command.UserID} not found");
@@ -27,7 +27,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
             else
             {
                 user.Code = GenerateCode(command.UserID);
-                _userRepository.Update(user);
+                await _unitOfWork.CompleteAsync();
                 return user.Id;
             }
         }

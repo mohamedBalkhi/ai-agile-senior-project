@@ -8,15 +8,15 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
 {
     public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, Guid>
     {
-        private readonly IUserRepository _userRepository;
-        public UpdateProfileCommandHandler(IUserRepository userRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        public UpdateProfileCommandHandler(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Guid> Handle(UpdateProfileCommand command, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByIdAsync(command.DTO.UserId, cancellationToken);
+            var user = await _unitOfWork.Users.GetByIdAsync(command.DTO.UserId, cancellationToken);
             if (user == null)
             {
                 throw new NotFoundException($"User with ID {command.DTO.UserId} not found");
@@ -27,7 +27,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
             if (command.DTO.BirthDate.HasValue) user.BirthDate = command.DTO.BirthDate.Value;
             if (command.DTO.CountryId.HasValue) user.Country_IdCountry = command.DTO.CountryId.Value;
 
-            _userRepository.Update(user, cancellationToken);
+            await _unitOfWork.CompleteAsync();
             return user.Id;
         }
 

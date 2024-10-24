@@ -11,12 +11,10 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
 {
     public class CreateOrganizationCommandHandler : IRequestHandler<CreateOrganizationCommand, Guid>
     {
-        private readonly IOrganizationRepository _organizationRepository;
-        private readonly IOrganizationMemberRepository _organizationMemberRepository;
-        public CreateOrganizationCommandHandler(IOrganizationRepository organizationRepository, IOrganizationMemberRepository organizationMemberRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        public CreateOrganizationCommandHandler(IUnitOfWork unitOfWork)
         {
-            _organizationRepository = organizationRepository;
-            _organizationMemberRepository = organizationMemberRepository;
+            _unitOfWork = unitOfWork;
         }
         public async Task<Guid> Handle(CreateOrganizationCommand command, CancellationToken cancellationToken)
         {
@@ -29,16 +27,17 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                 OrganizationManager_IdOrganizationManager = command.Dto.UserId
             };
 
-            var organizationAdded = await _organizationRepository.AddOrganizationAsync(organization, cancellationToken);
+            await _unitOfWork.Organizations.AddAsync(organization);
             var organizationMember = new OrganizationMember
             {
                 User_IdUser = command.Dto.UserId,
                 IsManager = true, //because only manager can create organization, so indeed it is true.
                 HasAdministrativePrivilege = true,
-                Organization_IdOrganization = organizationAdded.Id,
+                Organization = organization
             };
-            await _organizationMemberRepository.AddOrganizationMemberAsync(organizationMember, cancellationToken);
-            return organizationAdded.Id;
+            await _unitOfWork.OrganizationMembers.AddAsync(organizationMember);
+            await _unitOfWork.CompleteAsync();
+            return organization.Id;
         }
         // TODO: send email to the user to confirm the organization creation.
     }

@@ -17,7 +17,7 @@ public class User : BaseEntity
 
 
     public required string Status { get; set; }
-    public required bool IsTruster { get; set; }
+    public required bool IsTrusted { get; set; }
     public required bool IsAdmin { get; set; }
     public Country Country { get; set; } = null!;
     public OrganizationMember? OrganizationMember { get; set; }

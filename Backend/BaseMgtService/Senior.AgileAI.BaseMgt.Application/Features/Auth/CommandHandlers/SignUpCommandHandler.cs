@@ -7,11 +7,11 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
 {
     public class SignUpCommandHandler : IRequestHandler<SignUpCommand, Guid>
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public SignUpCommandHandler(IUserRepository userRepository)
+        public SignUpCommandHandler(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Guid> Handle(SignUpCommand command, CancellationToken cancellationToken)
@@ -23,13 +23,13 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
                 Password = command.DTO.Password,
                 BirthDate = command.DTO.BirthDate,
                 Status = "active",
-                IsTruster = false, //need to make verify to the email first.
+                IsTrusted = false, //need to make verify to the email first.
                 IsAdmin = false, // we only allow the orgManagers to create an account.
             };
 
-            var createdUser = await _userRepository.AddAsync(user, cancellationToken);
+            var createdUser = await _unitOfWork.Users.AddAsync(user, cancellationToken);
             createdUser.Code = GenerateCode(createdUser.Id);
-            _userRepository.Update(createdUser, cancellationToken);
+            await _unitOfWork.CompleteAsync();
             return createdUser.Id;
         }
 
