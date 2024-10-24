@@ -27,6 +27,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
                 result = true;
                 user.IsTrusted = true;
             }
+            await _unitOfWork.CompleteAsync();
             return result;
         }
 

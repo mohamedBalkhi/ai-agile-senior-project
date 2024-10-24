@@ -221,3 +221,9 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+
+
+
+
+Backend/NotificationService/Configuration/agile_firebase.json

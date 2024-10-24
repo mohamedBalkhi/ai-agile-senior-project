@@ -14,7 +14,6 @@ public static class InfrastructureDependencyContainer
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
-
         // Add UnitOfWork
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -24,8 +23,8 @@ public static class InfrastructureDependencyContainer
         // Add password hasher
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
-
-        
+        // Add RabbitMQ service
+        services.AddSingleton<IRabbitMQService, RabbitMQService>();
 
         return services;
     }
