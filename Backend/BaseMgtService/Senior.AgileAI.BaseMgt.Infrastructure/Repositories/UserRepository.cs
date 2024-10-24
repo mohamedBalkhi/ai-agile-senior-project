@@ -5,6 +5,7 @@ using Senior.AgileAI.BaseMgt.Infrastructure.Data;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Repositories;
 
+
 public class UserRepository : GenericRepository<User>, IUserRepository
 {
     public UserRepository(PostgreSqlAppDbContext context) : base(context)
@@ -44,4 +45,24 @@ public class UserRepository : GenericRepository<User>, IUserRepository
                 .Where(rt => rt.User_IdUser == userId)
                 .ToListAsync();
     }
+
+    public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
+    {
+        await _context.Users.AddAsync(user, cancellationToken);
+        return user;
+    }
+
+    public User Update(User user, CancellationToken cancellationToken = default)
+    {
+         _context.Users.Update(user);
+        return user;
+    }
+    #nullable disable
+
+    public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.FindAsync(id, cancellationToken);
+    }
+
+
 }

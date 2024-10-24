@@ -8,4 +8,8 @@ public class Organization : NamedEntity
     public  OrganizationMember? OrganizationManager { get; set; } 
     public  ICollection<OrganizationMember> OrganizationMembers { get; set; } = new List<OrganizationMember>();
     public  ICollection<Project> Projects { get; set; } = new List<Project>();
+    public string ?Logo { get; set; } //logo is a url to the image.
+
 }
+
+
