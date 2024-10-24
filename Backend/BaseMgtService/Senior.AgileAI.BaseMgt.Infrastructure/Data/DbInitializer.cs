@@ -2,9 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
-using System;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
 {
@@ -67,47 +64,47 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
             {
                 new User
                 {
-                    Name = "Admin User",
+                    FUllName = "Admin User",
                     Email = "admin@example.com",
                     Password = "Admin", // In real scenario, use a proper password hashing method
                     BirthDate = new DateOnly(1990, 1, 1),
                     Country = usCountry,
                     Status = "Active",
                     IsAdmin = true,
-                    IsTruster = true
+                    IsTrusted = true
                 },
                 new User 
                 {
-                    Name = "Mohamed Al Balkhi",
+                    FUllName = "Mohamed Al Balkhi",
                     Email = "mohamedbalkhi169@gmail.com",
                     Password = "11223344123aS@",
                     BirthDate = new DateOnly(2002, 9, 16),
                     Country = syCountry,
                     Status = "Active",
-                        IsAdmin = true,
-                    IsTruster = true
+                    IsAdmin = true,
+                    IsTrusted = true
                 },
                  new User 
                 {
-                    Name = "Raghad Al Hossny",
+                    FUllName = "Raghad Al Hossny",
                     Email = "raghodalhosny@gmail.com",
                     Password = "raghod1234",
                     BirthDate = new DateOnly(2002, 7, 1),
                     Country = syCountry,
                     Status = "Active",
                     IsAdmin = true,
-                    IsTruster = true
+                    IsTrusted = true
                 },
                 new User
                 {
-                    Name = "Regular User",
+                    FUllName = "Regular User",
                     Email = "user@example.com",
                     Password = "Regular",
                     BirthDate = new DateOnly(1995, 5, 5),
                     Country = usCountry,
                     Status = "Active",
                     IsAdmin = false,
-                    IsTruster = false
+                    IsTrusted = false
                 }
             };
         }

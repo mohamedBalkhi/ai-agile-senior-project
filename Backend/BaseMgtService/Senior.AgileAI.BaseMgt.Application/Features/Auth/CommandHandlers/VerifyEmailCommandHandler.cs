@@ -8,16 +8,16 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
     public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, bool>
 
     {
-        private readonly IUserRepository _userRepository;
-        public VerifyEmailCommandHandler(IUserRepository userRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        public VerifyEmailCommandHandler(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<bool> Handle(VerifyEmailCommand request, CancellationToken cancellationToken)
         {
             var result = false;
-            var user = await _userRepository.GetByIdAsync(request.DTO.UserId, cancellationToken);
+            var user = await _unitOfWork.Users.GetByIdAsync(request.DTO.UserId, cancellationToken);
             if (user == null)
             {
                 throw new NotFoundException($"User with ID {request.DTO.UserId} not found");
@@ -25,7 +25,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
             if (user.Code == request.DTO.Code)
             {
                 result = true;
-                user.IsTruster = true;
+                user.IsTrusted = true;
             }
             return result;
         }
