@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'data/repositories/auth_repository.dart';
+import 'logic/cubits/auth/auth_cubit.dart';
 import 'screens/splash_screen.dart';
+import 'utils/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,26 +14,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AgileMeets',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.lightBlue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black87),
-          bodyMedium: TextStyle(color: Colors.black87),
-        ),
+    return BlocProvider(
+      create: (context) => AuthCubit(AuthRepository()),
+      child: MaterialApp(
+        title: 'AgileMeets',
+        theme: AppTheme.lightTheme,
+        themeMode: ThemeMode.system,
+        home: const SplashScreen(),
       ),
-      home: const SplashScreen(),
     );
   }
 }

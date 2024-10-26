@@ -21,6 +21,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Country.QueriesHandlers
 
             return countries.Select(c => new CountryDTO
             {
+                Id = c.Id,
                 Name = c.Name,
                 Code = c.Code
             }).ToList();

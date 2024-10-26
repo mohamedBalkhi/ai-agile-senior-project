@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'login_screen.dart'; // We'll create this later
+import 'signup_page.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -16,22 +16,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingPage> _pages = [
     const OnboardingPage(
-      image: 'assets/svg/Meetings.svg', // Replace with your actual asset
+      image: 'assets/svg/Meetings.svg',
       title: 'Run Better Agile Meetings',
       description: 'Make your daily standups, retros, and planning sessions more effective - whether in-person or remote.',
     ),
     const OnboardingPage(
-      image: 'assets/svg/AI.svg', // Replace with your actual asset
+      image: 'assets/svg/AI.svg',
       title: 'AI-Powered Meeting Analysis',
       description: 'Get automated key points, action items, and smart reports from your meetings using our AI assistant.',
     ),
     const OnboardingPage(
-      image: 'assets/svg/Scheduling.svg', // Replace with your actual asset
+      image: 'assets/svg/Scheduling.svg',
       title: 'Meeting Scheduling',
       description: 'Schedule meetings and tasks easily with your team across different time zones.',
     ),
     const OnboardingPage(
-      image: 'assets/svg/Tasks.svg', // Replace with your actual asset
+      image: 'assets/svg/Tasks.svg',
       title: 'Simple Task Management',
       description: 'Track your team\'s tasks and view progress on basic agile boards.',
     ),
@@ -45,19 +45,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           PageView.builder(
             controller: _pageController,
             itemCount: _pages.length,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
-            itemBuilder: (context, index) {
-              return _pages[index];
-            },
+            onPageChanged: (int page) => setState(() => _currentPage = page),
+            itemBuilder: (context, index) => _pages[index],
           ),
           Positioned(
             bottom: 50,
-            left: 0,
-            right: 0,
+            left: 20,
+            right: 20,
             child: Column(
               children: [
                 SmoothPageIndicator(
@@ -73,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: () {
                     if (_currentPage == _pages.length - 1) {
                       Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        MaterialPageRoute(builder: (_) => const SignUpPage()),
                       );
                     } else {
                       _pageController.nextPage(

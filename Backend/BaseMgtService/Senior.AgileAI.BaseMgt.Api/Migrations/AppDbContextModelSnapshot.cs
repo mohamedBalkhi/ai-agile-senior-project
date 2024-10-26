@@ -72,6 +72,12 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IsActive");
+
                     b.Property<string>("Logo")
                         .HasColumnType("text");
 
@@ -93,7 +99,8 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrganizationManager_IdOrganizationManager");
+                    b.HasIndex("OrganizationManager_IdOrganizationManager")
+                        .IsUnique();
 
                     b.ToTable("Organizations", "public");
                 });
@@ -357,9 +364,9 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
 
             modelBuilder.Entity("Senior.AgileAI.BaseMgt.Domain.Entities.Organization", b =>
                 {
-                    b.HasOne("Senior.AgileAI.BaseMgt.Domain.Entities.OrganizationMember", "OrganizationManager")
-                        .WithMany()
-                        .HasForeignKey("OrganizationManager_IdOrganizationManager");
+                    b.HasOne("Senior.AgileAI.BaseMgt.Domain.Entities.User", "OrganizationManager")
+                        .WithOne("Organization")
+                        .HasForeignKey("Senior.AgileAI.BaseMgt.Domain.Entities.Organization", "OrganizationManager_IdOrganizationManager");
 
                     b.Navigation("OrganizationManager");
                 });
@@ -480,6 +487,8 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
 
             modelBuilder.Entity("Senior.AgileAI.BaseMgt.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Organization");
+
                     b.Navigation("OrganizationMember");
 
                     b.Navigation("RefreshTokens");
