@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
 using Senior.AgileAI.BaseMgt.Infrastructure.Options;
+using Senior.AgileAI.BaseMgt.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +18,9 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddPostgreSqlAppDbContext(builder.Configuration); // ? PostgreSql
 builder.Services.AddInfrastructureServices(); // ? DI Of Infrastrcture.
 builder.Services.AddApplicationServices(); // ? DI Of Application.
-builder.Services.AddControllers(); 
-builder.Services.AddEndpointsApiExplorer(); 
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add authentication

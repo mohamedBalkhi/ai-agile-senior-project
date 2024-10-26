@@ -20,25 +20,28 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                 }
 
                 var countries = SeedCountries();
-                var users = SeedUsers(countries);
-                var organization = SeedOrganizations(users);
-                var orgMember = SeedOrganizationMembers(organization, users);
-                var project = SeedProjects(organization, orgMember);
-
                 context.Countries.AddRange(countries);
-                context.Users.AddRange(users);
-                context.Organizations.Add(organization);
-                context.OrganizationMembers.Add(orgMember);
-                context.Projects.Add(project);
-
-                // Save changes in a specific order to avoid circular dependency issues
                 context.SaveChanges();
-                context.Entry(organization).State = EntityState.Detached;
-                context.Entry(orgMember).State = EntityState.Detached;
-                context.Entry(project).State = EntityState.Detached;
 
-                organization.OrganizationManager = orgMember;
-                context.Organizations.Update(organization);
+                var users = SeedUsers(countries);
+                context.Users.AddRange(users);
+                context.SaveChanges();
+
+                var adminUser = users.First(u => u.Email == "admin@example.com");
+                var organization = SeedOrganizations(adminUser);
+                context.Organizations.Add(organization);
+                context.SaveChanges();
+
+                // Update the admin user with the organization
+                adminUser.Organization = organization;
+                context.SaveChanges();
+
+                var orgMember = SeedOrganizationMembers(organization, adminUser);
+                context.OrganizationMembers.Add(orgMember);
+                context.SaveChanges();
+
+                var project = SeedProjects(organization, orgMember);
+                context.Projects.Add(project);
                 context.SaveChanges();
             }
         }
@@ -73,7 +76,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     IsAdmin = true,
                     IsTrusted = true
                 },
-                new User 
+                new User
                 {
                     FUllName = "Mohamed Al Balkhi",
                     Email = "mohamedbalkhi169@gmail.com",
@@ -84,10 +87,10 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     IsAdmin = true,
                     IsTrusted = true
                 },
-                 new User 
+                new User
                 {
                     FUllName = "Raghad Al Hossny",
-                    Email = "raghodalhosny@gmail.com",
+                    Email = "raghadalhosny@gmail.com",
                     Password = "raghod1234",
                     BirthDate = new DateOnly(2002, 7, 1),
                     Country = syCountry,
@@ -109,33 +112,26 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
             };
         }
 
-        private static Organization SeedOrganizations(List<User> users)
+        private static Organization SeedOrganizations(User manager)
         {
-            var adminUser = users.First(u => u.Email == "admin@example.com");
-
-            var organization = new Organization
+            return new Organization
             {
                 Name = "Default Organization",
                 Status = "Active",
                 Description = "Default Organization Description",
+                OrganizationManager = manager
             };
-
-            return organization;
         }
 
-        private static OrganizationMember SeedOrganizationMembers(Organization organization, List<User> users)
+        private static OrganizationMember SeedOrganizationMembers(Organization organization, User user)
         {
-            var adminUser = users.First(u => u.Email == "admin@example.com");
-
-            var orgMember = new OrganizationMember
+            return new OrganizationMember
             {
                 Organization = organization,
-                User = adminUser,
+                User = user,
                 IsManager = true,
                 HasAdministrativePrivilege = true
             };
-
-            return orgMember;
         }
 
         private static Project SeedProjects(Organization organization, OrganizationMember manager)

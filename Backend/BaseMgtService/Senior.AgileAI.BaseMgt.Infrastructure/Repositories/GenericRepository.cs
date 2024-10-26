@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
+using System.Linq.Expressions;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Repositories;
 
@@ -40,4 +41,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
         _dbSet.Remove(entity);
     }
+
+
 }

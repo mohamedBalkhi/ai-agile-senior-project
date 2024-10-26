@@ -14,14 +14,15 @@ public class PostgreSqlAppDbContext : DbContext
     {
         _configuration = configuration;
     }
-     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
         {
             optionsBuilder.UseNpgsql(_configuration.GetConnectionString("PostgreSqlConnection"),
-                b => {
+                b =>
+                {
                     b.MigrationsAssembly("Senior.AgileAI.BaseMgt.Api");
-                   
+
                 });
         }
     }
@@ -34,7 +35,7 @@ public class PostgreSqlAppDbContext : DbContext
     public DbSet<Country> Countries { get; set; }
     public DbSet<ProjectRequirement> ProjectRequirements { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
-   
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,7 +67,7 @@ public class PostgreSqlAppDbContext : DbContext
                     .HasDefaultValueSql("CURRENT_TIMESTAMP")
                     .ValueGeneratedOnAddOrUpdate()
                     .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
-                
+
 
                 modelBuilder.Entity(entityType.ClrType)
                     .Property(nameof(BaseEntity.Id))
@@ -96,7 +97,7 @@ public class PostgreSqlAppDbContext : DbContext
         modelBuilder.Entity<RefreshToken>().HasOne(rt => rt.User)
             .WithMany(u => u.RefreshTokens)
             .HasForeignKey(rt => rt.User_IdUser);
-        
+
 
         modelBuilder.Entity<OrganizationMember>()
             .HasOne(om => om.Organization)
@@ -135,9 +136,9 @@ public class PostgreSqlAppDbContext : DbContext
 
         modelBuilder.Entity<Organization>()
             .HasOne(o => o.OrganizationManager)
-            .WithMany()
-            .IsRequired(false)
-            .HasForeignKey(o => o.OrganizationManager_IdOrganizationManager);
+            .WithOne(u => u.Organization)
+            .IsRequired()
+            .HasForeignKey<Organization>(o => o.OrganizationManager_IdOrganizationManager);
 
         modelBuilder.Entity<User>().Property(u => u.BirthDate)
             .HasConversion(
@@ -149,7 +150,7 @@ public class PostgreSqlAppDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
-        
+
         modelBuilder.Entity<RefreshToken>()
             .HasIndex(rt => rt.Token)
             .IsUnique();

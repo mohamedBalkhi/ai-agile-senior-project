@@ -54,14 +54,25 @@ public class UserRepository : GenericRepository<User>, IUserRepository
 
     public User Update(User user, CancellationToken cancellationToken = default)
     {
-         _context.Users.Update(user);
+        _context.Users.Update(user);
         return user;
     }
-    #nullable disable
+#nullable disable
 
     public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Users.FindAsync(id, cancellationToken);
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+    }
+
+    public async Task<User> GetProfileInformation(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await _context.Users
+            .Where(u => u.Id == id)
+            .Include(u => u.Country)
+            .Include(u => u.Organization).ThenInclude(org => org.OrganizationMembers)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return user;
     }
 
 
