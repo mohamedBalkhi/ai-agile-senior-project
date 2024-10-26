@@ -5,6 +5,7 @@ using Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Commands;
 using Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Queries;
 using Senior.AgileAI.BaseMgt.Application.Common;
 using FluentValidation;
+using System.Security.Permissions;
 
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers
@@ -84,6 +85,32 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             //     Error = ex.Message
             // });
 
+        }
+
+        [HttpPost("ChangePassword")]
+        public async Task<ActionResult<bool>> ChangePassword(ChangePasswordDTO dto)
+        {
+            try
+            {
+                var command = new ChangePasswordCommand(dto);
+                var result = await _mediator.Send(command);
+                return Ok(new ApiResponse(200, "Password changed successfully", result));
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("ForgetPassword")] //TODO: test
+        public async Task<ActionResult<bool>> ForgetPassword(ForgetPasswordCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse(200, "Password changed successfully", result));
         }
 
 

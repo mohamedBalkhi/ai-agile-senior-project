@@ -6,7 +6,6 @@ public class User : BaseEntity
     public required string FUllName { get; set; }
     public required string Email { get; set; }
     public required string Password { get; set; }
-
     public required DateOnly BirthDate { get; set; }
     public Guid Country_IdCountry { get; set; }
     public string? Code { get; set; }

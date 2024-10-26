@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
@@ -24,6 +20,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                 Description = command.Dto.Description,
                 Logo = command.Dto.Logo,
                 Status = "Active",
+                IsActive = true,
                 OrganizationManager_IdOrganizationManager = command.Dto.UserId
             };
 
@@ -42,7 +39,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
 
             await _unitOfWork.OrganizationMembers.AddAsync(organizationMember);
             await _unitOfWork.CompleteAsync();
-            
+
             return organization.Id;
         }
         //  TODO: send push notification to the user to confirm the organization creation.

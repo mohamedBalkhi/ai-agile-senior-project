@@ -9,6 +9,10 @@ using Senior.AgileAI.BaseMgt.Application.Common;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Senior.AgileAI.BaseMgt.Application.Common.Utils;
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers;
 
@@ -17,10 +21,12 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITokenResolver _tokenResolver;
 
-    public AuthController(IMediator mediator, ILogger<AuthController> logger)
+    public AuthController(IMediator mediator, ILogger<AuthController> logger, ITokenResolver tokenResolver)
     {
         _mediator = mediator;
+        _tokenResolver = tokenResolver;
     }
 
     [HttpPost("login")]
@@ -92,6 +98,14 @@ public class AuthController : ControllerBase
         await _mediator.Send(new LogoutCommand { RefreshToken = refreshToken });
         Response.Cookies.Delete("refreshToken");
         return Ok();
+    }
+
+    [Authorize]
+    [HttpGet("test")]
+    public ActionResult<object> Test()
+    {
+        var userId = _tokenResolver.ExtractUserId();
+        return Ok(new ApiResponse(200, "Test successful", userId));
     }
 
 

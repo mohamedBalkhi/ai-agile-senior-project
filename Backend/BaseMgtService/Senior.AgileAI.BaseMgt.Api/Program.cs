@@ -16,6 +16,7 @@ builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddPostgreSqlAppDbContext(builder.Configuration); // ? PostgreSql
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddInfrastructureServices(); // ? DI Of Infrastrcture.
 builder.Services.AddApplicationServices(); // ? DI Of Application.
 builder.Services.AddControllers();

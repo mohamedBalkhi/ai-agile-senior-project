@@ -1,5 +1,7 @@
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Senior.AgileAI.BaseMgt.Application.Contracts.infrastructure;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Repositories;
 
@@ -35,5 +37,11 @@ public class UnitOfWork : IUnitOfWork
     public void Dispose()
     {
         _context.Dispose();
+    }
+
+    public async Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        return new EfTransaction(transaction);
     }
 }

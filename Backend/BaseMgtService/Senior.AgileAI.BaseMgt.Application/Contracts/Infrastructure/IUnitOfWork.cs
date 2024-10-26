@@ -1,6 +1,9 @@
+using Senior.AgileAI.BaseMgt.Application.Contracts.infrastructure;
+
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
-public interface IUnitOfWork : IDisposable {
+public interface IUnitOfWork : IDisposable
+{
     IUserRepository Users { get; }
     ICountryRepository Countries { get; }
     IOrganizationRepository Organizations { get; }
@@ -8,7 +11,7 @@ public interface IUnitOfWork : IDisposable {
     IOrganizationMemberRepository OrganizationMembers { get; }
     IProjectPrivilegeRepository ProjectPrivileges { get; }
     IProjectRequirementRepository ProjectRequirements { get; }
-    
 
     Task<int> CompleteAsync();
+    Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 }
