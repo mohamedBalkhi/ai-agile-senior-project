@@ -28,17 +28,23 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
             };
 
             await _unitOfWork.Organizations.AddAsync(organization);
+            // Save the organization first to get its Id because it is a foreign key in the OrganizationMember table.
+            // and it will cause an error if we try to add the organization member without saving the organization first.
+            await _unitOfWork.CompleteAsync();
+
             var organizationMember = new OrganizationMember
             {
                 User_IdUser = command.Dto.UserId,
-                IsManager = true, //because only manager can create organization, so indeed it is true.
+                IsManager = true,
                 HasAdministrativePrivilege = true,
-                Organization = organization
+                Organization_IdOrganization = organization.Id
             };
+
             await _unitOfWork.OrganizationMembers.AddAsync(organizationMember);
             await _unitOfWork.CompleteAsync();
+            
             return organization.Id;
         }
-        // TODO: send email to the user to confirm the organization creation.
+        //  TODO: send push notification to the user to confirm the organization creation.
     }
 }

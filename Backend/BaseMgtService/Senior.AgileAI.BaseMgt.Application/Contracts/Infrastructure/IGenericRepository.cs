@@ -1,5 +1,4 @@
 using Senior.AgileAI.BaseMgt.Domain.Entities;
-
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 public interface IGenericRepository<T> where T : BaseEntity
