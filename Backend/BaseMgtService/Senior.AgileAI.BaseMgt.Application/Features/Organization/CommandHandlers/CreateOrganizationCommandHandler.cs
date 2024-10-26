@@ -24,6 +24,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                 Description = command.Dto.Description,
                 Logo = command.Dto.Logo,
                 Status = "Active",
+                IsActive = true,
                 OrganizationManager_IdOrganizationManager = command.Dto.UserId
             };
 

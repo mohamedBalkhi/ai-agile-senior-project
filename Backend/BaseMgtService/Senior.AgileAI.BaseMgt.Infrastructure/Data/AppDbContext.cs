@@ -133,11 +133,10 @@ public class PostgreSqlAppDbContext : DbContext
             .HasOne(pr => pr.Project)
             .WithMany(p => p.ProjectRequirements)
             .HasForeignKey(pr => pr.Project_IdProject);
-
+        // Configure Organization-OrganizationManager relationship
         modelBuilder.Entity<Organization>()
             .HasOne(o => o.OrganizationManager)
             .WithOne(u => u.Organization)
-            .IsRequired()
             .HasForeignKey<Organization>(o => o.OrganizationManager_IdOrganizationManager);
 
         modelBuilder.Entity<User>().Property(u => u.BirthDate)
@@ -160,5 +159,38 @@ public class PostgreSqlAppDbContext : DbContext
         modelBuilder.Entity<RefreshToken>()
             .HasIndex(rt => new { rt.User_IdUser, rt.Token });
         // Add any additional configurations here
+
+        modelBuilder.Entity<Organization>()
+            .HasIndex(o => o.OrganizationManager_IdOrganizationManager);
+
+        modelBuilder.Entity<OrganizationMember>()
+            .HasIndex(om => om.Organization_IdOrganization);
+
+        modelBuilder.Entity<OrganizationMember>()
+            .HasIndex(om => om.User_IdUser);
+
+
+        modelBuilder.Entity<Project>()
+            .HasIndex(p => p.Organization_IdOrganization);
+
+        modelBuilder.Entity<Project>()
+            .HasIndex(p => p.ProjectManager_IdProjectManager);
+
+
+        modelBuilder.Entity<ProjectPrivilege>()
+            .HasIndex(pp => pp.Project_IdProject);
+
+        modelBuilder.Entity<ProjectPrivilege>()
+            .HasIndex(pp => pp.OrganizationMember_IdOrganizationMember);
+
+
+        modelBuilder.Entity<ProjectRequirement>()
+            .HasIndex(pr => pr.Project_IdProject);
+
+        modelBuilder.Entity<Organization>()
+            .Property(o => o.IsActive)
+            .HasDefaultValue(true)
+            .IsRequired()
+            .HasColumnName("IsActive");
     }
 }
