@@ -7,19 +7,24 @@ using Microsoft.IdentityModel.Tokens;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
+using Microsoft.Extensions.Options;
+using Senior.AgileAI.BaseMgt.Infrastructure.Options;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IConfiguration _configuration;
+    private readonly JwtOptions _jwtOptions;
     private readonly IPasswordHasher<User> _passwordHasher;
 
-    public AuthService(IUnitOfWork unitOfWork, IConfiguration configuration, IPasswordHasher<User> passwordHasher)
+    public AuthService(
+        IUnitOfWork unitOfWork, 
+        IOptions<JwtOptions> jwtOptions,
+        IPasswordHasher<User> passwordHasher)
     {
         _unitOfWork = unitOfWork;
-        _configuration = configuration;
+        _jwtOptions = jwtOptions.Value;
         _passwordHasher = passwordHasher;
     }
 
@@ -101,13 +106,14 @@ public class AuthService : IAuthService
             new Claim("IsAdmin", isAdmin.ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var keyBytes = Convert.FromBase64String(_jwtOptions.Key);
+        var key = new SymmetricSecurityKey(keyBytes);
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Jwt:AccessTokenExpirationMinutes"]));
+        var expires = DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes);
 
         var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
+            issuer: _jwtOptions.Issuer,
+            audience: _jwtOptions.Audience,
             claims: claims,
             expires: expires,
             signingCredentials: creds

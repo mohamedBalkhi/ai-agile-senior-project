@@ -166,6 +166,14 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize("Admin")] // Add this attribute to endpoints that need admin access
+    [HttpGet("admin-only")]
+    public ActionResult<object> AdminOnlyEndpoint()
+    {
+        var userId = _tokenResolver.ExtractUserId();
+        return Ok(new ApiResponse(200, "Admin access successful", userId));
+    }
+
 
 
 
