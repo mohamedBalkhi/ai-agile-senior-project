@@ -33,7 +33,8 @@ namespace NotificationService.Services.Implementations
                 };
 
                 using var smtpClient = new SmtpClient();
-                await smtpClient.ConnectAsync(emailSettings["SmtpServer"]!, int.Parse(emailSettings["Port"]!), false);
+                smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                await smtpClient.ConnectAsync(emailSettings["SmtpServer"]!, int.Parse(emailSettings["Port"]!), MailKit.Security.SecureSocketOptions.Auto);
                 await smtpClient.AuthenticateAsync(emailSettings["UserName"]!, emailSettings["Password"]!);
                 await smtpClient.SendAsync(email);
                 await smtpClient.DisconnectAsync(true);
