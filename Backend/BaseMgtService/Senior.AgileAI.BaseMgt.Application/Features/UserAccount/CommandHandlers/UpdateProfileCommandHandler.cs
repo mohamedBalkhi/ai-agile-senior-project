@@ -24,9 +24,9 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
 
             // Update only non-null properties
             if (command.DTO.FullName != null) user.FUllName = command.DTO.FullName;
-            if (command.DTO.BirthDate.HasValue) user.BirthDate = command.DTO.BirthDate.Value;
-            if (command.DTO.CountryId.HasValue) user.Country_IdCountry = command.DTO.CountryId.Value;
-
+            if (command.DTO.BirthDate != null) user.BirthDate = command.DTO.BirthDate.Value;
+            if (command.DTO.CountryId != null) user.Country_IdCountry = command.DTO.CountryId.Value;
+            
             await _unitOfWork.CompleteAsync();
             return user.Id;
         }

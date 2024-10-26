@@ -6,7 +6,9 @@ using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using Senior.AgileAI.BaseMgt.Application.Features.Test.Queries;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Common;
-
+using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers;
 
@@ -16,30 +18,51 @@ public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public AuthController(IMediator mediator)
+    public AuthController(IMediator mediator, ILogger<AuthController> logger)
     {
         _mediator = mediator;
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResult>> Login([FromBody] LoginCommand command)
+    public async Task<ActionResult<ApiResponse>> Login([FromBody] LoginCommand command)
     {
-        var result = await _mediator.Send(command);
-        SetRefreshTokenCookie(result.RefreshToken);
-        return Ok(new { AccessToken = result.AccessToken });
+        try
+        {
+            var result = await _mediator.Send(command);
+            SetRefreshTokenCookie(result.RefreshToken);
+
+            return Ok(new ApiResponse(
+                200,
+                "Login successful",
+                new { AccessToken = result.AccessToken }
+            ));
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new ApiResponse(
+                400,
+                "Validation failed",
+                ex.Errors
+            ));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new ApiResponse(
+                401,
+                "Authentication failed",
+                ex.Message
+            ));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse(
+                500,
+                "An error occurred while processing your request",
+                ex.Message
+            ));
+        }
     }
-    [HttpGet("test")]
-    public async Task<IActionResult> Test()
-    {
-        var result = await _mediator.Send(new TestQuery());
-        return Ok(result);
-    }
-    [HttpGet("test11")]
-    public async Task<IActionResult> Test11()
-    {
-        var result = await _mediator.Send(new TestQuery(true));
-        return Ok(result);
-    }
+
 
     [HttpPost("refresh")]
     public async Task<ActionResult<AuthResult>> Refresh()
@@ -72,12 +95,32 @@ public class AuthController : ControllerBase
     }
 
 
-    [HttpPost("SignUp")]
-    public async Task<ActionResult<Guid>> SignUp(SignUpDTO dto)
+    [HttpPost("signup")]
+    public async Task<ActionResult<Guid>> SignUp([FromBody] SignUpDTO dto)
     {
-        var command = new SignUpCommand(dto);
-        var result = await _mediator.Send(command);
-        return Ok(new ApiResponse(200, "User created successfully", result));
+        try
+        {
+            var command = new SignUpCommand(dto);
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse(200, "Signup successful", result));
+        }
+        catch (ValidationException ex)
+        {
+
+            return BadRequest(new
+            {
+                Message = "Validation failed",
+                Errors = ex.Errors
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                Message = "An error occurred while processing your request",
+                Error = ex.Message
+            });
+        }
     }
 
     [HttpPost("VerifyEmail")]
@@ -86,15 +129,27 @@ public class AuthController : ControllerBase
         var command = new VerifyEmailCommand(dto);
         var result = await _mediator.Send(command);
         return Ok(new ApiResponse(200, "Email verified successfully", result));
+
     }
 
-// if the user wants to resend the code, we need to send the code to the user's email.
+    // if the user wants to resend the code, we need to send the code to the user's email.
     [HttpPost("ResendCode")]
     public async Task<ActionResult<bool>> ResendCode(Guid userId)
     {
-        var command = new ResendCodeCommand(userId);
-        var result = await _mediator.Send(command);
-        return Ok(new ApiResponse(200, "Code resent successfully", result));
+        try
+        {
+            var command = new ResendCodeCommand(userId);
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse(200, "Code resent successfully", result));
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new ApiResponse(400, "Validation failed", ex.Errors));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse(500, "An error occurred while processing your request", ex.Message));
+        }
     }
 
 

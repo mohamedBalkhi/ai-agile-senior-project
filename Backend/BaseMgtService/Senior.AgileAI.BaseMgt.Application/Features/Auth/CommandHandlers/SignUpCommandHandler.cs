@@ -24,7 +24,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
         {
             var user = new User
             {
-                FUllName = command.DTO.Name,
+                FUllName = command.DTO.FullName,
                 Email = command.DTO.Email,
                 Password = command.DTO.Password,
                 BirthDate = command.DTO.BirthDate,

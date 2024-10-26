@@ -20,6 +20,7 @@ public class User : BaseEntity
     public required bool IsTrusted { get; set; }
     public required bool IsAdmin { get; set; }
     public Country Country { get; set; } = null!;
+    public Organization? Organization { get; set; }
     public OrganizationMember? OrganizationMember { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
