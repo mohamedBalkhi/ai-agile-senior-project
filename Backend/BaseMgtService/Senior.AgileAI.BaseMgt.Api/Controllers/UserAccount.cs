@@ -5,7 +5,6 @@ using Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Commands;
 using Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Queries;
 using Senior.AgileAI.BaseMgt.Application.Common;
 using FluentValidation;
-using System.Security.Permissions;
 
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers
@@ -111,6 +110,13 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
         {
             var result = await _mediator.Send(command);
             return Ok(new ApiResponse(200, "Password changed successfully", result));
+        }
+
+        [HttpPost("RequestPasswordReset")]
+        public async Task<ActionResult<ApiResponse>> RequestPasswordReset(RequestPasswordResetCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse(200, "Password reset requested successfully", result));
         }
 
 

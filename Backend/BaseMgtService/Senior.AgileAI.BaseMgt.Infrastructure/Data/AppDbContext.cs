@@ -133,11 +133,13 @@ public class PostgreSqlAppDbContext : DbContext
             .HasOne(pr => pr.Project)
             .WithMany(p => p.ProjectRequirements)
             .HasForeignKey(pr => pr.Project_IdProject);
+            
         // Configure Organization-OrganizationManager relationship
         modelBuilder.Entity<Organization>()
             .HasOne(o => o.OrganizationManager)
             .WithOne(u => u.Organization)
-            .HasForeignKey<Organization>(o => o.OrganizationManager_IdOrganizationManager);
+            .HasForeignKey<Organization>(o => o.OrganizationManager_IdOrganizationManager)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<User>().Property(u => u.BirthDate)
             .HasConversion(

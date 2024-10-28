@@ -18,3 +18,15 @@ public enum PrivilegeLevel
     Read = 1,
     Write = 2
 }
+
+// PrivillegeLevel.Write 
+
+public static class ProjectPrivilegeAspect {
+    public const string Meetings = "Meetings";
+    public const string Settings = "Settings";
+    public const string Users = "Users";
+}
+// ProjectPrivilegeAspect.Meetings 
+
+
+// IsPrvileged = HasNeededPrivilege(Member, Project, ProjectPrivilegeAspect.Meetings, PrivilegeLevel.Write)
