@@ -5,6 +5,7 @@ using Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.Commands;
 using FluentValidation;
 using Senior.AgileAI.BaseMgt.Application.Common;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers
 {
@@ -48,7 +49,14 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             return Ok(new ApiResponse(200, "Organization deactivated successfully", result));
         }
 
-        
+
+        // [HttpPost("AddOrgMember")]
+        // public async Task<ActionResult<ApiResponse>> AddOrgMember(OrgMemberDTO dto)
+        // {
+        //     var command = new AddOrgMember(dto, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        //     var result = await _mediator.Send(command);
+        //     return Ok(new ApiResponse(200, "Organization member added successfully", result));
+        // }
 
 
 

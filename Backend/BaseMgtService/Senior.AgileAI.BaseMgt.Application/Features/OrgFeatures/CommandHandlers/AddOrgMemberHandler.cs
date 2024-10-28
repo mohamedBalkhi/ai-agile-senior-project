@@ -20,7 +20,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
         }
         public async Task<bool> Handle(AddOrgMember request, CancellationToken cancellationToken)
         {
-            using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+            using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken); //? NOTE 
             try
             {
                 var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
@@ -41,6 +41,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                         Country_IdCountry = user.Country_IdCountry, //TODO: change to organization country
                         Code = "00000",
                         Organization = organization,
+                    
 
                     };
                     await _unitOfWork.Users.AddAsync(NewUser, cancellationToken);
