@@ -28,10 +28,10 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
                 Email = command.DTO.Email,
                 Password = command.DTO.Password,
                 BirthDate = command.DTO.BirthDate,
-                Status = "active",
                 Country_IdCountry = command.DTO.Country_IdCountry,
+                IsActive = false, //until they make new organization.
                 IsTrusted = false, //need to make verify to the email first.
-                IsAdmin = false, // we only allow the orgManagers to create an account.
+                IsAdmin = true, // we only allow the orgManagers to create an account.
             };
 
             var createdUser = await _unitOfWork.Users.AddAsync(user, cancellationToken);

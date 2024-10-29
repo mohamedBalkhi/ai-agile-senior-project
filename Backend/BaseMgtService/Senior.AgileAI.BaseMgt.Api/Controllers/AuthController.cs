@@ -1,17 +1,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
-using Senior.AgileAI.BaseMgt.Application.Features.Test.Queries;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Common;
-using FluentValidation;
-using FluentValidation.Results;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+
 using Senior.AgileAI.BaseMgt.Application.Common.Utils;
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers;
@@ -166,6 +162,16 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize]
+    [HttpGet("CompleteProfile")]
+    public async Task<ActionResult<ApiResponse>> CompleteProfile(CompleteProfileDTO dto)
+    {
+        var userId = GetCurrentUserId(); //the user should be loged in using their email with the  default password
+        var command = new CompleteProfileCommand(dto, userId);
+        var result = await _mediator.Send(command);
+        return Ok(new ApiResponse(200, "Profile completed successfully", result));
+    }
+
     [Authorize("Admin")] // Add this attribute to endpoints that need admin access
     [HttpGet("admin-only")]
     public ActionResult<object> AdminOnlyEndpoint()
@@ -187,5 +193,16 @@ public class AuthController : ControllerBase
             Secure = false // TODO: Change to true when deploying to production
         };
         Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+    }
+
+
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+        {
+            throw new UnauthorizedAccessException("User ID not found in token");
+        }
+        return userId;
     }
 }

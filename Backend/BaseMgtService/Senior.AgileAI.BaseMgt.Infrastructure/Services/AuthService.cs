@@ -19,7 +19,7 @@ public class AuthService : IAuthService
     private readonly IPasswordHasher<User> _passwordHasher;
 
     public AuthService(
-        IUnitOfWork unitOfWork, 
+        IUnitOfWork unitOfWork,
         IOptions<JwtOptions> jwtOptions,
         IPasswordHasher<User> passwordHasher)
     {
@@ -38,11 +38,13 @@ public class AuthService : IAuthService
         {
             throw new UnauthorizedAccessException("Invalid credentials");
         }
-        bool isAdmin = user.IsAdmin || 
-                       (user.OrganizationMember?.IsManager ?? false) || 
-                       (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
-        
-        var accessToken = GenerateAccessToken(user, isAdmin);
+        bool isAdmin = user.IsAdmin ||
+                    (user.OrganizationMember?.IsManager ?? false) ||
+                    (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
+        var isTrusted = user.IsTrusted;
+        var isActive = user.IsActive;
+
+        var accessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive);
         var refreshToken = GenerateRefreshToken(user.Id);
 
         user.RefreshTokens.Add(refreshToken);
@@ -71,10 +73,13 @@ public class AuthService : IAuthService
         {
             throw new UnauthorizedAccessException("Invalid Refresh Token");
         }
-        var isAdmin = user.IsAdmin || 
-                       (user.OrganizationMember?.IsManager ?? false) || 
-                       (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
-        var newAccessToken = GenerateAccessToken(user, isAdmin);
+        var isAdmin = user.IsAdmin ||
+                    (user.OrganizationMember?.IsManager ?? false) ||
+                    (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
+        var isTrusted = user.IsTrusted;
+        var isActive = user.IsActive;
+        //(user.OrganizationMember?.HasAdministrativePrivilege ?? false);
+        var newAccessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive);
 
 
         return new AuthResult
@@ -96,14 +101,17 @@ public class AuthService : IAuthService
         }
     }
 
-    private string GenerateAccessToken(User user, bool isAdmin)
+    private string GenerateAccessToken(User user, bool isAdmin, bool isTrusted, bool isActive)
     {
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.FUllName),
-            new Claim("IsAdmin", isAdmin.ToString())
+            new Claim("IsAdmin", isAdmin.ToString()),
+            new Claim("IsTrusted", isTrusted.ToString()),
+            new Claim ("IsActive", isActive.ToString())
+
         };
 
         var keyBytes = Convert.FromBase64String(_jwtOptions.Key);
@@ -131,7 +139,7 @@ public class AuthService : IAuthService
         };
     }
 
-   
+
 
     public string HashPassword(User user, string password)
     {
