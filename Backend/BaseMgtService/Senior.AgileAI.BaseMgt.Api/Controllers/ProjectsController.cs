@@ -42,12 +42,12 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpGet("GetProjectMembers")]
-        public async Task<ActionResult<ApiResponse>> GetProjectMembers([FromBody] Guid projectId)
+        public async Task<ActionResult<ApiResponse<List<ProjectMemberDTO>>>> GetProjectMembers([FromBody] Guid projectId)
         {
             var userId = GetCurrentUserId();
             var query = new GetProjectMembersQuery(projectId, userId);
             var result = await _mediator.Send(query);
-            return Ok(new ApiResponse(200, "Project members retrieved successfully", result));
+            return Ok(new ApiResponse<List<ProjectMemberDTO>>(200, "Project members retrieved successfully", result));
         }
 
         [Authorize]

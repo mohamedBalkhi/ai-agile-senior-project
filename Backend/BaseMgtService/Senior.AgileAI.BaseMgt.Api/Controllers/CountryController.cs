@@ -20,7 +20,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
         }
 
         [HttpGet("GetAllCountries")]
-        public async Task<ActionResult<List<CountryDTO>>> GetAllCountries()
+        public async Task<ActionResult<ApiResponse<List<CountryDTO>>>> GetAllCountries()
         {
             try
             {
