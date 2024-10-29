@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                 serviceProvider.GetRequiredService<DbContextOptions<PostgreSqlAppDbContext>>(),
                 serviceProvider.GetRequiredService<IConfiguration>()))
             {
+                var passwordHasher = serviceProvider.GetRequiredService<IPasswordHasher<User>>();
+
                 // Check if the database already contains seed data
                 if (context.Users.Any() || context.Countries.Any() || context.Organizations.Any())
                 {
@@ -23,7 +26,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                 context.Countries.AddRange(countries);
                 context.SaveChanges();
 
-                var users = SeedUsers(countries);
+                var users = SeedUsers(countries, passwordHasher);
                 context.Users.AddRange(users);
                 context.SaveChanges();
 
@@ -58,18 +61,18 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
             };
         }
 
-        private static List<User> SeedUsers(List<Country> countries)
+        private static List<User> SeedUsers(List<Country> countries, IPasswordHasher<User> passwordHasher)
         {
             var usCountry = countries.First(c => c.Code == "US");
             var syCountry = countries.First(c => c.Code == "SY");
 
-            return new List<User>
+            var users = new List<User>
             {
                 new User
                 {
                     FUllName = "Admin User",
                     Email = "admin@example.com",
-                    Password = "Admin", // In real scenario, use a proper password hashing method
+                    Password = "Admin",
                     BirthDate = new DateOnly(1990, 1, 1),
                     Country = usCountry,
                     IsActive = true,
@@ -80,8 +83,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                 {
                     FUllName = "Mohamed Al Balkhi",
                     Email = "mohamedbalkhi169@gmail.com",
-                    Password = "11223344123aS@",
                     BirthDate = new DateOnly(2002, 9, 16),
+                    Password = "11223344123aS@",
                     Country = syCountry,
                     IsActive = true,
                     IsAdmin = true,
@@ -91,8 +94,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                 {
                     FUllName = "Raghad Al Hossny",
                     Email = "raghadalhosny@gmail.com",
-                    Password = "raghod1234",
                     BirthDate = new DateOnly(2002, 7, 1),
+                    Password = "raghod1234",
                     Country = syCountry,
                     IsActive = true,
                     IsAdmin = true,
@@ -102,14 +105,23 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                 {
                     FUllName = "Regular User",
                     Email = "user@example.com",
-                    Password = "Regular",
                     BirthDate = new DateOnly(1995, 5, 5),
                     Country = usCountry,
+                    Password = "User",
                     IsActive = true,
                     IsAdmin = false,
                     IsTrusted = false
                 }
             };
+
+            // Hash passwords for each user
+            foreach (var user in users)
+            {
+                
+                user.Password = passwordHasher.HashPassword(user, user.Password);
+            }
+
+            return users;
         }
 
         private static Organization SeedOrganizations(User manager)
