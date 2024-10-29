@@ -31,12 +31,14 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
 
             var organizationMember = new OrganizationMember
             {
-                User_IdUser = command.Dto.UserId,
+                User_IdUser = command.Dto.UserId, // org manger
                 IsManager = true,
                 HasAdministrativePrivilege = true,
                 Organization_IdOrganization = organization.Id
             };
-
+            var user = await _unitOfWork.Users.GetByIdAsync(command.Dto.UserId, cancellationToken);
+            user.IsActive = true; //? complete the flow of sign-up.
+            _unitOfWork.Users.Update(user);
             await _unitOfWork.OrganizationMembers.AddAsync(organizationMember);
             await _unitOfWork.CompleteAsync();
 

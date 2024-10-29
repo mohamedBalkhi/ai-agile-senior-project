@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 
 namespace Senior.AgileAI.BaseMgt.Application.DTOs
 {
-    public class CreateOrganizationDTO
+    public class GetOrgProjectDTO
     {
-        public Guid UserId { get; set; } //it will used as the manger id
+        public Guid Id { get; set; }
         public required string Name { get; set; }
         public required string Description { get; set; }
-        public required string Logo { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string? ProjectManager { get; set; }
     }
 }
