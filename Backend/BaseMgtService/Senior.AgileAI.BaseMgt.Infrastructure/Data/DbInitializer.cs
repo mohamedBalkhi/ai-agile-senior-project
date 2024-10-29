@@ -72,7 +72,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     Password = "Admin", // In real scenario, use a proper password hashing method
                     BirthDate = new DateOnly(1990, 1, 1),
                     Country = usCountry,
-                    Status = "Active",
+                    IsActive = true,
                     IsAdmin = true,
                     IsTrusted = true
                 },
@@ -83,7 +83,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     Password = "11223344123aS@",
                     BirthDate = new DateOnly(2002, 9, 16),
                     Country = syCountry,
-                    Status = "Active",
+                    IsActive = true,
                     IsAdmin = true,
                     IsTrusted = true
                 },
@@ -94,7 +94,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     Password = "raghod1234",
                     BirthDate = new DateOnly(2002, 7, 1),
                     Country = syCountry,
-                    Status = "Active",
+                    IsActive = true,
                     IsAdmin = true,
                     IsTrusted = true
                 },
@@ -105,7 +105,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     Password = "Regular",
                     BirthDate = new DateOnly(1995, 5, 5),
                     Country = usCountry,
-                    Status = "Active",
+                    IsActive = true,
                     IsAdmin = false,
                     IsTrusted = false
                 }
@@ -139,7 +139,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
             return new Project
             {
                 Name = "Default Project",
-                Status = "Active",
+                Status = true,
                 Description = "Default Project Description",
                 Organization = organization,
                 ProjectManager = manager
