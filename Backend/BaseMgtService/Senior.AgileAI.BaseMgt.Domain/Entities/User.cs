@@ -13,8 +13,6 @@ public class User : BaseEntity
     // public required string ProfilePicture { get; set; } 
     // TODO: Add Profile Picture Mohamed
 
-
-
     public required bool IsActive { get; set; } = false;
     public required bool IsTrusted { get; set; } = false;
     public required bool IsAdmin { get; set; } = false;
