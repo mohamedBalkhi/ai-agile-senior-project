@@ -20,6 +20,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
             member.User.FUllName = request.Dto.FullName;
             member.User.Country_IdCountry = request.Dto.CountryId;
             member.User.BirthDate = request.Dto.BirthDate;
+            member.User.IsActive = true;
 
             member.User.Password = _authService.HashPassword(member.User, request.Dto.Password);
             await _unitOfWork.CompleteAsync();
