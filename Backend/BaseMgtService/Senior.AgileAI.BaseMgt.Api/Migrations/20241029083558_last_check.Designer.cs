@@ -126,9 +126,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                     b.Property<bool>("IsManager")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("MyProperty")
-                        .IsRequired()
-                        .HasColumnType("text");
+               
 
                     b.Property<Guid>("Organization_IdOrganization")
                         .HasColumnType("uuid");

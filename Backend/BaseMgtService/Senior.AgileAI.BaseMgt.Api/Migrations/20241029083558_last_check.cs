@@ -29,14 +29,18 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                 nullable: false,
                 defaultValue: false);
 
-            migrationBuilder.AlterColumn<bool>(
-                name: "Status",
+            migrationBuilder.DropColumn(
+                name: "Status", 
                 schema: "public",
+                table: "Projects");
+
+            migrationBuilder.AddColumn<bool>(
+                name: "Status",
+                schema: "public", 
                 table: "Projects",
                 type: "boolean",
                 nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
+                defaultValue: false);
 
             migrationBuilder.AddColumn<int>(
                 name: "Members",
@@ -54,13 +58,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                 nullable: false,
                 defaultValue: 0);
 
-            migrationBuilder.AddColumn<string>(
-                name: "MyProperty",
-                schema: "public",
-                table: "OrganizationMembers",
-                type: "text",
-                nullable: false,
-                defaultValue: "");
+       
         }
 
         /// <inheritdoc />
@@ -81,10 +79,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                 schema: "public",
                 table: "ProjectPrivileges");
 
-            migrationBuilder.DropColumn(
-                name: "MyProperty",
-                schema: "public",
-                table: "OrganizationMembers");
+            
 
             migrationBuilder.RenameColumn(
                 name: "Tasks",
