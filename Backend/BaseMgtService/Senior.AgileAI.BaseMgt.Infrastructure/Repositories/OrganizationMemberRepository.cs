@@ -1,6 +1,7 @@
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Repositories;
 
@@ -17,5 +18,22 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
         return organizationMember;
     }
 
-    // Implement custom methods for OrganizationMember repository
+    public async Task<List<OrganizationMember>> GetByOrgId(Guid orgId, CancellationToken cancellationToken)
+    {
+        return await _context.OrganizationMembers
+            .Where(om => om.Organization_IdOrganization == orgId)
+            .Include(om => om.User)
+            .Include(om => om.ProjectPrivileges)
+            .ThenInclude(pp => pp.Project)
+            .ToListAsync(cancellationToken);
+    }
+#nullable disable
+
+    public async Task<OrganizationMember> GetByUserId(Guid userId, CancellationToken cancellationToken)
+    {
+        return await _context.OrganizationMembers
+            .Where(om => om.User_IdUser == userId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
 }
