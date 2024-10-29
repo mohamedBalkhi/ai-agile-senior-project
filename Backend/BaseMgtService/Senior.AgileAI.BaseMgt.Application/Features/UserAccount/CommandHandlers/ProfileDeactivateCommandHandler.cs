@@ -21,7 +21,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
                 throw new NotFoundException($"User with ID {command.UserId} not found");
 
             }
-            user.Status = "Inactive";
+            user.IsActive = false;
             await _unitOfWork.CompleteAsync();
             return true;
             //TODO: send an email to the user to inform them that their account has been deactivated.
