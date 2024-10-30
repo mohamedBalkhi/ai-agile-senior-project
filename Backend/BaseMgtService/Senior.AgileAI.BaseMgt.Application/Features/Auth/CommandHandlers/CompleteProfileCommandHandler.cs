@@ -16,7 +16,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
         }
         public async Task<bool> Handle(CompleteProfileCommand request, CancellationToken cancellationToken)
         {
-            var member = await _unitOfWork.OrganizationMembers.GetByUserId(request.UserId, cancellationToken);
+            var member = await _unitOfWork.OrganizationMembers.GetByUserId(request.UserId, cancellationToken, includeUser : true);
             member.User.FUllName = request.Dto.FullName;
             member.User.Country_IdCountry = request.Dto.CountryId;
             member.User.BirthDate = request.Dto.BirthDate;

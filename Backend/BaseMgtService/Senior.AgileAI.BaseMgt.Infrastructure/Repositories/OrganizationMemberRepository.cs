@@ -29,9 +29,12 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
     }
 #nullable disable
 
-    public async Task<OrganizationMember> GetByUserId(Guid userId, CancellationToken cancellationToken)
+    public async Task<OrganizationMember> GetByUserId(Guid userId, CancellationToken cancellationToken, bool includeUser)
     {
-        return await _context.OrganizationMembers
+        var query = _context.OrganizationMembers.AsQueryable();
+        if (includeUser)
+            query = query.Include(om => om.User);
+        return await query
             .Where(om => om.User_IdUser == userId)
             .FirstOrDefaultAsync(cancellationToken);
     }

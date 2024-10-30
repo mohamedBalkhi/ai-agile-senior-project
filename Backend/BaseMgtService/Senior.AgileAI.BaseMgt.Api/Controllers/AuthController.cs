@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
 
 
     [HttpPost("refresh")]
-    public async Task<ActionResult<AuthResult>> Refresh()
+    public async Task<ActionResult<ApiResponse<AuthResult>>> Refresh()
     {
         var refreshToken = Request.Cookies["refreshToken"];
 
@@ -78,8 +78,9 @@ public class AuthController : ControllerBase
 
         var command = new RefreshTokenCommand { RefreshToken = refreshToken };
         var result = await _mediator.Send(command);
+        result.RefreshToken = "";
 
-        return Ok(new { AccessToken = result.AccessToken });
+        return Ok(new ApiResponse<AuthResult>(200, "Token refreshed successfully", result));
     }
 
     [HttpPost("logout")]
