@@ -22,27 +22,27 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpPost("CreateProject")]
-        public async Task<ActionResult<ApiResponse>> CreateProject(CreateProjectDTO dto)
+        public async Task<ActionResult<ApiResponse<Guid>>> CreateProject(CreateProjectDTO dto)
         {
             var userId = GetCurrentUserId();
             var command = new CreateProjectCommand(dto, userId);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse(200, "Project created successfully", result));
+            return Ok(new ApiResponse<Guid>(200, "Project created successfully", result));
         }
 
         [Authorize]
         [HttpPost("AssignMember")]
-        public async Task<ActionResult<ApiResponse>> AssignMember(AssignMemberDTO dto)
+        public async Task<ActionResult<ApiResponse<bool>>> AssignMember(AssignMemberDTO dto)
         {
             var userId = GetCurrentUserId();
             var command = new AssignMemberCommand(dto, userId);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse(200, "Member assigned to project successfully", result));
+            return Ok(new ApiResponse<bool>(200, "Member assigned to project successfully", result));
         }
 
         [Authorize]
         [HttpGet("GetProjectMembers")]
-        public async Task<ActionResult<ApiResponse<List<ProjectMemberDTO>>>> GetProjectMembers([FromBody] Guid projectId)
+        public async Task<ActionResult<ApiResponse<List<ProjectMemberDTO>>>> GetProjectMembers([FromQuery] Guid projectId)
         {
             var userId = GetCurrentUserId();
             var query = new GetProjectMembersQuery(projectId, userId);
@@ -52,22 +52,22 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpGet("GetMemberPrivileges")]
-        public async Task<ActionResult<ApiResponse>> GetMemberPrivileges([FromBody] Guid projectId)
+        public async Task<ActionResult<ApiResponse<MemberPrivilegesDto>>> GetMemberPrivileges([FromQuery] Guid projectId)
         {
             var memberId = GetCurrentUserId();
             var query = new GetMemberPrivilegesQuery(projectId, memberId);
             var result = await _mediator.Send(query);
-            return Ok(new ApiResponse(200, "Member privileges retrieved successfully", result));
+            return Ok(new ApiResponse<MemberPrivilegesDto>(200, "Member privileges retrieved successfully", result));
         }
 
         [Authorize]
         [HttpGet("GetProjectInfo")]
-        public async Task<ActionResult<ApiResponse>> GetProjectInfo([FromBody] Guid projectId)
+        public async Task<ActionResult<ApiResponse<ProjectInfoDTO>>> GetProjectInfo([FromQuery] Guid projectId)
         {
             var userId = GetCurrentUserId();
             var query = new GetProjectInfoQuery(projectId, userId);
             var result = await _mediator.Send(query);
-            return Ok(new ApiResponse(200, "Project info retrieved successfully", result));
+            return Ok(new ApiResponse<ProjectInfoDTO>(200, "Project info retrieved successfully", result));
         }
 
         private Guid GetCurrentUserId()

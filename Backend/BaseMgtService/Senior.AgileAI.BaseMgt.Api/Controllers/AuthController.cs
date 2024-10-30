@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse>> Login([FromBody] LoginCommand command)
+    public async Task<ActionResult<ApiResponse<AuthResult>>> Login([FromBody] LoginCommand command)
     {
         try
         {
@@ -106,13 +106,13 @@ public class AuthController : ControllerBase
 
 
     [HttpPost("signup")]
-    public async Task<ActionResult<Guid>> SignUp([FromBody] SignUpDTO dto)
+    public async Task<ActionResult<ApiResponse<Guid>>> SignUp([FromBody] SignUpDTO dto)
     {
         try
         {
             var command = new SignUpCommand(dto);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse(200, "Signup successful", result));
+            return Ok(new ApiResponse<Guid>(200, "Signup successful", result));
         }
         catch (ValidationException ex)
         {
@@ -134,23 +134,23 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("VerifyEmail")]
-    public async Task<ActionResult<bool>> VerifyEmail(VerifyEmailDTO dto)
+    public async Task<ActionResult<ApiResponse<bool>>> VerifyEmail(VerifyEmailDTO dto)
     {
         var command = new VerifyEmailCommand(dto);
         var result = await _mediator.Send(command);
-        return Ok(new ApiResponse(200, "Email verified successfully", result));
+        return Ok(new ApiResponse<bool>(200, "Email verified successfully", result));
 
     }
 
     // if the user wants to resend the code, we need to send the code to the user's email.
     [HttpPost("ResendCode")]
-    public async Task<ActionResult<bool>> ResendCode(Guid userId)
+    public async Task<ActionResult<ApiResponse<Guid>>> ResendCode([FromQuery] Guid userId)
     {
         try
         {
             var command = new ResendCodeCommand(userId);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse(200, "Code resent successfully", result));
+            return Ok(new ApiResponse<Guid>(200, "Code resent successfully", result));
         }
         catch (ValidationException ex)
         {
@@ -163,13 +163,13 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("CompleteProfile")]
-    public async Task<ActionResult<ApiResponse>> CompleteProfile(CompleteProfileDTO dto)
+    [HttpPut("CompleteProfile")]
+    public async Task<ActionResult<ApiResponse<bool>>> CompleteProfile(CompleteProfileDTO dto)
     {
         var userId = GetCurrentUserId(); //the user should be loged in using their email with the  default password
         var command = new CompleteProfileCommand(dto, userId);
         var result = await _mediator.Send(command);
-        return Ok(new ApiResponse(200, "Profile completed successfully", result));
+        return Ok(new ApiResponse<bool>(200, "Profile completed successfully", result));
     }
 
     [Authorize("Admin")] // Add this attribute to endpoints that need admin access

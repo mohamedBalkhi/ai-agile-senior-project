@@ -23,13 +23,13 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
 
         [HttpPost("CreateOrganization")]
-        public async Task<ActionResult<ApiResponse>> CreateOrganization(CreateOrganizationDTO dto)
+        public async Task<ActionResult<ApiResponse<Guid>>> CreateOrganization(CreateOrganizationDTO dto)
         {
             try
             {
                 var command = new CreateOrganizationCommand(dto);
                 var result = await _mediator.Send(command);
-                return Ok(new ApiResponse(200, "Organization created successfully", result));
+                return Ok(new ApiResponse<Guid>(200, "Organization created successfully", result));
             }
             catch (ValidationException ex)
             {
@@ -44,51 +44,51 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpPost("DeactivateOrganization")]
-        public async Task<ActionResult<ApiResponse>> DeactivateOrganization([FromBody] DeactivateOrganizationCommand command)
+        public async Task<ActionResult<ApiResponse<bool>>> DeactivateOrganization([FromBody] DeactivateOrganizationCommand command)
         {
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse(200, "Organization deactivated successfully", result));
+            return Ok(new ApiResponse<bool>(200, "Organization deactivated successfully", result));
         }
 
 
         [Authorize]
         [HttpPost("AddOrgMember")]
-        public async Task<ActionResult<ApiResponse>> AddOrgMember(OrgMemberDTO dto)
+        public async Task<ActionResult<ApiResponse<bool>>> AddOrgMember(OrgMemberDTO dto)
         {
             var userId = GetCurrentUserId();
             Console.WriteLine(userId);
             var command = new AddOrgMember(dto, userId);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse(200, "Organization member added successfully", result));
+            return Ok(new ApiResponse<bool>(200, "Organization member added successfully", result));
         }
 
         [Authorize]
         [HttpGet("GetOrganizationMembers")]
-        public async Task<ActionResult<ApiResponse>> GetOrganizationMembers()
+        public async Task<ActionResult<ApiResponse<List<GetOrgMemberDTO>>>> GetOrganizationMembers()
         {
             var userId = GetCurrentUserId();
             var query = new GetOrganizationMembersQuery(userId);
             var result = await _mediator.Send(query);
-            return Ok(new ApiResponse(200, "Organization members fetched successfully", result));
+            return Ok(new ApiResponse<List<GetOrgMemberDTO>>(200, "Organization members fetched successfully", result));
         }
 
         [Authorize]
         [HttpGet("GetOrganizationProjects")]
-        public async Task<ActionResult<ApiResponse>> GetOrganizationProjects()
+        public async Task<ActionResult<ApiResponse<List<GetOrgProjectDTO>>>> GetOrganizationProjects()
         {
             var userId = GetCurrentUserId();
             var query = new GetOrganizationProjectsQuery(userId);
             var result = await _mediator.Send(query);
-            return Ok(new ApiResponse(200, "Organization projects fetched successfully", result));
+            return Ok(new ApiResponse<List<GetOrgProjectDTO>>(200, "Organization projects fetched successfully", result));
         }
 
         [Authorize]
         [HttpPost("SetMemberAsAdmin")]
-        public async Task<ActionResult<ApiResponse>> SetMemberAsAdmin([FromBody] Guid userId)
+        public async Task<ActionResult<ApiResponse<bool>>> SetMemberAsAdmin([FromQuery] Guid userId)
         {
             var command = new SetMemberAsAdminCommand(userId);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse(200, "Member got full administrative privileges successfully", result));
+            return Ok(new ApiResponse<bool>(200, "Member got full administrative privileges successfully", result));
         }
 
         private Guid GetCurrentUserId()
