@@ -70,6 +70,15 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             return Ok(new ApiResponse<ProjectInfoDTO>(200, "Project info retrieved successfully", result));
         }
 
+        [Authorize]
+        [HttpGet("GetProjectsByMember")]
+        public async Task<ActionResult<ApiResponse<List<ProjectInfoDTO>>>> GetProjectsByMember()
+        {
+            var userId = GetCurrentUserId();
+            var query = new GetProjectsByMemberQuery(userId);
+            var result = await _mediator.Send(query);
+            return Ok(new ApiResponse<List<ProjectInfoDTO>>(200, "Projects retrieved successfully", result));
+        }
         private Guid GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
