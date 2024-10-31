@@ -37,5 +37,13 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<ProjectPrivilege>> GetProjectsByMember(OrganizationMember organizationMember, CancellationToken cancellationToken = default)
+    {
+        return await _context.ProjectPrivileges
+            .Where(pp => pp.OrganizationMember_IdOrganizationMember == organizationMember.Id)
+            .Include(pp => pp.Project)
+            .ToListAsync(cancellationToken);
+    }
+
     // Implement custom methods for ProjectPrivilege repository
 }

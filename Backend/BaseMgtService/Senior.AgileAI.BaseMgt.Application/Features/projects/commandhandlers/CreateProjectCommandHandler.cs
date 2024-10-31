@@ -20,7 +20,11 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commandhandlers
         public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
         {
 
-            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken);
+            var user = await _unitOfWork.Users.getUserWithOrg(request.UserId, cancellationToken);
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
 
 
             var project = new Project
@@ -28,8 +32,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commandhandlers
                 Name = request.Dto.ProjectName,
                 Description = request.Dto.ProjectDescription,
                 Status = true,
-                Organization_IdOrganization = user.Organization.Id,
-                ProjectManager_IdProjectManager = request.Dto.ProjectManagerId ?? user.Id,
+                Organization_IdOrganization = user.OrganizationMember.Organization.Id,
+                ProjectManager_IdProjectManager = request.Dto.ProjectManagerId,
             };
             var addedProject = await _unitOfWork.Projects.AddAsync(project, cancellationToken);
             await _unitOfWork.CompleteAsync();

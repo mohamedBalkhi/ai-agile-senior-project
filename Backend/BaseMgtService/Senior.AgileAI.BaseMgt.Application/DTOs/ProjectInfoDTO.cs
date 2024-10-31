@@ -7,6 +7,7 @@ namespace Senior.AgileAI.BaseMgt.Application.DTOs
 {
     public class ProjectInfoDTO
     {
+        public required Guid ProjectId { get; set; }
         public required string ProjectName { get; set; }
         public required string ProjectDescription { get; set; }
         public required bool ProjectStatus { get; set; }

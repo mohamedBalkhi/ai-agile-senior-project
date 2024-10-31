@@ -84,5 +84,13 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         return user;
     }
 
+    public async Task<User> getUserWithOrg(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await _context.Users
+            .Include(u => u.OrganizationMember).ThenInclude(om => om.Organization)
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        return user;
+    }
+
 
 }

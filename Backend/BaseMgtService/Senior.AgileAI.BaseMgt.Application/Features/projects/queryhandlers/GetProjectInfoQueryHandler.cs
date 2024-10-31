@@ -31,13 +31,13 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
             var project = await _unitOfWork.Projects.GetByIdAsync(request.ProjectId, cancellationToken, includeProjectManager: true);
             var projectInfoDTO = new ProjectInfoDTO
             {
+                ProjectId = project.Id,
                 ProjectName = project.Name,
                 ProjectDescription = project.Description,
                 ProjectStatus = project.Status,
                 ProjectManagerId = project.ProjectManager_IdProjectManager,
                 ProjectManagerName = project.ProjectManager.User.FUllName
             };
-
             return projectInfoDTO;
         }
     }

@@ -14,7 +14,6 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
     {
         private readonly IRabbitMQService _rabbitMQService;
         private readonly IAuthService _authService;
-
         private readonly IUnitOfWork _unitOfWork;
         public AddOrgMembersCommandHandler(IUnitOfWork unitOfWork, IRabbitMQService rabbitMQService, IAuthService authService)
         {
@@ -26,16 +25,16 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
         {
             var response = new AddOrgMembersResponseDTO();
             using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
-            
+
             try
             {
                 var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
                 var organization = await _unitOfWork.Organizations.GetOrganizationByUserId(request.UserId, cancellationToken);
-                
+
                 foreach (var email in request.Dto.Emails)
                 {
                     var result = new EmailResult { Email = email };
-                    
+
                     // Check if email is valid
                     if (!IsValidEmail(email))
                     {
@@ -46,8 +45,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                     }
 
                     // Check if user is already a member
-                    var newUser = await _unitOfWork.Users.GetUserByEmailAsync(email,includeOrganizationMember: true);
-                    
+                    var newUser = await _unitOfWork.Users.GetUserByEmailAsync(email, includeOrganizationMember: true);
+
                     if (newUser != null && newUser.OrganizationMember != null && newUser.OrganizationMember.Organization_IdOrganization == organization.Id)
                     {
                         result.Success = false;
@@ -77,9 +76,10 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                         Country_IdCountry = user.Country_IdCountry,
                         Code = "00000",
                     };
-                    _authService.HashPassword(newUser, newUser.Password);
+                    newUser.Password = _authService.HashPassword(newUser,password);
 
                     await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
+
                     await _unitOfWork.CompleteAsync();
 
                     var orgMember = new OrganizationMember
