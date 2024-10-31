@@ -17,8 +17,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
 #nullable disable
         public async Task<bool> Handle(SetMemberAsAdminCommand request, CancellationToken cancellationToken)
         {
-            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
-            user.OrganizationMember.HasAdministrativePrivilege = true;
+            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, includeOrganizationMember: true);
+            user.OrganizationMember.HasAdministrativePrivilege = request.IsAdmin;
             _unitOfWork.Users.Update(user);
             await _unitOfWork.CompleteAsync();
             return true;

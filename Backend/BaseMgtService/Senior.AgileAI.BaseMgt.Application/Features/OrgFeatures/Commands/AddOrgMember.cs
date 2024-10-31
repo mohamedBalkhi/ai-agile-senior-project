@@ -3,7 +3,7 @@ using Senior.AgileAI.BaseMgt.Application.DTOs;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.Commands
 {
-    public class AddOrgMembersCommand : IRequest<bool>
+    public class AddOrgMembersCommand : IRequest<AddOrgMembersResponseDTO>
     {
         public Guid UserId { get; set; }
         public AddOrgMembersDTO Dto { get; set; }

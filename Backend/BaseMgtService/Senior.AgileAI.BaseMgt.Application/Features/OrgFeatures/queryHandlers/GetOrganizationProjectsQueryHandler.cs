@@ -15,8 +15,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.queryHandlers
 #nullable disable
         public async Task<List<GetOrgProjectDTO>> Handle(GetOrganizationProjectsQuery request, CancellationToken cancellationToken)
         {
-            var User = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken, includeOrganization : true);
-            var Organization = User.Organization.Id;
+            var User = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken, includeOrganization : true,includeOrganizationMember: true);
+            var Organization = User.Organization?.Id ?? User.OrganizationMember.Organization_IdOrganization;
 
             var projects = await _unitOfWork.Projects.GetAllByOrgAsync(Organization, cancellationToken);
             return projects.Select(p => new GetOrgProjectDTO

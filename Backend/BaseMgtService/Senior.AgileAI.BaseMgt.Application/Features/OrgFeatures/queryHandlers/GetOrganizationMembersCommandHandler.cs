@@ -17,10 +17,10 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.QueryHandlers
 
         public async Task<List<GetOrgMemberDTO>> Handle(GetOrganizationMembersQuery request, CancellationToken cancellationToken)
         {
-            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken, includeOrganization: true) 
+            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken, includeOrganization: true,includeOrganizationMember: true) 
                 ?? throw new InvalidOperationException($"User with ID {request.UserId} not found");
             Console.WriteLine("user.Organization: " + user.Organization);
-            var orgId = user.Organization.Id;
+            var orgId = user.Organization?.Id ?? user.OrganizationMember.Organization_IdOrganization;
             var orgMembers = await _unitOfWork.OrganizationMembers.GetByOrgId(orgId, cancellationToken);
             var orgMembersDTO = orgMembers.Select(om => new GetOrgMemberDTO
             {

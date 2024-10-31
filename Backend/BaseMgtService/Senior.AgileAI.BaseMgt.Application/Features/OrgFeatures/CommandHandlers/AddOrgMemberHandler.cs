@@ -6,12 +6,11 @@ using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using System.Text;
 using Senior.AgileAI.BaseMgt.Application.Models;
 using System.Linq;
-
-
+using Senior.AgileAI.BaseMgt.Application.DTOs;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandlers
 {
-    public class AddOrgMembersCommandHandler : IRequestHandler<AddOrgMembersCommand, bool>
+    public class AddOrgMembersCommandHandler : IRequestHandler<AddOrgMembersCommand, AddOrgMembersResponseDTO>
     {
         private readonly IRabbitMQService _rabbitMQService;
         private readonly IAuthService _authService;
@@ -23,21 +22,50 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
             _rabbitMQService = rabbitMQService;
             _authService = authService;
         }
-        public async Task<bool> Handle(AddOrgMembersCommand request, CancellationToken cancellationToken)
+        public async Task<AddOrgMembersResponseDTO> Handle(AddOrgMembersCommand request, CancellationToken cancellationToken)
         {
+            var response = new AddOrgMembersResponseDTO();
             using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+            
             try
             {
                 var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
                 var organization = await _unitOfWork.Organizations.GetOrganizationByUserId(request.UserId, cancellationToken);
-
-                // Dictionary to store email-password pairs
-                var emailCredentials = new Dictionary<string, (string Email, string Password)>();
-
+                
                 foreach (var email in request.Dto.Emails)
                 {
+                    var result = new EmailResult { Email = email };
+                    
+                    // Check if email is valid
+                    if (!IsValidEmail(email))
+                    {
+                        result.Success = false;
+                        result.ErrorMessage = AddOrgMemberErrors.InvalidEmail;
+                        response.Results.Add(result);
+                        continue;
+                    }
+
+                    // Check if user is already a member
+                    var newUser = await _unitOfWork.Users.GetUserByEmailAsync(email,includeOrganizationMember: true);
+                    
+                    if (newUser != null && newUser.OrganizationMember != null && newUser.OrganizationMember.Organization_IdOrganization == organization.Id)
+                    {
+                        result.Success = false;
+                        result.ErrorMessage = AddOrgMemberErrors.AlreadyMember;
+                        response.Results.Add(result);
+                        continue;
+                    }
+
+                    if (newUser != null)
+                    {
+                        result.Success = false;
+                        result.ErrorMessage = AddOrgMemberErrors.UserExists;
+                        response.Results.Add(result);
+                        continue;
+                    }
+
                     var password = GenerateDefaultPassword(organization);
-                    var newUser = new User
+                    newUser = new User
                     {
                         Email = email,
                         FUllName = "NewUser",
@@ -49,10 +77,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                         Country_IdCountry = user.Country_IdCountry,
                         Code = "00000",
                     };
+                    _authService.HashPassword(newUser, newUser.Password);
 
-                    // Store the email and password before hashing
-                    emailCredentials.Add(email, (newUser.Email, password));
-                    newUser.Password = _authService.HashPassword(newUser, password);
                     await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
                     await _unitOfWork.CompleteAsync();
 
@@ -66,32 +92,41 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
 
                     await _unitOfWork.OrganizationMembers.AddOrganizationMemberAsync(orgMember, cancellationToken);
                     await _unitOfWork.CompleteAsync();
-                }
 
-                await transaction.CommitAsync(cancellationToken);
-
-                // Send emails with credentials
-                foreach (var credential in emailCredentials)
-                {
+                    // Send welcome email
                     await _rabbitMQService.PublishNotificationAsync(new NotificationMessage
                     {
                         Type = NotificationType.Email,
-                        Recipient = credential.Key,
+                        Recipient = email,
                         Subject = "Welcome to " + organization.Name,
-                        Body = GenerateWelcomeEmailBody(
-                            organization.Name,
-                            credential.Value.Email,
-                            credential.Value.Password
-                        )
+                        Body = GenerateWelcomeEmailBody(organization.Name, email, password)
                     });
+
+                    result.Success = true;
+                    response.SuccessCount++;
+                    response.Results.Add(result);
                 }
 
-                return true;
+                await transaction.CommitAsync(cancellationToken);
+                return response;
             }
-            catch (Exception)
+            catch
             {
                 await transaction.RollbackAsync(cancellationToken);
                 throw;
+            }
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
             }
         }
 

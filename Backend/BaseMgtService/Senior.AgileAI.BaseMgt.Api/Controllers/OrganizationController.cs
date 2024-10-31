@@ -53,13 +53,21 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpPost("AddOrgMembers")]
-        public async Task<ActionResult<ApiResponse<bool>>> AddOrgMembers(AddOrgMembersDTO dto)
+        public async Task<ActionResult<ApiResponse<AddOrgMembersResponseDTO>>> AddOrgMembers(AddOrgMembersDTO dto)
         {
             var userId = GetCurrentUserId();
-            Console.WriteLine(userId);
             var command = new AddOrgMembersCommand(dto, userId);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse<bool>(200, "Organization members added successfully", result));
+            
+            var message = result.SuccessCount > 0 
+                ? $"Successfully added {result.SuccessCount} member(s)" + (result.FailureCount > 0 ? $", {result.FailureCount} failed" : "")
+                : "No members were added";
+            
+            return Ok(new ApiResponse<AddOrgMembersResponseDTO>(
+                result.SuccessCount > 0 ? 200 : 400,
+                message,
+                result
+            ));
         }
 
         [Authorize]
@@ -84,9 +92,9 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpPost("SetMemberAsAdmin")]
-        public async Task<ActionResult<ApiResponse<bool>>> SetMemberAsAdmin([FromQuery] Guid userId)
+        public async Task<ActionResult<ApiResponse<bool>>> SetMemberAsAdmin([FromQuery] Guid userId, [FromQuery] bool isAdmin)
         {
-            var command = new SetMemberAsAdminCommand(userId);
+            var command = new SetMemberAsAdminCommand(userId, isAdmin);
             var result = await _mediator.Send(command);
             return Ok(new ApiResponse<bool>(200, "Member got full administrative privileges successfully", result));
         }
