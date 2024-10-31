@@ -13,9 +13,12 @@ public class ProjectRepository : GenericRepository<Project>, IProjectRepository
 
     }
 #nullable disable
-    public async Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken, bool includeProjectManager = false)
     {
-        return await _context.Projects.Where(p => p.Id == id)
+        var query = _context.Projects.AsQueryable();
+        if (includeProjectManager)
+            query = query.Include(p => p.ProjectManager).ThenInclude(pm => pm.User);
+        return await query.Where(p => p.Id == id)
         .Include(p => p.ProjectManager)
         .ThenInclude(pm => pm.User)
         .FirstOrDefaultAsync(cancellationToken);

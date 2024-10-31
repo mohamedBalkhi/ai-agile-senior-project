@@ -28,7 +28,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
             {
                 throw new UnauthorizedAccessException("User does not have the required privilege to access this project");
             }
-            var project = await _unitOfWork.Projects.GetByIdAsync(request.ProjectId, cancellationToken);
+            var project = await _unitOfWork.Projects.GetByIdAsync(request.ProjectId, cancellationToken, includeProjectManager: true);
             var projectInfoDTO = new ProjectInfoDTO
             {
                 ProjectName = project.Name,

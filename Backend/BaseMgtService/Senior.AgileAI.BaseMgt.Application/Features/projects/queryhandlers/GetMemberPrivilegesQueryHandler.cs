@@ -15,7 +15,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
 #nullable disable
         public async Task<MemberPrivilegesDto> Handle(GetMemberPrivilegesQuery request, CancellationToken cancellationToken)
         {
-            ProjectPrivilege projectPrivilege = await _unitOfWork.ProjectPrivileges.GetPrivilegeAsync(request.ProjectId, request.MemberId, cancellationToken);
+            ProjectPrivilege projectPrivilege = await _unitOfWork.ProjectPrivileges.GetPrivilegeByUserIdAsync(request.ProjectId, request.UserId, cancellationToken);
             var memberPrivileges = new MemberPrivilegesDto
             {
                 MeetingsPrivilegeLevel = projectPrivilege.Meetings.ToString(),

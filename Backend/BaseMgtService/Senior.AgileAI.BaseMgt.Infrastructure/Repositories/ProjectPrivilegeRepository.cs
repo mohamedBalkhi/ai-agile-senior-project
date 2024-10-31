@@ -11,15 +11,15 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
     {
     }
 
-    public async Task<ProjectPrivilege?> GetPrivilegeAsync(
+    public async Task<ProjectPrivilege?> GetPrivilegeByUserIdAsync(
         Guid projectId,
-        Guid organizationMemberId,
+        Guid userId,
         CancellationToken cancellationToken = default)
     {
         return await _context.ProjectPrivileges
             .FirstOrDefaultAsync(pp =>
                 pp.Project_IdProject == projectId &&
-                pp.OrganizationMember_IdOrganizationMember == organizationMemberId,
+                pp.OrganizationMember.User_IdUser == userId,
                 cancellationToken);
     }
 

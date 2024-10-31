@@ -54,8 +54,8 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
         [HttpGet("GetMemberPrivileges")]
         public async Task<ActionResult<ApiResponse<MemberPrivilegesDto>>> GetMemberPrivileges([FromQuery] Guid projectId)
         {
-            var memberId = GetCurrentUserId();
-            var query = new GetMemberPrivilegesQuery(projectId, memberId);
+            var userId = GetCurrentUserId();
+            var query = new GetMemberPrivilegesQuery(projectId, userId);
             var result = await _mediator.Send(query);
             return Ok(new ApiResponse<MemberPrivilegesDto>(200, "Member privileges retrieved successfully", result));
         }

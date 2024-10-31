@@ -3,9 +3,9 @@ using Senior.AgileAI.BaseMgt.Domain.Entities;
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 public interface IProjectPrivilegeRepository : IGenericRepository<ProjectPrivilege> {
-    Task<ProjectPrivilege?> GetPrivilegeAsync(
+    Task<ProjectPrivilege?> GetPrivilegeByUserIdAsync(
         Guid projectId, 
-        Guid organizationMemberId, 
+        Guid userId, 
         CancellationToken cancellationToken = default
     );
     Task<List<ProjectPrivilege>> GetProjectMembersAsync(Guid projectId, CancellationToken cancellationToken = default);
