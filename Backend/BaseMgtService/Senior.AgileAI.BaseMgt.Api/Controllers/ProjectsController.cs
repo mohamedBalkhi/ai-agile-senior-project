@@ -79,6 +79,16 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             var result = await _mediator.Send(query);
             return Ok(new ApiResponse<List<ProjectInfoDTO>>(200, "Projects retrieved successfully", result));
         }
+
+        [Authorize]
+        [HttpPut("UpdateProjectPrivileges")]
+        public async Task<ActionResult<ApiResponse<bool>>> UpdateProjectPrivileges(UpdateProjectPrivilegesDTO dto)
+        {
+            var userId = GetCurrentUserId();
+            var command = new UpdateProjectPrivilagiesCommand(dto);
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse<bool>(200, "Project privileges updated successfully", result));
+        }
         private Guid GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

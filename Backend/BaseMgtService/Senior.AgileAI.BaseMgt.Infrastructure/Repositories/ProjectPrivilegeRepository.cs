@@ -45,5 +45,21 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
             .ToListAsync(cancellationToken);
     }
 
+    public async Task Update(ProjectPrivilege privilege, CancellationToken cancellationToken = default)
+    {
+        _context.ProjectPrivileges.Update(privilege);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<ProjectPrivilege> GetProjectPrivilegeByMember(Guid organizationMemberId, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        return await _context.ProjectPrivileges
+            .Where(pp => pp.OrganizationMember_IdOrganizationMember == organizationMemberId && pp.Project_IdProject == projectId)
+            .Include(pp => pp.Project)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+#nullable disable
+
     // Implement custom methods for ProjectPrivilege repository
 }
