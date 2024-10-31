@@ -60,9 +60,17 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     }
 #nullable disable
 
-    public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default, bool includeOrganizationMember = false, bool includeProjectPrivileges = false, bool includeOrganization = false)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        var query = _context.Users.AsQueryable();
+        if (includeOrganizationMember)
+            query = query.Include(u => u.OrganizationMember);
+        if (includeProjectPrivileges && includeOrganizationMember)
+            query = query.Include(u => u.OrganizationMember.ProjectPrivileges);
+        if (includeOrganization)
+            query = query.Include(u => u.Organization);
+
+        return await query.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
     public async Task<User> GetProfileInformation(Guid id, CancellationToken cancellationToken)

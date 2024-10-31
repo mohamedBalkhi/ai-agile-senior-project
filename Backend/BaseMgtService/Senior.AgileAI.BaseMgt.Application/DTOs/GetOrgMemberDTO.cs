@@ -12,6 +12,8 @@ namespace Senior.AgileAI.BaseMgt.Application.DTOs
         public required string MemberName { get; set; }
         public required string MemberEmail { get; set; }
         public bool IsActive { get; set; }
+        public bool IsAdmin { get; set; }
+        public bool IsManager { get; set; }
         public List<ProjectDTO>? Projects { get; set; } = new List<ProjectDTO>();
 
     }

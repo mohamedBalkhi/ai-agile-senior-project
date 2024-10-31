@@ -11,19 +11,19 @@ using System.Linq;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandlers
 {
-    public class AddOrgMemberHandler : IRequestHandler<AddOrgMember, bool>
+    public class AddOrgMembersCommandHandler : IRequestHandler<AddOrgMembersCommand, bool>
     {
         private readonly IRabbitMQService _rabbitMQService;
         private readonly IAuthService _authService;
 
         private readonly IUnitOfWork _unitOfWork;
-        public AddOrgMemberHandler(IUnitOfWork unitOfWork, IRabbitMQService rabbitMQService, IAuthService authService)
+        public AddOrgMembersCommandHandler(IUnitOfWork unitOfWork, IRabbitMQService rabbitMQService, IAuthService authService)
         {
             _unitOfWork = unitOfWork;
             _rabbitMQService = rabbitMQService;
             _authService = authService;
         }
-        public async Task<bool> Handle(AddOrgMember request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(AddOrgMembersCommand request, CancellationToken cancellationToken)
         {
             using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
             try
@@ -48,7 +48,6 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                         IsAdmin = false,
                         Country_IdCountry = user.Country_IdCountry,
                         Code = "00000",
-                        Organization = organization,
                     };
 
                     // Store the email and password before hashing

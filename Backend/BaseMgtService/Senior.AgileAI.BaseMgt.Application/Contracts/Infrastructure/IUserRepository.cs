@@ -16,6 +16,6 @@ public interface IUserRepository : IGenericRepository<User>
     Task<User> AddAsync(User user, CancellationToken cancellationToken = default);
 
     User Update(User user, CancellationToken cancellationToken = default);
-    Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default, bool includeOrganizationMember = false, bool includeProjectPrivileges = false, bool includeOrganization = false);
     Task<User> GetProfileInformation(Guid id, CancellationToken cancellationToken);
 }

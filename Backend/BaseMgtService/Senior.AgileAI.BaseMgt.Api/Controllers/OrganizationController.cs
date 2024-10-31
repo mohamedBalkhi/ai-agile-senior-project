@@ -52,14 +52,14 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
 
         [Authorize]
-        [HttpPost("AddOrgMember")]
-        public async Task<ActionResult<ApiResponse<bool>>> AddOrgMember(OrgMemberDTO dto)
+        [HttpPost("AddOrgMembers")]
+        public async Task<ActionResult<ApiResponse<bool>>> AddOrgMembers(AddOrgMembersDTO dto)
         {
             var userId = GetCurrentUserId();
             Console.WriteLine(userId);
-            var command = new AddOrgMember(dto, userId);
+            var command = new AddOrgMembersCommand(dto, userId);
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse<bool>(200, "Organization member added successfully", result));
+            return Ok(new ApiResponse<bool>(200, "Organization members added successfully", result));
         }
 
         [Authorize]

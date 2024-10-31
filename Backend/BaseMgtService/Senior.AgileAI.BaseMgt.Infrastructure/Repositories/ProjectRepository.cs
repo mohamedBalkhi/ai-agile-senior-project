@@ -27,12 +27,13 @@ public class ProjectRepository : GenericRepository<Project>, IProjectRepository
         return addedProject.Entity;
     }
 
-    public async Task<List<Project>> GetAllByOrgAsync(Guid orgId, CancellationToken cancellationToken)
+    public async Task<List<Project>> GetAllByOrgAsync(Guid orgId, CancellationToken cancellationToken, bool includeProjectManager = false)
     {
-        return await _context.Projects
+        var query = _context.Projects.AsQueryable();
+        if (includeProjectManager)
+            query = query.Include(p => p.ProjectManager).ThenInclude(pm => pm.User);
+        return await query
         .Where(p => p.Organization_IdOrganization == orgId)
-        .Include(p => p.ProjectManager)
-        .ThenInclude(pm => pm.User)
         .ToListAsync(cancellationToken);
     }
 
