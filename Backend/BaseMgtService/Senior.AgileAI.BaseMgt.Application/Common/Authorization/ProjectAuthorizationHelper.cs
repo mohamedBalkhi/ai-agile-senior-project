@@ -30,7 +30,7 @@ public class ProjectAuthorizationHelper : IProjectAuthorizationHelper
             return true;
 
         var privilege = await _unitOfWork.ProjectPrivileges
-            .GetPrivilegeAsync(projectId, member.Id, cancellationToken);
+            .GetPrivilegeByUserIdAsync(projectId, userId, cancellationToken);
 
         if (privilege == null)
             return false;
