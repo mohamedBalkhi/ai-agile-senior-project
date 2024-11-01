@@ -85,7 +85,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
         public async Task<ActionResult<ApiResponse<bool>>> UpdateProjectPrivileges(UpdateProjectPrivilegesDTO dto)
         {
             var userId = GetCurrentUserId();
-            var command = new UpdateProjectPrivilagiesCommand(dto);
+            var command = new UpdateProjectPrivilagiesCommand(dto, userId);
             var result = await _mediator.Send(command);
             return Ok(new ApiResponse<bool>(200, "Project privileges updated successfully", result));
         }

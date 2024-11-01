@@ -39,9 +39,18 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
 
     public async Task<List<ProjectPrivilege>> GetProjectsByMember(OrganizationMember organizationMember, CancellationToken cancellationToken = default)
     {
+        if (organizationMember.IsManager || organizationMember.HasAdministrativePrivilege)
+        {
+            return await _context.ProjectPrivileges
+                .Where(pp => pp.Project.Organization_IdOrganization == organizationMember.Organization_IdOrganization)
+                .Include(pp => pp.Project)
+                .Include(pp => pp.Project.ProjectManager).ThenInclude(pm => pm.User)
+                .ToListAsync(cancellationToken);
+        }
         return await _context.ProjectPrivileges
             .Where(pp => pp.OrganizationMember_IdOrganizationMember == organizationMember.Id)
             .Include(pp => pp.Project)
+            .Include(pp => pp.Project.ProjectManager).ThenInclude(pm => pm.User)
             .ToListAsync(cancellationToken);
     }
 

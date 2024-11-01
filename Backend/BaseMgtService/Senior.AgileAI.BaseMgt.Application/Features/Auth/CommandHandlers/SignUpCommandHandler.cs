@@ -22,6 +22,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
 
         public async Task<Guid> Handle(SignUpCommand command, CancellationToken cancellationToken)
         {
+            command.DTO.Email = command.DTO.Email.ToLower().Trim();
             var user = new User
             {
                 FUllName = command.DTO.FullName,

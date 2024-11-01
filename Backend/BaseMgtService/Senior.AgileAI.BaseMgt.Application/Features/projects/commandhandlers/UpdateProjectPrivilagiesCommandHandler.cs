@@ -12,39 +12,47 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commandhandlers
     public class UpdateProjectPrivilagiesCommandHandler : IRequestHandler<UpdateProjectPrivilagiesCommand, bool>
     {
         private readonly IUnitOfWork _unitOfWork;
-        public UpdateProjectPrivilagiesCommandHandler(IUnitOfWork unitOfWork)
+        private readonly IProjectAuthorizationHelper _projectAuthorizationHelper;
+        public UpdateProjectPrivilagiesCommandHandler(IUnitOfWork unitOfWork, IProjectAuthorizationHelper projectAuthorizationHelper)
         {
             _unitOfWork = unitOfWork;
+            _projectAuthorizationHelper = projectAuthorizationHelper;
         }
 #nullable disable
 
         public async Task<bool> Handle(UpdateProjectPrivilagiesCommand request, CancellationToken cancellationToken)
         {
-            var projectPrivilege = await _unitOfWork.ProjectPrivileges.GetProjectPrivilegeByMember(request.Dto.MemberId, request.Dto.ProjectId, cancellationToken);
+            if (!await _projectAuthorizationHelper.HasProjectPrivilege(request.UserId, request.Dto.ProjectId, ProjectAspect.members, PrivilegeLevel.Write, cancellationToken))
+            {
+                throw new UnauthorizedAccessException("Forbidden Access");
+            }
+
+
+            var projectPrivilege = await _unitOfWork.ProjectPrivileges.GetPrivilegeByUserIdAsync(request.Dto.MemberId, request.Dto.ProjectId, cancellationToken);
             if (projectPrivilege == null)
             {
                 throw new ApplicationException("Project privilege not found");
             }
 
-            if (request.Dto.MeetingsPrivilegeLevel != null)
+            if (request.Dto.MeetingsPrivilegeLevel.HasValue)
             {
-                projectPrivilege.Meetings = request.Dto.MeetingsPrivilegeLevel ?? 0;
+                projectPrivilege.Meetings = request.Dto.MeetingsPrivilegeLevel.Value;
             }
-            if (request.Dto.MembersPrivilegeLevel != null)
+            if (request.Dto.MembersPrivilegeLevel.HasValue)
             {
-                projectPrivilege.Members = request.Dto.MembersPrivilegeLevel ?? 0;
+                projectPrivilege.Members = request.Dto.MembersPrivilegeLevel.Value;
             }
-            if (request.Dto.RequirementsPrivilegeLevel != null)
+            if (request.Dto.RequirementsPrivilegeLevel.HasValue)
             {
-                projectPrivilege.Requirements = request.Dto.RequirementsPrivilegeLevel ?? 0; //none 
+                projectPrivilege.Requirements = request.Dto.RequirementsPrivilegeLevel.Value;
             }
-            if (request.Dto.SettingsPrivilegeLevel != null)
+            if (request.Dto.SettingsPrivilegeLevel.HasValue)
             {
-                projectPrivilege.Settings = request.Dto.SettingsPrivilegeLevel ?? 0; //none 
+                projectPrivilege.Settings = request.Dto.SettingsPrivilegeLevel.Value;
             }
-            if (request.Dto.TasksPrivilegeLevel != null)
+            if (request.Dto.TasksPrivilegeLevel.HasValue)
             {
-                projectPrivilege.Tasks = request.Dto.TasksPrivilegeLevel ?? 0; //none 
+                projectPrivilege.Tasks = request.Dto.TasksPrivilegeLevel.Value;
             }
 
             await _unitOfWork.ProjectPrivileges.Update(projectPrivilege);

@@ -13,5 +13,6 @@ namespace Senior.AgileAI.BaseMgt.Application.DTOs
         public required bool ProjectStatus { get; set; }
         public required Guid ProjectManagerId { get; set; }
         public required string ProjectManagerName { get; set; }
+        public DateTimeOffset ProjectCreatedAt { get; set; }
     }
 }

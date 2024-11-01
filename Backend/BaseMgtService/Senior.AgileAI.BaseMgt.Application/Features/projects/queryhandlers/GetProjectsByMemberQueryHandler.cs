@@ -20,6 +20,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
             {
                 throw new NotFoundException("User not found");
             }
+
             var result = await _unitOfWork.ProjectPrivileges.GetProjectsByMember(organizationMember, cancellationToken);
             var projectInfoDTOs = new List<ProjectInfoDTO>();
             foreach (var projectPrivilege in result)
@@ -31,7 +32,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
                     ProjectDescription = projectPrivilege.Project.Description,
                     ProjectStatus = projectPrivilege.Project.Status,
                     ProjectManagerId = projectPrivilege.Project.ProjectManager_IdProjectManager,
-                    ProjectManagerName = projectPrivilege.Project.ProjectManager.User.FUllName
+                    ProjectManagerName = projectPrivilege.Project.ProjectManager.User.FUllName,
+                    ProjectCreatedAt = projectPrivilege.Project.CreatedDate
                 });
             }
             return projectInfoDTOs;

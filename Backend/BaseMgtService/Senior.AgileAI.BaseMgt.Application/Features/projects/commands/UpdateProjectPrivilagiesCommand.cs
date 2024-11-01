@@ -6,10 +6,12 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commands
 {
     public class UpdateProjectPrivilagiesCommand : IRequest<bool>
     {
+        public Guid UserId { get; set; }
         public UpdateProjectPrivilegesDTO Dto { get; set; }
-        public UpdateProjectPrivilagiesCommand(UpdateProjectPrivilegesDTO dto)
+        public UpdateProjectPrivilagiesCommand(UpdateProjectPrivilegesDTO dto, Guid userId)
         {
             Dto = dto;
+            UserId = userId;
         }
 
     }

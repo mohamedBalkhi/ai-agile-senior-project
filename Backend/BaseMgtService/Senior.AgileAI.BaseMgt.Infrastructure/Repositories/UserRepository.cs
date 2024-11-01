@@ -60,13 +60,17 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     }
 #nullable disable
 
-    public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default, bool includeOrganizationMember = false, bool includeProjectPrivileges = false, bool includeOrganization = false)
+    public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default, bool includeOrganizationMember = false, bool includeProjectPrivileges = false, bool includeOrganization = false, Guid? projectId = null)
     {
         var query = _context.Users.AsQueryable();
         if (includeOrganizationMember)
             query = query.Include(u => u.OrganizationMember);
         if (includeProjectPrivileges && includeOrganizationMember)
+        {
             query = query.Include(u => u.OrganizationMember.ProjectPrivileges);
+            if (projectId != null)
+            query = query.Include(u => u.OrganizationMember.ProjectPrivileges.Where(pp => pp.Project_IdProject == projectId));
+        }
         if (includeOrganization)
             query = query.Include(u => u.Organization);
 
