@@ -35,7 +35,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
                 ProjectName = project.Name,
                 ProjectDescription = project.Description,
                 ProjectStatus = project.Status,
-                ProjectManagerId = project.ProjectManager_IdProjectManager,
+                ProjectManagerId = project.ProjectManager.User_IdUser,
                 ProjectManagerName = project.ProjectManager.User.FUllName,
                 ProjectCreatedAt = project.CreatedDate
             };
