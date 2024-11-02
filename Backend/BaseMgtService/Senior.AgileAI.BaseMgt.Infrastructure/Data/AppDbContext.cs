@@ -189,6 +189,14 @@ public class PostgreSqlAppDbContext : DbContext
         modelBuilder.Entity<ProjectRequirement>()
             .HasIndex(pr => pr.Project_IdProject);
 
+        modelBuilder.Entity<ProjectRequirement>()
+            .Property(e => e.Priority)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<ProjectRequirement>()
+            .Property(e => e.Status)
+            .HasConversion<string>();
+
         modelBuilder.Entity<Organization>()
             .Property(o => o.IsActive)
             .HasDefaultValue(true)
