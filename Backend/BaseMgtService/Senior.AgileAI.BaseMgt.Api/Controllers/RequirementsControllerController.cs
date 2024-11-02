@@ -58,7 +58,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
         }
 
 
-        [HttpPost("uploadRequirementsFile")]
+        [HttpPost("UploadRequirementsFile")]
         public async Task<ActionResult<ApiResponse<bool>>> UploadRequirements([FromQuery] Guid projectId, IFormFile file)
         {
             if (file == null || file.Length == 0)

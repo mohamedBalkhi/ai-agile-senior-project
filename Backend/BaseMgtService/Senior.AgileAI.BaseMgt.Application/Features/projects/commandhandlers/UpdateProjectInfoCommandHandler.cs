@@ -19,7 +19,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commandhandlers
 
         public async Task<bool> Handle(UpdateProjectInfoCommand request, CancellationToken cancellationToken)
         {
-            var project = await _unitOfWork.Projects.GetByIdAsync(request.UpdateProjectInfo.ProjectId);
+            var project = await _unitOfWork.Projects.GetByIdAsync(request.ProjectId);
             if (project == null)
             {
                 throw new Exception("Project not found");
@@ -31,14 +31,14 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commandhandlers
             if (request.UpdateProjectInfo.ManagerId != null)
             {
                 project.ProjectManager_IdProjectManager = request.UpdateProjectInfo.ManagerId.Value;
-                var projectPrivileges = await _unitOfWork.ProjectPrivileges.GetProjectPrivilegeByMember(request.UpdateProjectInfo.ManagerId.Value, request.UpdateProjectInfo.ProjectId, cancellationToken);
+                var projectPrivileges = await _unitOfWork.ProjectPrivileges.GetProjectPrivilegeByMember(request.UpdateProjectInfo.ManagerId.Value, request.ProjectId, cancellationToken);
                 Console.WriteLine(projectPrivileges);
 
                 if (projectPrivileges == null)  //? base on the bussines flow, this case must never happen.
                 {
                     projectPrivileges = new ProjectPrivilege
                     {
-                        Project_IdProject = request.UpdateProjectInfo.ProjectId,
+                        Project_IdProject = request.ProjectId,
                         OrganizationMember_IdOrganizationMember = request.UpdateProjectInfo.ManagerId.Value,
                         Meetings = PrivilegeLevel.Write,
                         Requirements = PrivilegeLevel.Write,
