@@ -60,7 +60,7 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-
+#nullable disable
     public async Task<ProjectPrivilege> GetProjectPrivilegeByMember(Guid organizationMemberId, Guid projectId, CancellationToken cancellationToken = default)
     {
         var privilege = await _context.ProjectPrivileges
@@ -68,7 +68,7 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
                     && pp.Project_IdProject == projectId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return privilege ;
+        return privilege;
     }
 
 #nullable disable

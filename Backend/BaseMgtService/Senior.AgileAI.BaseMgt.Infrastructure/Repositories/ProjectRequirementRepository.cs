@@ -30,13 +30,14 @@ public class ProjectRequirementRepository : GenericRepository<ProjectRequirement
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public async Task<List<ProjectRequirement>> GetByProjectId(Guid projectId)
+    public async Task<List<ProjectRequirement>> GetByProjectIdPaginated(Guid projectId, int pageNumber, int pageSize)
     {
         return await _context.ProjectRequirements
             .Where(r => r.Project_IdProject == projectId)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize).OrderBy(r => r.CreatedDate)
             .ToListAsync();
     }
-
 
 
 

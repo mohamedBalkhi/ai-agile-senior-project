@@ -11,7 +11,7 @@ public interface IProjectRequirementRepository : IGenericRepository<ProjectRequi
 
     Task<bool> UpdateAsync(ProjectRequirement requirement);
 
-    Task<List<ProjectRequirement>> GetByProjectId(Guid projectId);
+    Task<List<ProjectRequirement>> GetByProjectIdPaginated(Guid projectId, int pageNumber, int pageSize);
 
     Task<bool> Delete(ProjectRequirement requirement);
 }
