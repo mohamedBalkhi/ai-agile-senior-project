@@ -66,7 +66,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                     var password = GenerateDefaultPassword(organization);
                     newUser = new User
                     {
-                        Email = email,
+                        Email = email.ToLower().Trim(),
                         FUllName = "NewUser",
                         Password = password,
                         BirthDate = DateOnly.FromDateTime(DateTime.Now),
