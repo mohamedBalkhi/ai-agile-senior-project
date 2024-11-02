@@ -6,6 +6,7 @@ using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Queries;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Commands;
 using Senior.AgileAI.BaseMgt.Application.Common;
+using Senior.AgileAI.BaseMgt.Domain.Entities;
 
 
 
@@ -13,10 +14,10 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class Requirements : ControllerBase
+    public class RequirementsController : ControllerBase
     {
         private readonly IMediator _mediator;
-        public Requirements(IMediator mediator)
+        public RequirementsController(IMediator mediator)
         {
             _mediator = mediator;
         }
@@ -54,5 +55,23 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             return Ok(new ApiResponse<List<ProjectRequirementsDTO>>(200, "Requirements fetched successfully", result));
         }
 
+
+        [HttpPost("uploadRequirementsFile")]
+        public async Task<ActionResult<ApiResponse<List<ProjectRequirement>>>> UploadRequirements([FromQuery] Guid projectId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("File is required");
+
+            using var stream = file.OpenReadStream();
+            var command = new AddProjectReqFromFileCommand
+            {
+                ProjectId = projectId,
+                FileStream = stream,
+                FileName = file.FileName
+            };
+
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse<List<ProjectRequirement>>(200, "Requirements uploaded successfully", result));
+        }
     }
 }

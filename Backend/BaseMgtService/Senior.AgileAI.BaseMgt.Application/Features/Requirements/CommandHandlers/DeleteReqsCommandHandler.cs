@@ -25,7 +25,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Requirements.CommandHandle
                     var requirement = await _unitOfWork.ProjectRequirements.GetbyReqIdAsync(id);
                     if (requirement == null)
                         throw new Exception("Requirement not found");
-                    _unitOfWork.ProjectRequirements.Delete(requirement);
+                    await _unitOfWork.ProjectRequirements.Delete(requirement);
                     results.Add(true);
                 }
                 await transaction.CommitAsync(cancellationToken);
