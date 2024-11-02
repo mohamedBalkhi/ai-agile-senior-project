@@ -20,7 +20,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
 
             var projectMembersDTOs = projectMembers.Select(pm => new ProjectMemberDTO
             {
-                Id = pm.OrganizationMember.Id,
+                Id = pm.OrganizationMember.User.Id,
                 Name = pm.OrganizationMember.User.FUllName,
                 Email = pm.OrganizationMember.User.Email,
                 Meetings = pm.Meetings.ToString(),
