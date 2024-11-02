@@ -7,6 +7,7 @@ using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Commands;
 using Senior.AgileAI.BaseMgt.Application.Common;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
+using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Filters;
 
 
 
@@ -48,9 +49,10 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
         }
 
         [HttpGet("GetProjectRequirements")]
-        public async Task<ActionResult<ApiResponse<List<ProjectRequirementsDTO>>>> GetProjectRequirements([FromQuery] Guid projectId)
+        public async Task<ActionResult<ApiResponse<List<ProjectRequirementsDTO>>>> GetProjectRequirements([FromQuery] Guid projectId,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] ProjectRequirementsFilter? searchFilter = null)
         {
-            var query = new GetProjectRequirements(projectId);
+            var query = new GetProjectRequirements(projectId, pageNumber, pageSize, searchFilter);
             var result = await _mediator.Send(query);
             return Ok(new ApiResponse<List<ProjectRequirementsDTO>>(200, "Requirements fetched successfully", result));
         }
