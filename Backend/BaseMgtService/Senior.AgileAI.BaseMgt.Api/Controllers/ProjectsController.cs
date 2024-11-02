@@ -99,5 +99,14 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             return userId;
         }
 
+        // [Authorize]
+        [HttpPut("UpdateProjectInfo")]
+        public async Task<ActionResult<ApiResponse<bool>>> UpdateProjectInfo(UpdateProjectInfoDTO dto)
+        {
+            var command = new UpdateProjectInfoCommand(dto);
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse<bool>(200, "Project info updated successfully", result));
+        }
+
     }
 }

@@ -14,7 +14,6 @@ public class ExcelFileParserStrategy : IFileParserStrategy
         using var package = await Task.Run(() => new ExcelPackage(fileStream));
         var worksheet = package.Workbook.Worksheets[0]; // First worksheet
         var requirements = new List<ProjectRequirement>();
-
         try
         {
             await Task.Run(() =>
@@ -35,11 +34,7 @@ public class ExcelFileParserStrategy : IFileParserStrategy
                     if (string.IsNullOrWhiteSpace(title)) continue;
 
                     // Parse enums
-                    if (!Enum.TryParse<ReqPriority>(priorityStr, true, out var priority))
-                        throw new Exception($"Invalid priority value '{priorityStr}' at row {row}");
-
-                    if (!Enum.TryParse<RequirementsStatus>(statusStr, true, out var status))
-                        throw new Exception($"Invalid status value '{statusStr}' at row {row}");
+                    var (priority, status) = ValidateAndParseEnums(priorityStr, statusStr, row);
 
                     requirements.Add(new ProjectRequirement
                     {
@@ -57,5 +52,31 @@ public class ExcelFileParserStrategy : IFileParserStrategy
         {
             throw new Exception($"Error parsing Excel file: {ex.Message}");
         }
+    }
+
+    private (ReqPriority priority, RequirementsStatus status) ValidateAndParseEnums(string priorityStr, string statusStr, int row)
+    {
+        // Define valid values
+        var validPriorities = Enum.GetNames(typeof(ReqPriority));
+        var validStatuses = Enum.GetNames(typeof(RequirementsStatus));
+
+        // Validate Priority
+        if (!Enum.TryParse<ReqPriority>(priorityStr, true, out var priority))
+        {
+            throw new Exception(
+                $"Invalid priority value '{priorityStr}' at row {row}. " +
+                $"Valid values are: {string.Join(", ", validPriorities)}"
+            );
+        }
+
+        // Validate Status
+        if (!Enum.TryParse<RequirementsStatus>(statusStr, true, out var status))
+        {
+            throw new Exception(
+                $"Invalid status value '{statusStr}' at row {row}. " +
+                $"Valid values are: {string.Join(", ", validStatuses)}"
+            );
+        }
+        return (priority, status);
     }
 }

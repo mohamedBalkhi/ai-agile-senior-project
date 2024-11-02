@@ -6,7 +6,7 @@ using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 
 
-public class AddProjectReqFromFileCommandHandler : IRequestHandler<AddProjectReqFromFileCommand, List<ProjectRequirement>>
+public class AddProjectReqFromFileCommandHandler : IRequestHandler<AddProjectReqFromFileCommand, bool>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFileParserStrategyFactory _fileParserFactory;
@@ -19,12 +19,12 @@ public class AddProjectReqFromFileCommandHandler : IRequestHandler<AddProjectReq
         _fileParserFactory = fileParserFactory;
     }
 
-    public async Task<List<ProjectRequirement>> Handle(AddProjectReqFromFileCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(AddProjectReqFromFileCommand request, CancellationToken cancellationToken)
     {
         string fileExtension = Path.GetExtension(request.FileName);
         var parser = _fileParserFactory.GetStrategy(fileExtension);
         Console.WriteLine(parser.GetType().Name);
-        
+
 
         var requirements = await parser.ParseFileAsync(request.FileStream, request.FileName);
         Console.WriteLine("requirementsssssssssssss");
@@ -34,6 +34,6 @@ public class AddProjectReqFromFileCommandHandler : IRequestHandler<AddProjectReq
         await _unitOfWork.ProjectRequirements.AddRangeAsync(requirements);
         await _unitOfWork.CompleteAsync();
 
-        return requirements;
+        return true; //TODO: Handle file parsing errors
     }
 }

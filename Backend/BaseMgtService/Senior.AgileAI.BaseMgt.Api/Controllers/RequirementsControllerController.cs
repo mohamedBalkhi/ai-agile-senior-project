@@ -57,7 +57,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
 
         [HttpPost("uploadRequirementsFile")]
-        public async Task<ActionResult<ApiResponse<List<ProjectRequirement>>>> UploadRequirements([FromQuery] Guid projectId, IFormFile file)
+        public async Task<ActionResult<ApiResponse<bool>>> UploadRequirements([FromQuery] Guid projectId, IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("File is required");
@@ -71,7 +71,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             };
 
             var result = await _mediator.Send(command);
-            return Ok(new ApiResponse<List<ProjectRequirement>>(200, "Requirements uploaded successfully", result));
+            return Ok(new ApiResponse<bool>(200, "Requirements uploaded successfully", result));
         }
     }
 }
