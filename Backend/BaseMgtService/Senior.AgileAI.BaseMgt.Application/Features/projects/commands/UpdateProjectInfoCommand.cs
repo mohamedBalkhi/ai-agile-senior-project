@@ -5,12 +5,17 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commands
 {
     public class UpdateProjectInfoCommand : IRequest<bool>
     {
-        public UpdateProjectInfoDTO UpdateProjectInfo { get; set; }
+        public required Guid ProjectId { get; set; }
+        public required UpdateProjectInfoDTO UpdateProjectInfo { get; set; }
 
-        public UpdateProjectInfoCommand(UpdateProjectInfoDTO updateProjectInfo)
+        public UpdateProjectInfoCommand()
         {
-            UpdateProjectInfo = updateProjectInfo;
         }
 
+        public UpdateProjectInfoCommand(UpdateProjectInfoDTO updateProjectInfo, Guid projectId)
+        {
+            ProjectId = projectId;
+            UpdateProjectInfo = updateProjectInfo;
+        }
     }
 }

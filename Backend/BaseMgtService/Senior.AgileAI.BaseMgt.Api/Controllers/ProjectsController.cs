@@ -101,9 +101,12 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         // [Authorize]
         [HttpPut("UpdateProjectInfo")]
-        public async Task<ActionResult<ApiResponse<bool>>> UpdateProjectInfo(UpdateProjectInfoDTO dto)
+        public async Task<ActionResult<ApiResponse<bool>>> UpdateProjectInfo(UpdateProjectInfoDTO dto, [FromQuery] Guid projectId)
         {
-            var command = new UpdateProjectInfoCommand(dto);
+            var command = new UpdateProjectInfoCommand {
+                ProjectId = projectId,
+                UpdateProjectInfo = dto
+            };
             var result = await _mediator.Send(command);
             return Ok(new ApiResponse<bool>(200, "Project info updated successfully", result));
         }
