@@ -58,11 +58,11 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             var userId = GetCurrentUserId();
             var command = new AddOrgMembersCommand(dto, userId);
             var result = await _mediator.Send(command);
-            
-            var message = result.SuccessCount > 0 
+
+            var message = result.SuccessCount > 0
                 ? $"Successfully added {result.SuccessCount} member(s)" + (result.FailureCount > 0 ? $", {result.FailureCount} failed" : "")
                 : "No members were added";
-            
+
             return Ok(new ApiResponse<AddOrgMembersResponseDTO>(
                 result.SuccessCount > 0 ? 200 : 400,
                 message,
@@ -72,10 +72,10 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpGet("GetOrganizationMembers")]
-        public async Task<ActionResult<ApiResponse<List<GetOrgMemberDTO>>>> GetOrganizationMembers()
+        public async Task<ActionResult<ApiResponse<List<GetOrgMemberDTO>>>> GetOrganizationMembers([FromQuery] int pageNumber, [FromQuery] int pageSize, [FromQuery] bool? isActiveFilter)
         {
             var userId = GetCurrentUserId();
-            var query = new GetOrganizationMembersQuery(userId);
+            var query = new GetOrganizationMembersQuery(userId, pageNumber, pageSize, isActiveFilter);
             var result = await _mediator.Send(query);
             return Ok(new ApiResponse<List<GetOrgMemberDTO>>(200, "Organization members fetched successfully", result));
         }
@@ -97,6 +97,15 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             var command = new SetMemberAsAdminCommand(userId, isAdmin);
             var result = await _mediator.Send(command);
             return Ok(new ApiResponse<bool>(200, "Member got full administrative privileges successfully", result));
+        }
+
+        [Authorize]
+        [HttpPost("DeActivateMember")]
+        public async Task<ActionResult<ApiResponse<bool>>> DeActivateMember([FromQuery] Guid UserId)
+        {
+            var command = new DeActivateMemberCommand(UserId);
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse<bool>(200, "Member deactivated successfully", result));
         }
 
         private Guid GetCurrentUserId()

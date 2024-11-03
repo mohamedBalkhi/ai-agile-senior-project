@@ -58,6 +58,7 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
     {
         _context.ProjectPrivileges.Update(privilege);
         await _context.SaveChangesAsync(cancellationToken);
+
     }
 
 #nullable disable
@@ -69,6 +70,12 @@ public class ProjectPrivilegeRepository : GenericRepository<ProjectPrivilege>, I
             .FirstOrDefaultAsync(cancellationToken);
 
         return privilege;
+    }
+
+    public async Task<bool> DeleteAsync(ProjectPrivilege privilege, CancellationToken cancellationToken = default)
+    {
+        _context.ProjectPrivileges.Remove(privilege);
+        return await _context.SaveChangesAsync(cancellationToken) > 0;
     }
 
 #nullable disable

@@ -8,4 +8,8 @@ public interface IProjectRepository : IGenericRepository<Project>
     Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken, bool includeProjectManager = false);
     Task<List<Project>> GetAllByOrgAsync(Guid orgId, CancellationToken cancellationToken, bool includeProjectManager = false);
     Task<Project> AddAsync(Project entity, CancellationToken cancellationToken);
+    Task<Project> GetProjectByIdAsync(Guid id, CancellationToken cancellationToken);
+    void UpdateProject(Project project);
+
+    
 }

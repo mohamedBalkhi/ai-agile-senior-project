@@ -17,11 +17,15 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.QueryHandlers
 
         public async Task<List<GetOrgMemberDTO>> Handle(GetOrganizationMembersQuery request, CancellationToken cancellationToken)
         {
-            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken, includeOrganization: true,includeOrganizationMember: true) 
+            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken, includeOrganization: true, includeOrganizationMember: true)
                 ?? throw new InvalidOperationException($"User with ID {request.UserId} not found");
             Console.WriteLine("user.Organization: " + user.Organization);
             var orgId = user.Organization?.Id ?? user.OrganizationMember.Organization_IdOrganization;
-            var orgMembers = await _unitOfWork.OrganizationMembers.GetByOrgId(orgId, cancellationToken);
+            var orgMembers = await _unitOfWork.OrganizationMembers.GetByOrgIdPaginated(orgId, request.PageNumber, request.PageSize, cancellationToken);
+
+            if (request.IsActiveFilter != null)
+                orgMembers = orgMembers.Where(om => om.User.IsActive == request.IsActiveFilter).ToList();
+
             var orgMembersDTO = orgMembers.Select(om => new GetOrgMemberDTO
             {
                 MemberId = om.User_IdUser,// the user id not the id of the member
@@ -36,7 +40,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.QueryHandlers
                     ProjectDescription = pp.Project.Description
                 }).ToList()
             }).ToList();
-            
+
             return orgMembersDTO;
         }
     }

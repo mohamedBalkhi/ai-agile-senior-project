@@ -39,4 +39,20 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<List<OrganizationMember>> GetByOrgIdPaginated(Guid orgId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+    {
+        return await _context.OrganizationMembers
+            .Where(om => om.Organization_IdOrganization == orgId)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+    }
+
+    public async Task<bool> DeleteAsync(OrganizationMember organizationMember, CancellationToken cancellationToken)
+    {
+        _context.OrganizationMembers.Remove(organizationMember);
+        return await _context.SaveChangesAsync(cancellationToken) > 0;
+    }
+
 }

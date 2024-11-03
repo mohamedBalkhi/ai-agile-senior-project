@@ -4,7 +4,8 @@ namespace Senior.AgileAI.BaseMgt.Application.DTOs
 {
     public class ProjectMemberDTO
     {
-        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public Guid MemberId { get; set; }
         public required string Name { get; set; }
         public required string Email { get; set; }
         public required string Meetings { get; set; }

@@ -36,8 +36,18 @@ public class ProjectRepository : GenericRepository<Project>, IProjectRepository
         if (includeProjectManager)
             query = query.Include(p => p.ProjectManager).ThenInclude(pm => pm.User);
         return await query
-        .Where(p => p.Organization_IdOrganization == orgId)
+        .Where(p => p.Organization_IdOrganization == orgId && p.Status == true) // Only active projects
         .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Project> GetProjectByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Projects.FindAsync(id, cancellationToken);
+    }
+
+    public void UpdateProject(Project project)
+    {
+        _context.Projects.Update(project);
     }
 
     // Implement custom methods for Project repository
