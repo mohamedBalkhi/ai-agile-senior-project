@@ -33,11 +33,11 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { Message = "Validation failed", Errors = ex.Errors });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { Message = "An error occurred while processing your request", Error = ex.Message });
             }
         }
 
