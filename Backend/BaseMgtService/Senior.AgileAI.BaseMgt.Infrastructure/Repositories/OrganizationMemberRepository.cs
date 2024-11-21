@@ -29,7 +29,7 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
     }
 #nullable disable
 
-    public async Task<OrganizationMember> GetByUserId(Guid userId, CancellationToken cancellationToken, bool includeUser)
+    public async Task<OrganizationMember> GetByUserId(Guid userId, bool includeUser = false, CancellationToken cancellationToken = default)
     {
         var query = _context.OrganizationMembers.AsQueryable();
         if (includeUser)
@@ -37,6 +37,14 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
         return await query
             .Where(om => om.User_IdUser == userId)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<OrganizationMember>> GetAllMembersAsync(Guid organizationId, CancellationToken cancellationToken = default)
+    {
+        return await _context.OrganizationMembers
+            .Include(om => om.User)
+            .Where(om => om.Organization_IdOrganization == organizationId)
+            .ToListAsync(cancellationToken);
     }
 
 }

@@ -37,7 +37,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = "An error occurred while processing your request", Error = ex.Message });
+                return StatusCode(500, new { Message = "An error occurred while processing your request", Error = ex.Message });
             }
         }
 
