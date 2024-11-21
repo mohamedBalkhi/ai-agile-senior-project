@@ -111,5 +111,22 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             return Ok(new ApiResponse<bool>(200, "Project info updated successfully", result));
         }
 
+        // [Authorize]
+        [HttpPut("DeactivateProject")]
+        public async Task<ActionResult<ApiResponse<bool>>> DeactivateProject([FromQuery] Guid projectId)
+        {
+            var command = new ProjectDeactivateCommand(projectId);
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse<bool>(200, "Project deactivated successfully", result));
+        }
+
+
+        [HttpDelete("DeleteProjectMember")]
+        public async Task<ActionResult<ApiResponse<bool>>> DeleteProjectMember([FromQuery] Guid projectId, [FromQuery] Guid memberId)
+        {
+            var command = new ProjectMemberDeleteCommand(projectId, memberId);
+            var result = await _mediator.Send(command);
+            return Ok(new ApiResponse<bool>(200, "Project member deleted successfully", result));
+        }
     }
 }

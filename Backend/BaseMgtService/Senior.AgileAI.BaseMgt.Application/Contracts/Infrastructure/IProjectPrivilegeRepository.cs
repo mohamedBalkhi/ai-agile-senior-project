@@ -14,4 +14,5 @@ public interface IProjectPrivilegeRepository : IGenericRepository<ProjectPrivile
     Task<List<ProjectPrivilege>> GetProjectsByMember(OrganizationMember organizationMember, CancellationToken cancellationToken = default);
     Task<ProjectPrivilege> GetProjectPrivilegeByMember(Guid organizationMemberId, Guid projectId, CancellationToken cancellationToken = default);
     Task Update(ProjectPrivilege privilege, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(ProjectPrivilege privilege, CancellationToken cancellationToken = default);
 }
