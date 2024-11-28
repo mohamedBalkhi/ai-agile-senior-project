@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Queries;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Commands;
 using Senior.AgileAI.BaseMgt.Application.Common;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Filters;
 
 
