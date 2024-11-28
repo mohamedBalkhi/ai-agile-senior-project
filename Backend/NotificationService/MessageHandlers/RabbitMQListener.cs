@@ -19,7 +19,9 @@ namespace NotificationService.MessageHandlers
         private IConnection _connection;
         private IModel _channel;
         private string _queueName;
-        #nullable disable
+        private const int MaxRetries = 10;
+        private const int RetryDelayMs = 5000;
+
         public RabbitMQListener(
             ILogger<RabbitMQListener> logger,
             IOptions<RabbitMQOptions> rabbitMQOptions,
@@ -28,113 +30,155 @@ namespace NotificationService.MessageHandlers
             _logger = logger;
             _rabbitMQOptions = rabbitMQOptions.Value;
             _serviceProvider = serviceProvider;
-
-            InitializeRabbitMQListener();
-        }
-
-        private void InitializeRabbitMQListener()
-        {
-            _logger.LogInformation($"Initializing RabbitMQ listener with HostName: {_rabbitMQOptions.HostName}, UserName: {_rabbitMQOptions.UserName}, QueueName: {_rabbitMQOptions.QueueName}");
-            
-            var factory = new ConnectionFactory()
-            {
-                HostName = _rabbitMQOptions.HostName,
-                UserName = _rabbitMQOptions.UserName,
-                Password = _rabbitMQOptions.Password,
-                DispatchConsumersAsync = true // Enable asynchronous consumers
-            };
-
-            int retryCount = 0;
-            const int maxRetries = 5;
-            const int retryDelayMs = 5000;
-
-            while (retryCount < maxRetries)
-            {
-                try
-                {
-                    _connection = factory.CreateConnection();
-                    _channel = _connection.CreateModel();
-                    _queueName = _rabbitMQOptions.QueueName;
-
-                    _channel.QueueDeclare(queue: _queueName,
-                                         durable: true,
-                                         exclusive: false,
-                                         autoDelete: false,
-                                         arguments: null);
-
-                    _logger.LogInformation($"RabbitMQ Listener initialized. Queue '{_queueName}' declared.");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Failed to connect to RabbitMQ. Retry attempt {retryCount + 1} of {maxRetries}. Error: {ex.Message}");
-                    retryCount++;
-                    if (retryCount >= maxRetries)
-                    {
-                        _logger.LogError($"Failed to connect to RabbitMQ after {maxRetries} attempts. Last error: {ex.Message}");
-                        throw;
-                    }
-                    Thread.Sleep(retryDelayMs);
-                }
-            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            stoppingToken.ThrowIfCancellationRequested();
+            try
+            {
+                await InitializeRabbitMQAsync();
+                
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+                consumer.Received += ProcessReceivedMessage;
 
-            var consumer = new AsyncEventingBasicConsumer(_channel);
-            consumer.Received += ProcessReceivedMessage;
+                consumer.ConsumerCancelled += async (sender, args) =>
+                {
+                    _logger.LogWarning("Consumer was cancelled. Attempting to reconnect...");
+                    await InitializeRabbitMQAsync();
+                };
 
-            _logger.LogInformation($"Starting to consume messages from queue: {_queueName}");
-            _channel.BasicConsume(queue: _queueName,
-                                  autoAck: false,
-                                  consumer: consumer);
+                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 
-            _logger.LogInformation($"Consumer set up successfully for queue: {_queueName}");
+                var consumerTag = _channel.BasicConsume(
+                    queue: _queueName,
+                    autoAck: false,
+                    consumer: consumer);
 
-            // Keep the background service running until cancellation is requested
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+                _logger.LogInformation($"Started consuming messages from queue: {_queueName} with consumer tag: {consumerTag}");
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    if (_connection?.IsOpen != true || _channel?.IsOpen != true)
+                    {
+                        _logger.LogWarning("Connection or channel closed. Attempting to reconnect...");
+                        await InitializeRabbitMQAsync();
+                    }
+                    await Task.Delay(5000, stoppingToken);
+                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("RabbitMQ listener stopping due to cancellation request");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fatal error in RabbitMQ listener. Service will need to be restarted.");
+                throw; // Let the host handle the retry
+            }
+        }
+
+        private async Task InitializeRabbitMQAsync()
+        {
+            var retryCount = 0;
+            while (retryCount < MaxRetries)
+            {
+                try
+                {
+                    _logger.LogInformation($"Attempting to connect to RabbitMQ at {_rabbitMQOptions.HostName}");
+                    
+                    _channel?.Dispose();
+                    _connection?.Dispose();
+
+                    var factory = new ConnectionFactory
+                    {
+                        HostName = _rabbitMQOptions.HostName,
+                        UserName = _rabbitMQOptions.UserName,
+                        Password = _rabbitMQOptions.Password,
+                        VirtualHost = _rabbitMQOptions.VirtualHost,
+                        DispatchConsumersAsync = true,
+                        AutomaticRecoveryEnabled = true,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
+                        RequestedHeartbeat = TimeSpan.FromSeconds(60)
+                    };
+
+                    // CreateConnection and CreateModel can be async operations
+                    _connection = await Task.Run(() => factory.CreateConnection());
+                    _channel = await Task.Run(() => _connection.CreateModel());
+                    _queueName = _rabbitMQOptions.QueueName;
+
+                    _connection.ConnectionShutdown += (sender, args) =>
+                    {
+                        _logger.LogWarning($"RabbitMQ connection shut down: {args.ReplyText}");
+                    };
+
+                    await Task.Run(() => _channel.QueueDeclare(
+                        queue: _queueName,
+                        durable: true,
+                        exclusive: false,
+                        autoDelete: false,
+                        arguments: null));
+
+                    _logger.LogInformation($"Successfully connected to RabbitMQ and declared queue: {_queueName}");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    retryCount++;
+                    _logger.LogWarning(ex, $"Failed to connect to RabbitMQ. Attempt {retryCount} of {MaxRetries}");
+                    
+                    if (retryCount >= MaxRetries) throw;
+                    
+                    await Task.Delay(RetryDelayMs);
+                }
+            }
         }
 
         private async Task ProcessReceivedMessage(object sender, BasicDeliverEventArgs eventArgs)
         {
             var content = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
-            _logger.LogInformation($"Message received from queue '{_queueName}': {content}");
+            _logger.LogInformation($"Received message: {content}");
 
             try
             {
-                var notificationMessage = JsonConvert.DeserializeObject<NotificationMessage>(content);
-                if (notificationMessage == null)
+                using var scope = _serviceProvider.CreateScope();
+                var notificationHandler = scope.ServiceProvider.GetRequiredService<INotificationHandler>();
+                
+                var message = JsonConvert.DeserializeObject<NotificationMessage>(content);
+                if (message == null)
                 {
-                    throw new JsonSerializationException("Failed to deserialize notification message");
+                    throw new JsonSerializationException("Failed to deserialize message");
                 }
 
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var notificationHandler = scope.ServiceProvider.GetRequiredService<INotificationHandler>();
-                    await notificationHandler.HandleNotificationAsync(notificationMessage);
-                }
-
+                await notificationHandler.HandleNotificationAsync(message);
+                
                 _channel.BasicAck(eventArgs.DeliveryTag, false);
-                _logger.LogInformation($"Successfully processed message of type {notificationMessage.Type}");
-            }
-            catch (JsonSerializationException ex)
-            {
-                _logger.LogError(ex, "Error deserializing message.");
-                _channel.BasicNack(eventArgs.DeliveryTag, false, false);
+                _logger.LogInformation($"Successfully processed and acknowledged message: {eventArgs.DeliveryTag}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error processing message from queue '{_queueName}': {content}");
-                _channel.BasicNack(eventArgs.DeliveryTag, false, false);
+                _logger.LogError(ex, $"Error processing message: {content}");
+                _channel.BasicNack(eventArgs.DeliveryTag, false, true);
+            }
+        }
+
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Stopping RabbitMQ listener");
+            try
+            {
+                await base.StopAsync(cancellationToken);
+            }
+            finally
+            {
+                _channel?.Close();
+                _connection?.Close();
             }
         }
 
         public override void Dispose()
         {
-            _channel?.Close();
-            _connection?.Close();
+            _channel?.Dispose();
+            _connection?.Dispose();
             base.Dispose();
         }
     }

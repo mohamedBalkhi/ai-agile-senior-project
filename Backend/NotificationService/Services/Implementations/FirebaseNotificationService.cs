@@ -9,9 +9,11 @@ namespace NotificationService.Services.Implementations
     public class FirebaseNotificationService : IFirebaseNotificationService
     {
         private readonly FirebaseMessaging _firebaseMessaging;
+        private readonly ILogger<FirebaseNotificationService> _logger;
 
-        public FirebaseNotificationService(IConfiguration configuration)
+        public FirebaseNotificationService(IConfiguration configuration, ILogger<FirebaseNotificationService> logger)
         {
+            _logger = logger;
             var firebaseCredentialsPath = configuration["Firebase:CredentialsPath"];
             FirebaseApp app;
 
@@ -41,6 +43,7 @@ namespace NotificationService.Services.Implementations
                     Body = message.Body
                 }
             };
+            _logger.LogInformation($"Sending Firebase notification to {message.Recipient} with subject {message.Subject} and body {message.Body}");
 
             await _firebaseMessaging.SendAsync(firebaseMessage);
         }

@@ -6,7 +6,8 @@ public interface IOrganizationMemberRepository : IGenericRepository<Organization
 {
     Task<OrganizationMember> AddOrganizationMemberAsync(OrganizationMember organizationMember, CancellationToken cancellationToken);
     Task<List<OrganizationMember>> GetByOrgId(Guid orgId, CancellationToken cancellationToken);
-    Task<OrganizationMember> GetByUserId(Guid userId, CancellationToken cancellationToken, bool includeUser = false);
+    Task<OrganizationMember> GetByUserId(Guid userId, bool includeUser = false, CancellationToken cancellationToken = default);
+    Task<List<OrganizationMember>> GetAllMembersAsync(Guid organizationId, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(OrganizationMember organizationMember, CancellationToken cancellationToken);
     Task<List<OrganizationMember>> GetByOrgIdPaginated(Guid orgId, int pageNumber, int pageSize, CancellationToken cancellationToken);
     // ? Custom methods for OrganizationMember repository

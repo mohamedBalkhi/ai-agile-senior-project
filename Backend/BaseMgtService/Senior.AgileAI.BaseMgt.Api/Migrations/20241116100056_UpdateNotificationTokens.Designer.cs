@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Senior.AgileAI.BaseMgt.Infrastructure.Data;
 namespace Senior.AgileAI.BaseMgt.Api.Migrations
 {
     [DbContext(typeof(PostgreSqlAppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241116100056_UpdateNotificationTokens")]
+    partial class UpdateNotificationTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,14 +84,16 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                  
                     b.Property<Guid>("User_IdUser")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
+
                     b.HasIndex("User_IdUser");
 
-                    b.ToTable("NotificationTokens", "public");
+                    b.ToTable("notification_tokens", "public");
                 });
 
             modelBuilder.Entity("Senior.AgileAI.BaseMgt.Domain.Entities.Organization", b =>
@@ -369,9 +374,6 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<bool>("Deactivated")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -410,8 +412,10 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
 
             modelBuilder.Entity("Senior.AgileAI.BaseMgt.Domain.Entities.NotificationToken", b =>
                 {
+             
+
                     b.HasOne("Senior.AgileAI.BaseMgt.Domain.Entities.User", "User")
-                        .WithMany("NotificationTokens")
+                        .WithMany()
                         .HasForeignKey("User_IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -77,7 +77,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     Country = usCountry,
                     IsActive = true,
                     IsAdmin = true,
-                    IsTrusted = true
+                    IsTrusted = true,
+                    Deactivated = false
                 },
                 new User
                 {
@@ -86,9 +87,10 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     BirthDate = new DateOnly(2002, 9, 16),
                     Password = "11223344123aS@",
                     Country = syCountry,
-                    IsActive = true,
+                    IsActive = false,
                     IsAdmin = true,
-                    IsTrusted = true
+                    IsTrusted = false,
+                    Deactivated = false
                 },
                 new User
                 {
@@ -99,7 +101,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     Country = syCountry,
                     IsActive = true,
                     IsAdmin = true,
-                    IsTrusted = true
+                    IsTrusted = true,
+                    Deactivated = false
                 },
                 new User
                 {
@@ -110,7 +113,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.Data
                     Password = "User",
                     IsActive = true,
                     IsAdmin = false,
-                    IsTrusted = false
+                    IsTrusted = false,
+                    Deactivated = false
                 }
             };
 

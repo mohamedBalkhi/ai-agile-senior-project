@@ -24,6 +24,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
                 MemberId= pm.OrganizationMember_IdOrganizationMember, //needed for other endpoints
                 Name = pm.OrganizationMember.User.FUllName,
                 Email = pm.OrganizationMember.User.Email,
+                IsAdmin = pm.OrganizationMember.HasAdministrativePrivilege || pm.OrganizationMember.IsManager,
                 Meetings = pm.Meetings.ToString(),
                 Members = pm.Members.ToString(),
                 Requirements = pm.Requirements.ToString(), // to return the name of the privilege level.
