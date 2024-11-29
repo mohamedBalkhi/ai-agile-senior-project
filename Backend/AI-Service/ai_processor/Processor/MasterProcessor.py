@@ -1,6 +1,7 @@
 from ..models import AudioProcessing
 from django.core.exceptions import ObjectDoesNotExist
 from .audio_downloader import download_audio_to_storage, cleanup_audio_file
+from .text_splitter import TextSplitter
 
 #? master processor class
 #? pipeline of the audio processing
@@ -41,9 +42,18 @@ class MasterProcessor:
             print(f"Summary completed!")
 
             # Step 4: Key Points Extraction
-            key_points = self.key_points_strategy.extract_key_points(summary)
+            key_points = self.key_points_strategy.extract_key_points(transcript)
+            print (key_points)
+            
+            # Split key points into sentences if it's a string
+            if isinstance(key_points, str):
+                key_points = TextSplitter.split_into_sentences(key_points)
+
+                print (key_points)
+            
             audio_task.key_points = key_points
             audio_task.processing_status = 'KEY_POINTS_PROCESSED'
+            
             audio_task.save()
             print(f"Key Points extraction completed!")
 

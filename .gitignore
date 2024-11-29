@@ -9,6 +9,9 @@ obj/
 *.exe
 *.pdb
 
+#django
+*.env
+
 # Visual Studio files
 .vs/
 *.vscode/

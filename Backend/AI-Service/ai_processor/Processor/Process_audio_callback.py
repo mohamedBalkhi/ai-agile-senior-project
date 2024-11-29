@@ -24,24 +24,20 @@ def process_audio(channel, method, properties, body):
         print("step02: process audio")
 
         # Dynamic Strategy Selection
-        language = task.get("language", "English")
-        user_plan = task.get("user_plan", "basic")
+        language = task.get("main_language")
+        user_plan = task.get("user_plan")
 
-        if language == "Arabic":
+        if language == "ar":
             speech_to_text_strategy = ArabicSpeechToText()
-            print("step03: arabic speech to text")
         else:
             speech_to_text_strategy = EnglishSpeechToText()
-            print("step03: english speech to text")
 
         if user_plan == "premium":
             summarization_strategy = AdvancedSummarization()
             key_points_strategy = AdvancedKeyPoints()
-            print("step04: premium processing")
         else:
             summarization_strategy = BasicSummarization()
             key_points_strategy = BasicKeyPoints()
-            print("step04: basic processing")
 
         processor = MasterProcessor(
             speech_to_text_strategy,

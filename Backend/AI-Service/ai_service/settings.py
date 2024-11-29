@@ -19,7 +19,16 @@ os.makedirs(AUDIOS_FOLDER, exist_ok=True)
 
 # Security Settings
 DEBUG = True  # Set to False in production
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.ngrok-free.app',
+    '6c3f-193-19-204-75.ngrok-free.app'
+]
+
+# Add additional hosts from environment variable if defined
+if os.getenv('ADDITIONAL_ALLOWED_HOSTS'):
+    ALLOWED_HOSTS.extend(os.getenv('ADDITIONAL_ALLOWED_HOSTS').split(','))
 
 # Installed Applications
 INSTALLED_APPS = [

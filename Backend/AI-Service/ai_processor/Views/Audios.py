@@ -16,7 +16,8 @@ class SubmitAudioAPIView(APIView):
     @require_api_key
     def post(self, request):
         print("step02: submit audio")
-
+        print("request data: ", request.data)
+        print("request content type: ", request.content_type)
         #? Get required and optional parameters from the request
         audio_url = request.data.get("audio_url")
         main_language = request.data.get("main_language") or "en"
