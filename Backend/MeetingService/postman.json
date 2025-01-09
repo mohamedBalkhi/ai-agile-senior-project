@@ -1,0 +1,138 @@
+{
+    "info": {
+        "name": "OpenVidu Recording Flow",
+        "description": "Test collection for OpenVidu recording functionality",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Create Session",
+            "request": {
+                "method": "POST",
+                "url": "http://localhost:3000/api/sessions",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"sessionId\": \"test-session-1\"}"
+                }
+            }
+        },
+        {
+            "name": "2. Get Session Token",
+            "request": {
+                "method": "POST",
+                "url": "http://localhost:3000/api/sessions/test-session-1/token",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"role\": \"PUBLISHER\"}"
+                }
+            }
+        },
+        {
+            "name": "3. Start Recording",
+            "request": {
+                "method": "POST",
+                "url": "http://localhost:3000/api/sessions/test-session-1/recording/start",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"name\": \"TestRecording\", \"hasAudio\": true, \"hasVideo\": false, \"outputMode\": \"COMPOSED\"}"
+                }
+            }
+        },
+        {
+            "name": "4. Get Recording Info",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:3000/api/sessions/test-session-1/recording/info"
+            }
+        },
+        {
+            "name": "5. Get Active Sessions",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:3000/api/sessions"
+            }
+        },
+        {
+            "name": "6. Get Session Info",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:3000/api/sessions/test-session-1"
+            }
+        },
+        {
+            "name": "7. Stop Recording",
+            "request": {
+                "method": "POST",
+                "url": "http://localhost:3000/api/sessions/{{sessionId}}/recording/{{recordingId}}/stop",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "8. Get Recording",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:3000/api/sessions/{{sessionId}}/recording/{{recordingId}}"
+            }
+        },
+        {
+            "name": "9. List All Recordings",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:3000/api/sessions/recordings"
+            }
+        },
+        {
+            "name": "10. Close Session",
+            "request": {
+                "method": "DELETE",
+                "url": "http://localhost:3000/api/sessions/test-session-1"
+            }
+        }
+    ],
+    "event": [
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                    "    const jsonData = pm.response.json();",
+                    "    if (jsonData.id) {",
+                    "        pm.environment.set('recordingId', jsonData.id);",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "recordingId",
+            "value": "",
+            "description": "Store recording ID from start recording response"
+        }
+    ]
+}   
