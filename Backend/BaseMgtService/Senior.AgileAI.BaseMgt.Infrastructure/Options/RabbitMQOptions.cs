@@ -6,4 +6,5 @@ public class RabbitMQOptions
     public required string UserName { get; set; }
     public required string Password { get; set; }
     public Dictionary<string, string> Queues { get; set; } = new Dictionary<string, string>();
+    public required string VirtualHost { get; set; }
 }

@@ -10,7 +10,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.queries
         public int PageSize { get; set; }
         public bool? IsActiveFilter { get; set; }
 
-        public GetOrganizationMembersQuery(Guid userId, int pageNumber, int pageSize, bool? isActiveFilter)
+        public GetOrganizationMembersQuery(Guid userId, int pageNumber = 1, int pageSize = 10, bool? isActiveFilter = null)
         {
             UserId = userId;
             PageNumber = pageNumber;

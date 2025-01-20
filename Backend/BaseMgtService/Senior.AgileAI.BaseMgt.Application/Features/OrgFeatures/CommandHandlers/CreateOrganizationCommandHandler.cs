@@ -24,7 +24,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                 OrganizationManager_IdOrganizationManager = command.Dto.UserId
             };
 
-            await _unitOfWork.Organizations.AddAsync(organization);
+            await _unitOfWork.Organizations.AddAsync(organization,cancellationToken);
             // Save the organization first to get its Id because it is a foreign key in the OrganizationMember table.
             // and it will cause an error if we try to add the organization member without saving the organization first.
             await _unitOfWork.CompleteAsync();
@@ -39,7 +39,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
             var user = await _unitOfWork.Users.GetByIdAsync(command.Dto.UserId, cancellationToken);
             user.IsActive = true; //? complete the flow of sign-up.
             _unitOfWork.Users.Update(user);
-            await _unitOfWork.OrganizationMembers.AddAsync(organizationMember);
+            await _unitOfWork.OrganizationMembers.AddAsync(organizationMember, cancellationToken);
             await _unitOfWork.CompleteAsync();
 
             return organization.Id;

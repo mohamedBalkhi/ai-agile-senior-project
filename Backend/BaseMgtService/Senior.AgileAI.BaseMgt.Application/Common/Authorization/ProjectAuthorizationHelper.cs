@@ -20,7 +20,7 @@ public class ProjectAuthorizationHelper : IProjectAuthorizationHelper
         CancellationToken cancellationToken)
     {
         var member = await _unitOfWork.OrganizationMembers
-            .GetByUserId(userId, cancellationToken);
+            .GetByUserId(userId, includeUser: false, cancellationToken);
 
         if (member == null)
             return false;

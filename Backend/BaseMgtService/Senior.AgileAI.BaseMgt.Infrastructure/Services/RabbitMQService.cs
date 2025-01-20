@@ -22,14 +22,37 @@ public class RabbitMQService : IRabbitMQService, IDisposable
     {
         _options = options.Value;
         _logger = logger;
-        var factory = new ConnectionFactory() 
-        { 
-            HostName = _options.HostName,
-            UserName = _options.UserName,
-            Password = _options.Password
-        };
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
+        
+        try
+        {
+            var factory = new ConnectionFactory() 
+            { 
+                HostName = _options.HostName,
+                UserName = _options.UserName,
+                Password = _options.Password,
+                VirtualHost = _options.VirtualHost
+            };
+            
+            _connection = factory.CreateConnection();
+            _channel = _connection.CreateModel();
+
+            // Declare all configured queues
+            foreach (var queue in _options.Queues)
+            {
+                _logger.LogInformation($"Declaring queue: {queue.Value}");
+                _channel.QueueDeclare(
+                    queue: queue.Value,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize RabbitMQ connection");
+            throw;
+        }
     }
 
     public async Task PublishNotificationAsync(NotificationMessage message)
@@ -46,12 +69,12 @@ public class RabbitMQService : IRabbitMQService, IDisposable
 
         try
         {
-            _logger.LogInformation($"Declaring queue: {actualQueueName}");
-            _channel.QueueDeclare(queue: actualQueueName,
-                                durable: true,
-                                exclusive: false,
-                                autoDelete: false,
-                                arguments: null);
+            // _logger.LogInformation($"Declaring queue: {actualQueueName}");
+            // _channel.QueueDeclare(queue: actualQueueName,
+            //                     durable: true,
+            //                     exclusive: false,
+            //                     autoDelete: false,
+            //                     arguments: null);
 
             string json = JsonConvert.SerializeObject(message);
             var body = Encoding.UTF8.GetBytes(json);

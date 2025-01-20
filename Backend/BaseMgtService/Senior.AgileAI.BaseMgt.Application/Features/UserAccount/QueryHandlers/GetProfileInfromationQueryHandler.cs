@@ -31,7 +31,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.QueryHandlers
                 Email = user.Email,
                 CountryName = user.Country.Name,  // Use null conditional operator
                 BirthDate = user.BirthDate,
-                OrganizationName = user.Organization?.Name
+                OrganizationName = user.Organization?.Name ?? user.OrganizationMember?.Organization?.Name
             };
         }
     }

@@ -18,6 +18,11 @@ public class PostgreSqlAppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+        base.OnConfiguring(optionsBuilder);
+
+        // Add this line to automatically handle DateTime conversions
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         if (!optionsBuilder.IsConfigured)
         {
             optionsBuilder.UseNpgsql(_configuration.GetConnectionString("PostgreSqlConnection"),
@@ -34,7 +39,11 @@ public class PostgreSqlAppDbContext : DbContext
     public DbSet<ProjectRequirement> ProjectRequirements { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<NotificationToken> NotificationTokens { get; set; } = null!;
-
+    public DbSet<Meeting> Meetings { get; set; } = null!;
+    public DbSet<MeetingMember> MeetingMembers { get; set; } = null!;
+    public DbSet<RecurringMeetingPattern> RecurringMeetingPatterns { get; set; } = null!;
+    public DbSet<RecurringMeetingException> RecurringMeetingExceptions { get; set; } = null!;
+    public DbSet<CalendarSubscription> CalendarSubscriptions { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -75,5 +84,10 @@ public class PostgreSqlAppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new NotificationTokenConfiguration());
         modelBuilder.ApplyConfiguration(new CountryConfiguration());
+        modelBuilder.ApplyConfiguration(new MeetingConfiguration());
+        modelBuilder.ApplyConfiguration(new MeetingMemberConfiguration());
+        modelBuilder.ApplyConfiguration(new RecurringMeetingPatternConfiguration());
+        modelBuilder.ApplyConfiguration(new RecurringMeetingExceptionConfiguration());
+        modelBuilder.ApplyConfiguration(new CalendarSubscriptionConfiguration());
     }
 }

@@ -79,10 +79,17 @@ public class UserRepository : GenericRepository<User>, IUserRepository
 
     public async Task<User> GetProfileInformation(Guid id, CancellationToken cancellationToken)
     {
+        // The error occurs because EF Core automatically fixes up navigation properties
+        // when loading related data. In this case, trying to Include Organization again
+        // through OrganizationMembers causes an invalid circular reference in the Include chain.
+        
+        // Instead, we should load the required navigation properties directly
         var user = await _context.Users
             .Where(u => u.Id == id)
             .Include(u => u.Country)
-            .Include(u => u.Organization).ThenInclude(org => org.OrganizationMembers)
+            .Include(u => u.Organization)
+            .Include(u => u.OrganizationMember)
+                .ThenInclude(om => om.Organization)
             .FirstOrDefaultAsync(cancellationToken);
 
         return user;

@@ -16,10 +16,10 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
 
         public async Task<Guid> Handle(UpdateProfileCommand command, CancellationToken cancellationToken)
         {
-            var user = await _unitOfWork.Users.GetByIdAsync(command.DTO.UserId, cancellationToken);
+            var user = await _unitOfWork.Users.GetByIdAsync(command.UserId, cancellationToken);
             if (user == null)
             {
-                throw new NotFoundException($"User with ID {command.DTO.UserId} not found");
+                throw new NotFoundException($"User with ID {command.UserId} not found");
             }
 
             // Update only non-null properties

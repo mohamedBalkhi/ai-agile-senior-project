@@ -46,7 +46,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commandhandlers
                         Settings = PrivilegeLevel.Write,
                         Members = PrivilegeLevel.Write
                     };
-                    await _unitOfWork.ProjectPrivileges.AddAsync(projectPrivileges);
+                    await _unitOfWork.ProjectPrivileges.AddAsync(projectPrivileges, cancellationToken);
                 }
                 else
                 {

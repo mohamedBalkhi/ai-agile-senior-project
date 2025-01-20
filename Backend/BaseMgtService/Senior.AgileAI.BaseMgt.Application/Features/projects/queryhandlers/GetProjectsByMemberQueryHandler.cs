@@ -15,17 +15,16 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
 
         public async Task<List<ProjectInfoDTO>> Handle(GetProjectsByMemberQuery request, CancellationToken cancellationToken)
         {
-            var organizationMember = await _unitOfWork.OrganizationMembers.GetByUserId(request.MemberId, cancellationToken, true);
+            var organizationMember = await _unitOfWork.OrganizationMembers.GetByUserId(request.MemberId, includeUser: true, cancellationToken);
             if (organizationMember == null)
             {
                 throw new NotFoundException("User not found");
             }
 
             var result = await _unitOfWork.ProjectPrivileges.GetProjectsByMember(organizationMember, cancellationToken);
-            var projectInfoDTOs = new List<ProjectInfoDTO>();
-            foreach (var projectPrivilege in result)
-            {
-                projectInfoDTOs.Add(new ProjectInfoDTO()
+            return result
+                .DistinctBy(pp => pp.Project.Id)
+                .Select(projectPrivilege => new ProjectInfoDTO
                 {
                     ProjectId = projectPrivilege.Project.Id,
                     ProjectName = projectPrivilege.Project.Name,
@@ -34,9 +33,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
                     ProjectManagerId = projectPrivilege.Project.ProjectManager_IdProjectManager,
                     ProjectManagerName = projectPrivilege.Project.ProjectManager.User.FUllName,
                     ProjectCreatedAt = projectPrivilege.Project.CreatedDate
-                });
-            }
-            return projectInfoDTOs;
+                })
+                .ToList();
         }
 
     }

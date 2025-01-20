@@ -1,0 +1,203 @@
+{
+    "info": {
+        "name": "AgileMeets API",
+        "description": "API collection for AgileMeets meeting management system",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Meetings",
+            "item": [
+                {
+                    "name": "Create Meeting",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Sprint Planning\",\n    \"goal\": \"Plan next sprint tasks\",\n    \"language\": \"English\",\n    \"type\": \"InPerson\",\n    \"startTime\": \"2024-02-01T10:00:00Z\",\n    \"endTime\": \"2024-02-01T11:00:00Z\",\n    \"timeZone\": \"Europe/London\",\n    \"projectId\": \"{{projectId}}\",\n    \"memberIds\": [\"{{memberId1}}\", \"{{memberId2}}\"],\n    \"location\": \"Meeting Room 1\",\n    \"reminderTime\": \"2024-02-01T09:45:00Z\",\n    \"isRecurring\": false\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/Meeting/CreateMeeting"
+                    }
+                },
+                {
+                    "name": "Create Done Meeting",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "meetingData",
+                                    "value": "{\n    \"title\": \"Previous Sprint Review\",\n    \"goal\": \"Review completed sprint\",\n    \"language\": \"English\",\n    \"type\": \"Done\",\n    \"startTime\": \"2024-01-25T14:00:00Z\",\n    \"endTime\": \"2024-01-25T15:00:00Z\",\n    \"timeZone\": \"Europe/London\",\n    \"projectId\": \"{{projectId}}\",\n    \"memberIds\": [\"{{memberId1}}\", \"{{memberId2}}\"]\n}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "audioFile",
+                                    "type": "file",
+                                    "src": "/path/to/audio.mp3"
+                                }
+                            ]
+                        },
+                        "url": "{{baseUrl}}/api/Meeting/CreateMeeting"
+                    }
+                },
+                {
+                    "name": "Create Recurring Meeting",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Daily Standup\",\n    \"goal\": \"Daily team sync\",\n    \"language\": \"English\",\n    \"type\": \"Online\",\n    \"startTime\": \"2024-02-01T09:00:00Z\",\n    \"endTime\": \"2024-02-01T09:15:00Z\",\n    \"timeZone\": \"Europe/London\",\n    \"projectId\": \"{{projectId}}\",\n    \"memberIds\": [\"{{memberId1}}\", \"{{memberId2}}\"],\n    \"isRecurring\": true,\n    \"recurringPattern\": {\n        \"recurrenceType\": \"Daily\",\n        \"interval\": 1,\n        \"recurringEndDate\": \"2024-03-01T00:00:00Z\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/Meeting/CreateMeeting"
+                    }
+                },
+                {
+                    "name": "Upload Meeting Audio",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "audioFile",
+                                    "type": "file",
+                                    "src": "/path/to/audio.mp3"
+                                }
+                            ]
+                        },
+                        "url": "{{baseUrl}}/api/Meeting/{{meetingId}}/UploadAudio"
+                    }
+                },
+                {
+                    "name": "Get Meeting Audio",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/Meeting/{{meetingId}}/Audio"
+                    }
+                },
+                {
+                    "name": "Start Meeting",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/Meeting/{{meetingId}}/Start"
+                    }
+                },
+                {
+                    "name": "Complete Meeting",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/Meeting/{{meetingId}}/Complete"
+                    }
+                },
+                {
+                    "name": "Cancel Meeting",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/Meeting/CancelMeeting?meetingId={{meetingId}}"
+                    }
+                },
+                {
+                    "name": "Get Project Meetings",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/Meeting/GetProjectMeetings?projectId={{projectId}}&pageNumber=1&pageSize=10"
+                    }
+                },
+                {
+                    "name": "Get Meeting Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": "{{baseUrl}}/api/Meeting/GetMeetingDetails?meetingId={{meetingId}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000"
+        }
+    ]
+} 

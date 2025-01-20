@@ -16,7 +16,6 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Requirements.CommandHandle
 
         public async Task<bool> Handle(AddReqManuallyCommand request, CancellationToken cancellationToken)
         {
-
             var project = await _unitOfWork.Projects.GetByIdAsync(request.DTO.ProjectId);
             if (project == null)
                 throw new Exception("Project not found");
@@ -31,7 +30,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Requirements.CommandHandle
             });
 
             await _unitOfWork.ProjectRequirements.AddRangeAsync(requirements);
-            return await _unitOfWork.CompleteAsync() > 0;
+            await _unitOfWork.CompleteAsync();
+            return true;
         }
     }
 }

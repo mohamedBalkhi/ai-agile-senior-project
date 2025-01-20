@@ -35,7 +35,7 @@ public class NotificationTokenRepository : GenericRepository<NotificationToken>,
 
     public async Task<List<NotificationToken>> GetTokensToClean(CancellationToken cancellationToken = default)
     {
-        var cutoffDate = DateTime.Now.AddMonths(-3); // Tokens older than 3 months
+        var cutoffDate = DateTime.UtcNow.AddMonths(-3); // Tokens older than 3 months
         return await _context.NotificationTokens
             .Where(nt => nt.UpdatedDate < cutoffDate)
             .ToListAsync(cancellationToken);
@@ -58,9 +58,4 @@ public class NotificationTokenRepository : GenericRepository<NotificationToken>,
         return Task.FromResult(true);
     }
 
-    public new async Task<NotificationToken> AddAsync(NotificationToken entity)
-    {
-        await _context.NotificationTokens.AddAsync(entity);
-        return entity;
-    }
 } 

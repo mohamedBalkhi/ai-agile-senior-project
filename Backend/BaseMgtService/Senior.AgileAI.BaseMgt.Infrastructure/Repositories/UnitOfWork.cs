@@ -16,7 +16,12 @@ public class UnitOfWork : IUnitOfWork
     public IOrganizationMemberRepository OrganizationMembers { get; private set; }
     public IProjectPrivilegeRepository ProjectPrivileges { get; private set; }
     public IProjectRequirementRepository ProjectRequirements { get; private set; }
-
+    public INotificationTokenRepository NotificationTokens { get; private set; }
+    public IMeetingRepository Meetings { get; private set; }
+    public IMeetingMemberRepository MeetingMembers { get; private set; }
+    public IRecurringMeetingPatternRepository RecurringMeetingPatterns { get; private set; }
+    public IRecurringMeetingExceptionRepository RecurringMeetingExceptions { get; private set; }
+    public ICalendarSubscriptionRepository CalendarSubscriptions { get; private set; }
     public UnitOfWork(PostgreSqlAppDbContext context)
     {
         _context = context;
@@ -27,6 +32,12 @@ public class UnitOfWork : IUnitOfWork
         OrganizationMembers = new OrganizationMemberRepository(_context);
         ProjectPrivileges = new ProjectPrivilegeRepository(_context);
         ProjectRequirements = new ProjectRequirementRepository(_context);
+        NotificationTokens = new NotificationTokenRepository(_context);
+        Meetings = new MeetingRepository(_context);
+        MeetingMembers = new MeetingMemberRepository(_context);
+        RecurringMeetingPatterns = new RecurringMeetingPatternRepository(_context);
+        RecurringMeetingExceptions = new RecurringMeetingExceptionRepository(_context);
+        CalendarSubscriptions = new CalendarSubscriptionRepository(_context);
     }
 
     public async Task<int> CompleteAsync()
@@ -41,7 +52,15 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        // Get the execution strategy
+        var strategy = _context.Database.CreateExecutionStrategy();
+        
+        // Execute the transaction creation within the strategy
+        var transaction = await strategy.ExecuteAsync(async () =>
+        {
+            return await _context.Database.BeginTransactionAsync(cancellationToken);
+        });
+        
         return new EfTransaction(transaction);
     }
 }

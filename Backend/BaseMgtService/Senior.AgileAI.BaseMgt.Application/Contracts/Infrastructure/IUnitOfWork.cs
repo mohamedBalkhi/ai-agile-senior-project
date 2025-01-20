@@ -1,4 +1,5 @@
 using Senior.AgileAI.BaseMgt.Application.Contracts.infrastructure;
+using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
@@ -11,6 +12,12 @@ public interface IUnitOfWork : IDisposable
     IOrganizationMemberRepository OrganizationMembers { get; }
     IProjectPrivilegeRepository ProjectPrivileges { get; }
     IProjectRequirementRepository ProjectRequirements { get; }
+    INotificationTokenRepository NotificationTokens { get; }
+    IMeetingRepository Meetings { get; }
+    IMeetingMemberRepository MeetingMembers { get; }
+    IRecurringMeetingPatternRepository RecurringMeetingPatterns { get; }
+    IRecurringMeetingExceptionRepository RecurringMeetingExceptions { get; }
+    ICalendarSubscriptionRepository CalendarSubscriptions { get; }
 
     Task<int> CompleteAsync();
     Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);

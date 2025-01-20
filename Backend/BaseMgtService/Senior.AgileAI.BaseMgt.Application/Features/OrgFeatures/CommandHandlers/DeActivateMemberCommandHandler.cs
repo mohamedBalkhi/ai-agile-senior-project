@@ -17,8 +17,8 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
             var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken);
             user.IsActive = false;
             _unitOfWork.Users.Update(user, cancellationToken);
-            var orgMember = await _unitOfWork.OrganizationMembers.GetByUserId(request.UserId, cancellationToken);
-            var result = await _unitOfWork.OrganizationMembers.DeleteAsync(orgMember, cancellationToken);
+            var orgMember = await _unitOfWork.OrganizationMembers.GetByUserId(request.UserId, cancellationToken: cancellationToken);
+            var result = await _unitOfWork.OrganizationMembers.DeleteAsync(orgMember, cancellationToken: cancellationToken);
             return result;
 
         }

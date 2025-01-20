@@ -7,5 +7,6 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Requirements.Filters
 
         public ReqPriority? Priority { get; set; }
         public RequirementsStatus? Status { get; set; }
+        public string? SearchQuery { get; set; }
     }
 }

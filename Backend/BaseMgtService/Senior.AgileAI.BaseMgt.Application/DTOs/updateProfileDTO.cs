@@ -7,7 +7,6 @@ namespace Senior.AgileAI.BaseMgt.Application.DTOs
 {
     public class updateProfileDTO
     {
-        public Guid UserId { get; set; }
         public string? FullName { get; set; } //the frontend can only send the updated fields.
         public DateOnly? BirthDate { get; set; }
         public Guid? CountryId { get; set; }

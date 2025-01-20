@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Senior.AgileAI.BaseMgt.Appl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Senior.AgileAI.BaseMgt.Infrastructure", "Senior.AgileAI.BaseMgt.Infrastructure\Senior.AgileAI.BaseMgt.Infrastructure.csproj", "{2CDA66C8-C8BA-4C52-B4A8-C78B0A71701E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Senior.AgileAI.BaseMgt.Tests", "Senior.AgileAI.BaseMgt.Tests\Senior.AgileAI.BaseMgt.Tests.csproj", "{5EC67DD3-0CB9-4026-AAD2-A52D563EDE91}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{2CDA66C8-C8BA-4C52-B4A8-C78B0A71701E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CDA66C8-C8BA-4C52-B4A8-C78B0A71701E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CDA66C8-C8BA-4C52-B4A8-C78B0A71701E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EC67DD3-0CB9-4026-AAD2-A52D563EDE91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EC67DD3-0CB9-4026-AAD2-A52D563EDE91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EC67DD3-0CB9-4026-AAD2-A52D563EDE91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EC67DD3-0CB9-4026-AAD2-A52D563EDE91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

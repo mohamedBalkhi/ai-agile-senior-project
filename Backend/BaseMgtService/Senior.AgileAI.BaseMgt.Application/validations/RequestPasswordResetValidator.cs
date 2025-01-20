@@ -13,14 +13,19 @@ namespace Senior.AgileAI.BaseMgt.Application.Validations
             _unitOfWork = unitOfWork;
 
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Invalid email format.")
-                .MaximumLength(100).WithMessage("Email cannot exceed 100 characters.")
+                .NotEmpty().WithMessage("Email is required")
+                .EmailAddress().WithMessage("Invalid email format")
+                .MaximumLength(100).WithMessage("Email cannot exceed 100 characters")
                 .MustAsync(async (email, _) =>
                 {
                     var user = await _unitOfWork.Users.GetUserByEmailAsync(email);
                     return user != null;
-                }).WithMessage("No account found with this email address.");
+                }).WithMessage("No account found with this email address")
+                .MustAsync(async (email, _) =>
+                {
+                    var user = await _unitOfWork.Users.GetUserByEmailAsync(email);
+                    return user != null && !user.Deactivated;
+                }).WithMessage("This account is not active");
         }
     }
 }

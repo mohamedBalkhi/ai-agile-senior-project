@@ -1,7 +1,7 @@
 using FluentValidation;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
-namespace Senior.AgileAI.BaseMgt.Application.validations
+namespace Senior.AgileAI.BaseMgt.Application.Validations
 {
     public class SignUpValidator : AbstractValidator<SignUpCommand>
     {
@@ -44,7 +44,7 @@ namespace Senior.AgileAI.BaseMgt.Application.validations
 
         private bool BeInPast(DateOnly birthDate)
         {
-            return birthDate < DateOnly.FromDateTime(DateTime.Today);
+            return birthDate <= DateOnly.FromDateTime(DateTime.Today.AddYears(-15));
         }
     }
 }

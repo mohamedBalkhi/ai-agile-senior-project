@@ -1,7 +1,7 @@
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using FluentValidation;
 
-namespace Senior.AgileAI.BaseMgt.Application.validations{
+namespace Senior.AgileAI.BaseMgt.Application.Validations{
     public class LoginCommandValidator : AbstractValidator<LoginCommand>
     {
         public LoginCommandValidator()

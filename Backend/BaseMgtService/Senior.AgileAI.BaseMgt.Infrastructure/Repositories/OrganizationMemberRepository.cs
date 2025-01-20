@@ -12,6 +12,15 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
 
     }
 
+    #nullable disable
+    public async Task<OrganizationMember> GetByIdAsync(Guid id, bool includeUser = false, CancellationToken cancellationToken = default)
+    {
+        var query = _context.OrganizationMembers.AsQueryable();
+        if (includeUser)
+            query = query.Include(om => om.User);
+        return await query.FirstOrDefaultAsync(om => om.Id == id, cancellationToken);
+    }
+
     public async Task<OrganizationMember> AddOrganizationMemberAsync(OrganizationMember organizationMember, CancellationToken cancellationToken)
     {
         await _context.OrganizationMembers.AddAsync(organizationMember, cancellationToken);
@@ -27,7 +36,6 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
             .ThenInclude(pp => pp.Project)
             .ToListAsync(cancellationToken);
     }
-#nullable disable
 
     public async Task<OrganizationMember> GetByUserId(Guid userId, bool includeUser = false, CancellationToken cancellationToken = default)
     {
@@ -46,10 +54,11 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
             .Where(om => om.Organization_IdOrganization == organizationId)
             .ToListAsync(cancellationToken);
     }
-    public async Task<List<OrganizationMember>> GetByOrgIdPaginated(Guid orgId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+    public async Task<List<OrganizationMember>> GetByOrgIdPaginated(Guid orgId, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         return await _context.OrganizationMembers
             .Where(om => om.Organization_IdOrganization == orgId)
+            .Include(om => om.User)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

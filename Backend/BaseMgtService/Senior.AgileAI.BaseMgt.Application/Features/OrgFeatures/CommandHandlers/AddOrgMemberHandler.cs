@@ -69,12 +69,13 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
                         Email = email.ToLower().Trim(),
                         FUllName = "NewUser",
                         Password = password,
-                        BirthDate = DateOnly.FromDateTime(DateTime.Now),
+                        BirthDate = DateOnly.FromDateTime(DateTime.UtcNow),
                         IsActive = false,
                         IsTrusted = true,
                         IsAdmin = false,
                         Country_IdCountry = user.Country_IdCountry,
                         Code = "00000",
+                        Deactivated = false,
                     };
                     newUser.Password = _authService.HashPassword(newUser,password);
 

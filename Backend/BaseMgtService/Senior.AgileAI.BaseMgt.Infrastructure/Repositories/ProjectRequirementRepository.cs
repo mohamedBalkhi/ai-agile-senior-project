@@ -2,6 +2,7 @@ using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Senior.AgileAI.BaseMgt.Domain.Enums;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Repositories;
 
@@ -30,16 +31,41 @@ public class ProjectRequirementRepository : GenericRepository<ProjectRequirement
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public async Task<List<ProjectRequirement>> GetByProjectIdPaginated(Guid projectId, int pageNumber, int pageSize)
+    public async Task<List<ProjectRequirement>> GetByProjectIdPaginated(
+        Guid projectId, 
+        int pageNumber, 
+        int pageSize,
+        ReqPriority? priority = null,
+        RequirementsStatus? status = null,
+        string? searchQuery = null)
     {
-        return await _context.ProjectRequirements
-            .Where(r => r.Project_IdProject == projectId)
+        var query = _context.ProjectRequirements
+            .Where(r => r.Project_IdProject == projectId);
+
+        if (priority.HasValue)
+        {
+            query = query.Where(r => r.Priority == priority.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(r => r.Status == status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            var searchTerm = searchQuery.Trim().ToLower();
+            query = query.Where(r => 
+                EF.Functions.ILike(r.Title, $"%{searchTerm}%") || 
+                EF.Functions.ILike(r.Description, $"%{searchTerm}%"));
+        }
+
+        return await query
+            .OrderBy(r => r.CreatedDate)
             .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize).OrderBy(r => r.CreatedDate)
+            .Take(pageSize)
             .ToListAsync();
     }
-
-
 
     public async Task<bool> Delete(ProjectRequirement requirement)
     {

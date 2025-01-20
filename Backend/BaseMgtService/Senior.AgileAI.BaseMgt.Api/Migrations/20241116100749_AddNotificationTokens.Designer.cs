@@ -414,7 +414,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Migrations
                
 
                     b.HasOne("Senior.AgileAI.BaseMgt.Domain.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("NotificationTokens")
                         .HasForeignKey("User_IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

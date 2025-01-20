@@ -1,0 +1,164 @@
+{
+    "info": {
+      "name": "Calendar Integration",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Calendar Subscriptions",
+        "item": [
+          {
+            "name": "Create Personal Calendar Subscription",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{accessToken}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"feedType\": \"Personal\",\n    \"expirationDays\": 365\n}"
+              },
+              "url": "{{baseUrl}}/api/Calendar/CreateSubscription"
+            }
+          },
+          {
+            "name": "Create Project Calendar Subscription",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{accessToken}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"feedType\": \"Project\",\n    \"projectId\": \"{{projectId}}\",\n    \"expirationDays\": 365\n}"
+              },
+              "url": "{{baseUrl}}/api/Calendar/CreateSubscription"
+            }
+          },
+          {
+            "name": "Create Series Calendar Subscription",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{accessToken}}"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"feedType\": \"Series\",\n    \"recurringPatternId\": \"{{recurringPatternId}}\",\n    \"expirationDays\": 365\n}"
+              },
+              "url": "{{baseUrl}}/api/Calendar/CreateSubscription"
+            }
+          },
+          {
+            "name": "Get User's Subscriptions",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{accessToken}}"
+                }
+              ],
+              "url": "{{baseUrl}}/api/Calendar/GetSubscriptions"
+            }
+          },
+          {
+            "name": "Revoke Subscription",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{accessToken}}"
+                }
+              ],
+              "url": "{{baseUrl}}/api/Calendar/RevokeSubscription/{{subscriptionToken}}"
+            }
+          },
+          {
+            "name": "Get Calendar Feed",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": "{{baseUrl}}/api/Calendar/GetCalendarFeed/{{subscriptionToken}}"
+            }
+          }
+        ]
+      }
+    ],
+    "variable": [
+      {
+        "key": "baseUrl",
+        "value": "http://localhost:8080"
+      },
+      {
+        "key": "projectId",
+        "value": ""
+      },
+      {
+        "key": "recurringPatternId",
+        "value": ""
+      },
+      {
+        "key": "subscriptionToken",
+        "value": ""
+      }
+    ],
+    "event": [
+      {
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "if (pm.response.code === 200 && pm.info.requestName === 'Create Personal Calendar Subscription') {",
+            "    var jsonData = pm.response.json();",
+            "    var feedUrl = jsonData.data.feedUrl;",
+            "    var token = feedUrl.split('/').pop();",
+            "    pm.environment.set('subscriptionToken', token);",
+            "}",
+            "",
+            "pm.test('Response is successful', function() {",
+            "    pm.response.to.be.success;",
+            "});",
+            "",
+            "pm.test('Response has correct structure', function() {",
+            "    var jsonData = pm.response.json();",
+            "    pm.expect(jsonData).to.have.property('statusCode');",
+            "    pm.expect(jsonData).to.have.property('message');",
+            "    pm.expect(jsonData).to.have.property('data');",
+            "});",
+            "",
+            "if (pm.info.requestName === 'Get Calendar Feed') {",
+            "    pm.test('Response is iCalendar format', function() {",
+            "        pm.response.to.have.header('Content-Type', 'text/calendar');",
+            "        pm.expect(pm.response.text()).to.include('BEGIN:VCALENDAR');",
+            "        pm.expect(pm.response.text()).to.include('END:VCALENDAR');",
+            "    });",
+            "}"
+          ]
+        }
+      }
+    ]
+  }
+  

@@ -3,7 +3,7 @@ using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 
-namespace Senior.AgileAI.BaseMgt.Application.validations
+namespace Senior.AgileAI.BaseMgt.Application.Validations
 {
 #nullable disable
     public class VerfiyEmailValidator : AbstractValidator<VerifyEmailCommand>

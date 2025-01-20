@@ -2,7 +2,7 @@ using FluentValidation;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 
-namespace Senior.AgileAI.BaseMgt.Application.validations
+namespace Senior.AgileAI.BaseMgt.Application.Validations
 {
     public class ResendCodeCommandValidator : AbstractValidator<ResendCodeCommand>
     {

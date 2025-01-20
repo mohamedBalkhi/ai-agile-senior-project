@@ -11,4 +11,5 @@ public class Project : NamedEntity
     public OrganizationMember ProjectManager { get; set; } = null!; 
     public ICollection<ProjectPrivilege>? ProjectPrivileges { get; set; } = new List<ProjectPrivilege>();
     public ICollection<ProjectRequirement>? ProjectRequirements { get; set; } = new List<ProjectRequirement>();
+    public ICollection<Meeting> Meetings { get; set; } = new List<Meeting>();
 }

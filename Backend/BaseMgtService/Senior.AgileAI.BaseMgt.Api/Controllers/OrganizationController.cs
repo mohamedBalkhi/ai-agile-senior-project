@@ -72,7 +72,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
         [Authorize]
         [HttpGet("GetOrganizationMembers")]
-        public async Task<ActionResult<ApiResponse<List<GetOrgMemberDTO>>>> GetOrganizationMembers([FromQuery] int pageNumber, [FromQuery] int pageSize, [FromQuery] bool? isActiveFilter)
+        public async Task<ActionResult<ApiResponse<List<GetOrgMemberDTO>>>> GetOrganizationMembers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActiveFilter = null)
         {
             var userId = GetCurrentUserId();
             var query = new GetOrganizationMembersQuery(userId, pageNumber, pageSize, isActiveFilter);

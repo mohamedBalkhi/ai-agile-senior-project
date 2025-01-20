@@ -29,6 +29,4 @@ public class OrganizationRepository : GenericRepository<Organization>, IOrganiza
 
         return organization;
     }
-
-    // Implement custom methods for Organization repository
 }

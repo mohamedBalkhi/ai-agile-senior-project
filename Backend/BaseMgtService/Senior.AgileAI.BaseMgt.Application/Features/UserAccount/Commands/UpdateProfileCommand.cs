@@ -6,9 +6,11 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Commands
     public class UpdateProfileCommand : IRequest<Guid>
     {
         public updateProfileDTO DTO { get; set; }
-        public UpdateProfileCommand(updateProfileDTO dto)
+        public Guid UserId { get; set; }
+        public UpdateProfileCommand(updateProfileDTO dto, Guid userId)
         {
             DTO = dto;
+            UserId = userId;
         }
 
 

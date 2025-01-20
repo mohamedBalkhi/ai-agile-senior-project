@@ -33,6 +33,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
                 IsActive = false, //until they make new organization.
                 IsTrusted = false, //need to make verify to the email first.
                 IsAdmin = true, // we only allow the orgManagers to create an account.
+                Deactivated = false,
             };
 
             var createdUser = await _unitOfWork.Users.AddAsync(user, cancellationToken);
