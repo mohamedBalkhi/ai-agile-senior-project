@@ -1,4 +1,4 @@
-package com.example.agilemeets_mobile
+package com.agilemeets.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

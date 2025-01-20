@@ -1,8 +1,17 @@
+import 'package:agilemeets/core/errors/app_exception.dart';
+import 'package:agilemeets/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../logic/cubits/auth/auth_cubit.dart';
 import '../logic/cubits/auth/auth_state.dart';
-import 'signup_page.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/auth_header.dart';
+import '../utils/navigation_mixin.dart';
+import 'package:agilemeets/widgets/error_handlers/form_validation_errors.dart';
+import 'package:agilemeets/extensions/context_extensions.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,11 +20,166 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with NavigationMixin {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: BlocConsumer<AuthCubit, AuthState>(
+        listenWhen: (previous, current) => 
+            previous.status != current.status && 
+            current.status != AuthStatus.loading && 
+            current.status != AuthStatus.validationError,
+        listener: (context, state) {
+          switch (state.status) {
+            case AuthStatus.authenticated:
+              Navigator.pushReplacementNamed(context, '/shell');
+              break;
+            case AuthStatus.emailVerificationRequired:
+              Navigator.pushReplacementNamed(context, '/verify-email');
+              break;
+            case AuthStatus.organizationCreationRequired:
+              Navigator.pushReplacementNamed(context, '/create-organization');
+              break;
+            case AuthStatus.profileCompletionRequired:
+              Navigator.pushReplacementNamed(context, '/complete-profile');
+              break;
+            case AuthStatus.error:
+              context.showErrorSnackbar(
+                BusinessException(
+                  state.error ?? 'An error occurred',
+                  code: 'LOGIN_ERROR',
+                ),
+              );
+              break;
+            default:
+              break;
+          }
+        },
+        builder: (context, state) {
+          return SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  children: [
+                    SizedBox(height: 40.h),
+                   const AuthHeader(
+  showLogo: true,
+  title: 'Welcome Back',
+                      subtitle: 'Sign in to continue',
+                    ),
+
+                    SizedBox(height: 32.h),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          CustomTextField(
+                            controller: _emailController,
+                            label: 'Email',
+                            prefixIcon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                            animationIndex: 0,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              return null;
+                            },
+                          ),
+                          if (_hasFieldErrors(state, 'email'))
+                            FormValidationErrors(
+                              errors: state.validationErrors!,
+                              fieldName: 'email',
+                            ),
+                          SizedBox(height: 16.h),
+                          CustomTextField(
+                            controller: _passwordController,
+                            label: 'Password',
+                            prefixIcon: Icons.lock_outline_rounded,
+                            obscureText: _obscurePassword,
+                            animationIndex: 1,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                size: 20.w,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              return null;
+                            },
+                          ),
+                          if (_hasFieldErrors(state, 'password'))
+                            FormValidationErrors(
+                              errors: state.validationErrors!,
+                              fieldName: 'password',
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 24.h),
+                    CustomButton(
+                      onPressed: state.status == AuthStatus.loading
+                          ? null
+                          : _handleLogin,
+                      text: 'Sign In',
+                      isLoading: state.status == AuthStatus.loading,
+                      animationDelay: 400,
+                    ),
+
+                    SizedBox(height: 16.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Don\'t have an account?',
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
+                        TextButton(
+                          onPressed: _handleSignUp,
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .slideY(begin: 0.3, delay: 500.ms)
+                    .fade(),
+
+                    TextButton(
+                      onPressed: _handleForgotPassword,
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
+                    )
+                    .animate()
+                    .slideY(begin: 0.3, delay: 600.ms)
+                    .fade(),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -24,95 +188,38 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      body: BlocConsumer<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state.status == AuthStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error ?? 'An error occurred')),
-            );
-          } else if (state.status == AuthStatus.authenticated) {
-            Navigator.of(context).pushReplacementNamed('/home');
-          }
-        },
-        builder: (context, state) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Please enter your email' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: !_isPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                          ),
-                          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                        ),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Please enter your password' : null,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: state.status == AuthStatus.loading
-                          ? null
-                          : () {
-                              if (_formKey.currentState!.validate()) {
-                                context.read<AuthCubit>().login(
-                                      _emailController.text,
-                                      _passwordController.text,
-                                    );
-                              }
-                            },
-                      child: state.status == AuthStatus.loading
-                          ? const CircularProgressIndicator()
-                          : const Text('Login'),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Don\'t have an account?'),
-                        TextButton(
-                          onPressed: () => Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SignUpPage()),
-                          ),
-                          child: const Text('Sign Up'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+  void _handleForgotPassword() {
+    navigateTo('/forgot-password');
+  }
+
+  void _handleSignUp() {
+    replaceTo('/signup');
+  }
+
+  String? _getFieldError(AuthState state, String fieldName) {
+    if (state.validationErrors == null) return null;
+    
+    final errors = state.validationErrors!
+        .where((e) => e.propertyName.toLowerCase().contains(fieldName.toLowerCase()))
+        .map((e) => e.errorMessage)
+        .toList();
+        
+    return errors.isEmpty ? null : errors.first;
+  }
+
+  bool _hasFieldErrors(AuthState state, String fieldName) {
+    if (state.validationErrors == null) return false;
+    
+    return state.validationErrors!
+        .any((e) => e.propertyName.toLowerCase().contains(fieldName.toLowerCase()));
+  }
+
+  void _handleLogin() {
+    if (!_formKey.currentState!.validate()) return;
+
+    context.read<AuthCubit>().login(
+      _emailController.text,
+      _passwordController.text,
     );
   }
 }

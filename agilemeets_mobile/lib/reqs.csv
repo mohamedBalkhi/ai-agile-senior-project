@@ -1,0 +1,6 @@
+Title,Description,Priority,Status
+"User Authentication","Implement secure login and registration system with email verification","Low","New"
+"Meeting Management","Create functionality to schedule, edit and delete virtual meetings","Low","New"
+"Video Conferencing","Integrate real-time video conferencing with screen sharing capabilities","Low","New"
+"Calendar Integration","Add support for syncing with external calendar services like Google Calendar","Low","New"
+"Chat Functionality","Develop in-meeting chat feature with file sharing support","Low","New"
