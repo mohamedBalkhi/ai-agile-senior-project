@@ -57,7 +57,7 @@ class CreateMeetingForm {
         break;
       case MeetingType.online:
         // Online meetings not implemented yet
-        return false;
+        return true;
     }
 
     if (isRecurring && recurringPattern == null) return false;

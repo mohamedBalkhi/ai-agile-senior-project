@@ -20,7 +20,7 @@ enum MeetingType {
       case MeetingType.inPerson:
         return 'In Person';
       case MeetingType.online:
-        return 'Online (Coming Soon)';
+        return 'Online';
       case MeetingType.done:
         return 'Past Meeting';
     }
@@ -37,5 +37,5 @@ enum MeetingType {
     }
   }
 
-  bool get isImplemented => this != MeetingType.online;
+  bool get isImplemented => true;
 } 

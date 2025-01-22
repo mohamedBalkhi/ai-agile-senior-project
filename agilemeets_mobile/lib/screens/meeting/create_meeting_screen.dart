@@ -303,8 +303,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
               SizedBox(height: 8.h),
               _buildTypeOption(
                 type: MeetingType.online,
-                description: 'Host a virtual meeting (Coming Soon)',
-                isDisabled: true,
+                description: 'Host a virtual meeting',
+                // isDisabled: true,
               ),
               SizedBox(height: 8.h),
               _buildTypeOption(

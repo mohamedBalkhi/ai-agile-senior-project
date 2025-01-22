@@ -4,6 +4,7 @@ import 'package:agilemeets/data/models/meeting_dto.dart';
 import 'package:agilemeets/data/models/meeting_details_dto.dart';
 import 'package:agilemeets/data/models/grouped_meetings_response.dart';
 import 'package:agilemeets/data/models/meeting_ai_report_dto.dart';
+import 'package:agilemeets/data/models/join_meeting_response.dart';
 
 enum MeetingStateStatus {
   initial,
@@ -17,6 +18,8 @@ enum MeetingStateStatus {
   validationError,
   loadingAIReport,
   aiReportLoaded,
+  joiningMeeting,
+  joinedMeeting,
 }
 
 class MeetingState extends Equatable {
@@ -35,6 +38,7 @@ class MeetingState extends Equatable {
   final bool isLoadingMore;
   final bool isRefreshing;
   final MeetingAIReportDTO? aiReport;
+  final JoinMeetingResponse? joinMeetingResponse;
 
   const MeetingState({
     this.status = MeetingStateStatus.initial,
@@ -52,6 +56,7 @@ class MeetingState extends Equatable {
     this.isLoadingMore = false,
     this.isRefreshing = false,
     this.aiReport,
+    this.joinMeetingResponse,
   });
 
   MeetingState copyWith({
@@ -70,6 +75,7 @@ class MeetingState extends Equatable {
     bool? isLoadingMore,
     bool? isRefreshing,
     MeetingAIReportDTO? aiReport,
+    JoinMeetingResponse? joinMeetingResponse,
   }) {
     return MeetingState(
       status: status ?? this.status,
@@ -87,6 +93,7 @@ class MeetingState extends Equatable {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       aiReport: aiReport ?? this.aiReport,
+      joinMeetingResponse: joinMeetingResponse ?? this.joinMeetingResponse,
     );
   }
 
@@ -107,5 +114,6 @@ class MeetingState extends Equatable {
         isLoadingMore,
         isRefreshing,
         aiReport,
+        joinMeetingResponse,
       ];
 }

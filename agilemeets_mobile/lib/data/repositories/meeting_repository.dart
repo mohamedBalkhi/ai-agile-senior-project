@@ -14,6 +14,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:agilemeets/data/enums/meeting_language.dart';
 import 'package:agilemeets/data/models/audio_url_response.dart';
 import 'package:agilemeets/data/models/grouped_meetings_response.dart';
+import 'package:agilemeets/data/models/join_meeting_response.dart';
 
 class MeetingRepository extends BaseRepository {
   Future<ApiResponse<GroupedMeetingsResponse>> getProjectMeetings(
@@ -393,6 +394,22 @@ class MeetingRepository extends BaseRepository {
         return ApiResponse<bool>.fromJson(
           response.data,
           (json) => json as bool,
+        );
+      },
+    );
+  }
+
+  Future<ApiResponse<JoinMeetingResponse>> joinMeeting(String meetingId) async {
+    return safeApiCall(
+      context: 'joinMeeting',
+      call: () async {
+        final response = await apiClient.post(
+          '/api/Meeting/$meetingId/Join',
+        );
+        
+        return ApiResponse<JoinMeetingResponse>.fromJson(
+          response.data,
+          (json) => JoinMeetingResponse.fromJson(json as Map<String, dynamic>),
         );
       },
     );

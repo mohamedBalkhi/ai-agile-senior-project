@@ -12,6 +12,8 @@ import 'package:agilemeets/data/enums/meeting_type.dart';
 import 'package:agilemeets/widgets/meeting/recurring_meeting_info_dialog.dart';
 import 'package:agilemeets/logic/cubits/meeting/meeting_cubit.dart';
 import 'package:agilemeets/utils/pending_recordings_storage.dart';
+import 'package:agilemeets/screens/meeting/online_meeting_screen.dart';
+import 'package:intl/intl.dart';
 
 class MeetingCard extends StatefulWidget {
   final MeetingDTO meeting;
@@ -179,39 +181,7 @@ class _MeetingCardState extends State<MeetingCard> {
                         ],
                       ),
                     ),
-                  Row(
-                    children: [
-                      _buildTypeIndicator(),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.meeting.title ?? 'Untitled Meeting',
-                              style: TextStyle(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (widget.meeting.creatorName != null) ...[
-                              SizedBox(height: 4.h),
-                              Text(
-                                'by ${widget.meeting.creatorName}',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: AppTheme.textGrey,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      _buildStatusBadge(),
-                    ],
-                  ),
+                  _buildStatusIndicator(),
                   SizedBox(height: 12.h),
                   Row(
                     children: [
@@ -291,11 +261,43 @@ class _MeetingCardState extends State<MeetingCard> {
               onPressed: () async {
                 await context.read<MeetingCubit>().startMeeting(widget.meeting.id);
                 if (context.mounted) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MeetingSessionScreen(
-                        meetingId: widget.meeting.id,
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text('Meeting started successfully! You can now join the meeting.'),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: AppTheme.successGreen,
+                      duration: Duration(seconds: 5),
+                      action: SnackBarAction(
+                        label: 'Join Now',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          if (widget.meeting.type == MeetingType.online) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => OnlineMeetingScreen(
+                                  meetingId: widget.meeting.id,
+                                ),
+                              ),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MeetingSessionScreen(
+                                  meetingId: widget.meeting.id,
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ),
                   );
@@ -309,14 +311,25 @@ class _MeetingCardState extends State<MeetingCard> {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MeetingSessionScreen(
-                      meetingId: widget.meeting.id,
+                if (widget.meeting.type == MeetingType.online) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OnlineMeetingScreen(
+                        meetingId: widget.meeting.id,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MeetingSessionScreen(
+                        meetingId: widget.meeting.id,
+                      ),
+                    ),
+                  );
+                }
               },
               icon: Icon(Icons.login_rounded),
               label: Text('Join'),
@@ -438,6 +451,116 @@ class _MeetingCardState extends State<MeetingCard> {
         ),
       ),
     );
+  }
+
+  Widget _buildStatusIndicator() {
+    final isOnline = widget.meeting.type == MeetingType.online;
+    final isInProgress = widget.meeting.status == MeetingStatus.inProgress;
+    
+    return Row(
+      children: [
+        if (isOnline) ...[
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.videocam_outlined,
+                  size: 14.w,
+                  color: AppTheme.primaryBlue,
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  'Online',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppTheme.primaryBlue,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 8.w),
+        ],
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: _getStatusColor().withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _getStatusIcon(),
+                size: 14.w,
+                color: _getStatusColor(),
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                _getStatusText(),
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: _getStatusColor(),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getStatusColor() {
+    switch (widget.meeting.status) {
+      case MeetingStatus.scheduled:
+        return AppTheme.infoBlue;
+      case MeetingStatus.inProgress:
+        return AppTheme.successGreen;
+      case MeetingStatus.completed:
+        return AppTheme.textGrey;
+      case MeetingStatus.cancelled:
+        return AppTheme.errorRed;
+      default:
+        throw Exception("Unknown meeting status");
+    }
+  }
+
+  IconData _getStatusIcon() {
+    switch (widget.meeting.status) {
+      case MeetingStatus.scheduled:
+        return Icons.schedule;
+      case MeetingStatus.inProgress:
+        return Icons.play_arrow;
+      case MeetingStatus.completed:
+        return Icons.check_circle;
+      case MeetingStatus.cancelled:
+        return Icons.cancel;
+      default:
+        throw Exception("Unknown meeting status");
+    }
+  }
+
+  String _getStatusText() {
+    switch (widget.meeting.status) {
+      case MeetingStatus.scheduled:
+        return 'Scheduled';
+      case MeetingStatus.inProgress:
+        return 'In Progress';
+      case MeetingStatus.completed:
+        return 'Completed';
+      case MeetingStatus.cancelled:
+        return 'Cancelled';
+      default:
+        throw Exception("Unknown meeting status");
+    }
   }
 
   void _showRecurringInfo(BuildContext context) {

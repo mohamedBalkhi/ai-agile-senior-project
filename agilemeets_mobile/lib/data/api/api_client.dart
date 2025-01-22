@@ -16,7 +16,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 class ApiClient {
   final Dio _dio = Dio();
   final String _baseUrl = 'https://agilemeets-basemgt.fly.dev';
-  // final String _baseUrl = 'http://192.168.1.100:8080';
+  // final String _baseUrl = 'http://192.168.0.143:8080';
   String get baseUrl => _baseUrl;
  
   bool _isRefreshing = false;

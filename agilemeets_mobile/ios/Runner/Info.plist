@@ -52,7 +52,7 @@
 	<key>MinimumOSVersion</key>
 	<string>13.0</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>AgileMeets needs access to microphone to record meeting audio</string>
+	<string>Microphone access is required for voice in meetings</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -62,5 +62,9 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required for video meetings</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Local network access is required for video meetings</string>
 </dict>
 </plist>

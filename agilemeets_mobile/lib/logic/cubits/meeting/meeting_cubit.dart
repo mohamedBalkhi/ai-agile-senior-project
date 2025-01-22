@@ -487,6 +487,39 @@ class MeetingCubit extends Cubit<MeetingState> {
     }
   }
 
+  Future<void> joinMeeting(String meetingId) async {
+    try {
+      emit(state.copyWith(
+        status: MeetingStateStatus.joiningMeeting,
+        error: null,
+      ));
+
+      final response = await _repository.joinMeeting(meetingId);
+
+      if (response.data != null) {
+        emit(state.copyWith(
+          status: MeetingStateStatus.joinedMeeting,
+          joinMeetingResponse: response.data,
+        ));
+      } else {
+        emit(state.copyWith(
+          status: MeetingStateStatus.error,
+          error: response.message ?? 'Failed to join meeting',
+        ));
+      }
+    } catch (e) {
+      developer.log(
+        'Error joining meeting: $e',
+        name: 'MeetingCubit',
+        error: e,
+      );
+      emit(state.copyWith(
+        status: MeetingStateStatus.error,
+        error: e.toString(),
+      ));
+    }
+  }
+
   Future<void> confirmAttendance(String meetingId, bool confirmed) async {
     try {
       emit(state.copyWith(
@@ -707,48 +740,6 @@ class MeetingCubit extends Cubit<MeetingState> {
       ));
     }
   }
-
-  // Future<String?> downloadMeetingAudio(String meetingId, {String? cachedFile}) async {
-  //   try {
-  //     if (cachedFile != null && File(cachedFile).existsSync()) {
-  //       // If we have a cached file, copy it to downloads instead of downloading again
-  //       final downloadDir = await getApplicationDocumentsDirectory();
-  //       final fileName = path.basename(cachedFile);
-  //       final targetPath = path.join(downloadDir.path, 'meeting_audio', fileName);
-        
-  //       // Create directory if it doesn't exist
-  //       final dir = Directory(path.dirname(targetPath));
-  //       if (!await dir.exists()) {
-  //         await dir.create(recursive: true);
-  //       }
-        
-  //       // Copy the cached file
-  //       await File(cachedFile).copy(targetPath);
-  //       return targetPath;
-  //     }
-      
-  //     // If no cached file, download normally
-  //     return await _repository.downloadMeetingAudio(meetingId);
-  //   } catch (e) {
-  //     dev.log('Error downloading audio: $e', name: 'MeetingCubit');
-  //     emit(state.copyWith(
-  //       status: MeetingStateStatus.error,
-  //       error: e.toString(),
-  //     ));
-  //     return null;
-  //   }
-  // }
-
-  // Future<String> getMeetingAudioUrl(String meetingId) async {
-  //   try {
-  //     final audioUrl = await _repository.getMeetingAudioUrl(meetingId);
-  //     dev.log('Got audio URL: $audioUrl', name: 'MeetingCubit');
-  //     return audioUrl;
-  //   } catch (e) {
-  //     dev.log('Error getting audio URL: $e', name: 'MeetingCubit');
-  //     rethrow;
-  //   }
-  // }
 
   Future<void> loadMeetingAIReport(String meetingId) async {
     try {

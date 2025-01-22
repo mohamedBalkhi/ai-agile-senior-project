@@ -17,8 +17,10 @@ import 'package:agilemeets/screens/project/project_details_screen.dart';
 import 'package:agilemeets/screens/reset_password_verification_screen.dart';
 import 'package:agilemeets/screens/shell_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/organization_repository.dart';
 import 'logic/cubits/auth/auth_cubit.dart';
@@ -46,6 +48,7 @@ import 'package:agilemeets/screens/meeting/meeting_details_screen.dart';
 import 'package:agilemeets/screens/meeting/meeting_session_screen.dart';
 import 'package:agilemeets/screens/meeting/create_meeting_screen.dart';
 import 'utils/route_constants.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -55,10 +58,37 @@ class MyHttpOverrides extends HttpOverrides {
   }
 }
 
+Future<void> _initializeAndroidAudioSettings() async {
+  await webrtc.WebRTC.initialize(options: {
+    'androidAudioConfiguration': webrtc.AndroidAudioConfiguration.media.toMap(),
+  });
+  webrtc.Helper.setAndroidAudioConfiguration(
+    webrtc.AndroidAudioConfiguration.media,
+  );
+}
+Future<void> _checkPermissions() async {
+  var status = await Permission.bluetooth.request();
+  if (status.isPermanentlyDenied) {
+    print('Bluetooth Permission disabled');
+  }
+  status = await Permission.bluetoothConnect.request();
+  if (status.isPermanentlyDenied) {
+    print('Bluetooth Connect Permission disabled');
+  }
+}
+
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     
+    // Set system UI mode to immersive sticky
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+    );
+    
+    await _initializeAndroidAudioSettings();
+    await _checkPermissions();
+
     // Initialize Firebase
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

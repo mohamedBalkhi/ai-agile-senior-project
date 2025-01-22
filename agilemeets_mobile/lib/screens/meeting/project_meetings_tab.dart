@@ -1,3 +1,4 @@
+import 'package:agilemeets/widgets/meeting/quick_meeting_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -82,6 +83,19 @@ class _ProjectMeetingsTabState extends State<ProjectMeetingsTab> {
     }
   }
 
+ Future<void> _showQuickMeetingSheet() async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => QuickMeetingSheet(projectId: widget.projectId),
+    );
+
+    if (result == true && mounted) {
+      _loadMeetings(refresh: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MeetingCubit, MeetingState>(
@@ -98,39 +112,69 @@ class _ProjectMeetingsTabState extends State<ProjectMeetingsTab> {
           return const LoadingIndicator();
         }
 
-        return Column(
+        return Stack(
           children: [
-            _buildHeader(),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => _loadMeetings(refresh: true),
-                child: Stack(
-                  children: [
-                    GroupedMeetingsListView(
-                      groups: state.groups ?? [],
-                      scrollController: _scrollController,
-                      hasMorePast: state.hasMorePast,
-                      hasMoreFuture: state.hasMoreFuture,
-                      isLoadingMore: state.isLoadingMore,
-                      onLoadMorePast: () => _loadMeetings(
-                        loadMore: true,
-                        loadPast: true,
-                      ),
-                      onLoadMoreFuture: () => _loadMeetings(
-                        loadMore: true,
-                        loadPast: false,
-                      ),
-                      onRefresh: _showUpcomingOnly 
-                          ? () => _loadMeetings(refresh: true)
-                          : null,  // Disable refresh for "All" view
+            Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () => _loadMeetings(refresh: true),
+                    child: Stack(
+                      children: [
+                        GroupedMeetingsListView(
+                          groups: state.groups ?? [],
+                          scrollController: _scrollController,
+                          hasMorePast: state.hasMorePast,
+                          hasMoreFuture: state.hasMoreFuture,
+                          isLoadingMore: state.isLoadingMore,
+                          onLoadMorePast: () => _loadMeetings(
+                            loadMore: true,
+                            loadPast: true,
+                          ),
+                          onLoadMoreFuture: () => _loadMeetings(
+                            loadMore: true,
+                            loadPast: false,
+                          ),
+                          onRefresh: _showUpcomingOnly 
+                              ? () => _loadMeetings(refresh: true)
+                              : null,  // Disable refresh for "All" view
+                        ),
+                        if (state.status == MeetingStateStatus.error)
+                          ErrorView(
+                            message: state.error ?? 'Failed to load meetings',
+                            onRetry: () => _loadMeetings(refresh: true),
+                          ),
+                      ],
                     ),
-                    if (state.status == MeetingStateStatus.error)
-                      ErrorView(
-                        message: state.error ?? 'Failed to load meetings',
-                        onRetry: () => _loadMeetings(refresh: true),
-                      ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
+            Positioned(
+              right: 16.w,
+              bottom: 16.h,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Quick meeting FAB
+                  FloatingActionButton(
+                    heroTag: 'quick_meeting',
+                    onPressed: _showQuickMeetingSheet,
+                    backgroundColor: Colors.white,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                 
+                        Icon(
+                          Icons.flash_on,
+                          color: AppTheme.primaryBlue,
+                          size: 28.w,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -154,7 +198,7 @@ class _ProjectMeetingsTabState extends State<ProjectMeetingsTab> {
       child: Row(
         children: [
           Expanded(
-            flex: 5,
+            flex: 4,
             child: SegmentedButton<bool>(
               selected: {_showUpcomingOnly},
               onSelectionChanged: (value) {
@@ -183,8 +227,8 @@ class _ProjectMeetingsTabState extends State<ProjectMeetingsTab> {
           ),
           SizedBox(width: 16.w),
           Expanded(
-            flex: 2,
-            child: FilledButton.icon(
+            flex: 1,
+            child: FilledButton(
               onPressed: () async {
                 final result = await Navigator.pushNamed(
                   context,
@@ -196,8 +240,12 @@ class _ProjectMeetingsTabState extends State<ProjectMeetingsTab> {
                   _loadMeetings(refresh: true);
                 }
               },
-              icon: const Icon(Icons.add),
-              label: const Text('New'),
+              style: FilledButton.styleFrom(
+                padding: EdgeInsets.zero,
+              ),
+              child: const Center(
+                child: Icon(Icons.add),
+              ),
             ),
           ),
         ],

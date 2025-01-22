@@ -11,6 +11,7 @@ import 'package:agilemeets/widgets/shared/loading_indicator.dart';
 import 'package:agilemeets/utils/app_theme.dart';
 import 'package:agilemeets/utils/route_constants.dart';
 import 'package:agilemeets/widgets/meeting/grouped_meetings_list_view.dart';
+import 'package:agilemeets/widgets/meeting/quick_meeting_sheet.dart';
 
 class ProjectMeetingsScreen extends StatefulWidget {
   final String projectId;
@@ -81,12 +82,31 @@ class _ProjectMeetingsScreenState extends State<ProjectMeetingsScreen> {
     }
   }
 
+  Future<void> _showQuickMeetingSheet() async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => QuickMeetingSheet(projectId: widget.projectId),
+    );
+
+    if (result == true && mounted) {
+      _loadMeetings(refresh: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meetings'),
         actions: [
+          // Quick meeting button
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'Quick Meeting',
+            onPressed: _showQuickMeetingSheet,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => _loadMeetings(refresh: true),
@@ -135,48 +155,31 @@ class _ProjectMeetingsScreenState extends State<ProjectMeetingsScreen> {
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  GestureDetector(
-                    onTap: () async {
-                      final result = await Navigator.pushNamed(
-                        context,
-                        RouteConstants.createMeeting,
-                        arguments: widget.projectId,
-                      );
-                      
-                      if (result == true && mounted) {
-                        _loadMeetings(refresh: true);
-                      }
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: AppTheme.primaryBlue.withOpacity(0.3),
-                          width: 1,
-                        ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildActionButton(
+                        icon: Icons.add_circle_outline,
+                        label: 'Quick Meeting',
+                        onTap: _showQuickMeetingSheet,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add_circle_outline,
-                            color: AppTheme.primaryBlue,
-                            size: 20.w,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Schedule Your First Meeting',
-                            style: TextStyle(
-                              color: AppTheme.primaryBlue,
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      SizedBox(width: 16.w),
+                      _buildActionButton(
+                        icon: Icons.calendar_month_outlined,
+                        label: 'Schedule Meeting',
+                        onTap: () async {
+                          final result = await Navigator.pushNamed(
+                            context,
+                            RouteConstants.createMeeting,
+                            arguments: widget.projectId,
+                          );
+                          
+                          if (result == true && mounted) {
+                            _loadMeetings(refresh: true);
+                          }
+                        },
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -215,8 +218,48 @@ class _ProjectMeetingsScreenState extends State<ProjectMeetingsScreen> {
             _loadMeetings(refresh: true);
           }
         },
-        icon: const Icon(Icons.add),
-        label: const Text('New Meeting'),
+        icon: const Icon(Icons.calendar_month),
+        label: const Text('Schedule'),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryBlue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: AppTheme.primaryBlue.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: AppTheme.primaryBlue,
+              size: 20.w,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              label,
+              style: TextStyle(
+                color: AppTheme.primaryBlue,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
