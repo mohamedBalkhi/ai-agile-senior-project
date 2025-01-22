@@ -8,6 +8,9 @@ using Microsoft.Extensions.Options;
 using NotificationService.Options;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Messaging;
+using System.Collections.Generic;
+using MailKit.Net.Smtp;
 
 namespace NotificationService.MessageHandlers
 {
@@ -16,9 +19,9 @@ namespace NotificationService.MessageHandlers
         private readonly ILogger<RabbitMQListener> _logger;
         private readonly RabbitMQOptions _rabbitMQOptions;
         private readonly IServiceProvider _serviceProvider;
-        private IConnection _connection;
-        private IModel _channel;
-        private string _queueName;
+        private IConnection _connection = null!;
+        private IModel _channel = null!;
+        private string _queueName = null!;
         private const int MaxRetries = 10;
         private const int RetryDelayMs = 5000;
 
@@ -56,6 +59,7 @@ namespace NotificationService.MessageHandlers
 
                 _logger.LogInformation($"Started consuming messages from queue: {_queueName} with consumer tag: {consumerTag}");
 
+                // Periodically check connection health
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     if (_connection?.IsOpen != true || _channel?.IsOpen != true)
@@ -111,6 +115,8 @@ namespace NotificationService.MessageHandlers
                         _logger.LogWarning($"RabbitMQ connection shut down: {args.ReplyText}");
                     };
 
+                    // This queue declaration is idempotent, so it's safe to keep it here.
+                    // If the queue already exists, it will not be recreated or cause an error.
                     await Task.Run(() => _channel.QueueDeclare(
                         queue: _queueName,
                         durable: true,
@@ -149,14 +155,50 @@ namespace NotificationService.MessageHandlers
                     throw new JsonSerializationException("Failed to deserialize message");
                 }
 
+                // Process the message
                 await notificationHandler.HandleNotificationAsync(message);
                 
+                // Acknowledge successfully handled message
                 _channel.BasicAck(eventArgs.DeliveryTag, false);
                 _logger.LogInformation($"Successfully processed and acknowledged message: {eventArgs.DeliveryTag}");
+            }
+            catch (SmtpCommandException smtpEx) when (smtpEx.Message.Contains("Too many login attempts"))
+            {
+                _logger.LogError(smtpEx, $"SMTP rate limit exceeded: {content}");
+                // Move to delay queue or dead-letter exchange
+                var headers = new Dictionary<string, object>
+                {
+                    { "x-delay", 300000 } // 5 minutes delay
+                };
+                var properties = _channel.CreateBasicProperties();
+                properties.Headers = headers;
+                
+                // Publish to delay exchange if configured, otherwise don't requeue
+                if (!string.IsNullOrEmpty(_rabbitMQOptions.DelayExchange))
+                {
+                    _channel.BasicPublish(
+                        _rabbitMQOptions.DelayExchange,
+                        _rabbitMQOptions.QueueName,
+                        properties,
+                        eventArgs.Body);
+                    _channel.BasicAck(eventArgs.DeliveryTag, false);
+                }
+                else
+                {
+                    // If no delay exchange, don't requeue to prevent immediate retry
+                    _channel.BasicNack(eventArgs.DeliveryTag, false, false);
+                }
+            }
+            catch (FirebaseMessagingException firebaseEx)
+            {
+                _logger.LogError(firebaseEx, $"Firebase error processing message: {content}");
+                // Don't requeue Firebase errors as they're likely permanent
+                _channel.BasicNack(eventArgs.DeliveryTag, false, false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error processing message: {content}");
+                // Requeue for other types of errors
                 _channel.BasicNack(eventArgs.DeliveryTag, false, true);
             }
         }
