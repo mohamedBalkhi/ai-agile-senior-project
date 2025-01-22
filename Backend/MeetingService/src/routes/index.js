@@ -1,9 +1,9 @@
 const express = require('express');
-const sessionRoutes = require('./sessionRoutes');
+const roomRoutes = require('./roomRoutes');
 
 const router = express.Router();
 
-router.use('/sessions', sessionRoutes);
+router.use('/rooms', roomRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

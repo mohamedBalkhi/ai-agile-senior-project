@@ -4,6 +4,7 @@ const cors = require('cors');
 const timeout = require('connect-timeout');
 const routes = require('./routes');
 const logger = require('./utils/logger');
+const { AppError, middleware: errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -37,8 +38,23 @@ app.use(helmet({
     }
 }));
 
-app.use(express.json());
+// Request body parser
+app.use(express.json({
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        try {
+            JSON.parse(buf);
+        } catch (e) {
+            throw new AppError(400, 'Invalid JSON payload');
+        }
+    }
+}));
+
+// Timeout middleware
 app.use(timeout('30s'));
+app.use((req, res, next) => {
+    if (!req.timedout) next();
+});
 
 // Enable CORS preflight
 app.options('*', cors());
@@ -46,37 +62,33 @@ app.options('*', cors());
 // Mount API routes
 app.use('/api', routes);
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({
-        status: 'error',
-        message: `Cannot ${req.method} ${req.url}`
-    });
+// Handle timeout errors
+app.use((err, req, res, next) => {
+    if (err.timeout) {
+        return next(new AppError(408, 'Request timeout'));
+    }
+    next(err);
 });
 
-// Error handler
-app.use((err, req, res, next) => {
-    // Log the error
-    logger.error('Error:', {
-        method: req.method,
-        url: req.url,
-        error: err.message,
-        stack: err.stack
-    });
+// 404 handler for undefined routes
+app.use((req, res, next) => {
+    next(new AppError(404, `Cannot ${req.method} ${req.url}`));
+});
 
+// Global error handler
+app.use((err, req, res, next) => {
     // Don't send error response if headers already sent
     if (res.headersSent) {
         return next(err);
     }
 
-    // Ensure we have a valid status code
-    const statusCode = err.status && Number.isInteger(err.status) ? err.status : 500;
+    // Handle body-parser errors
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return next(new AppError(400, 'Invalid request body'));
+    }
 
-    // Send error response
-    res.status(statusCode).json({
-        status: 'error',
-        message: err.message || 'Internal Server Error'
-    });
+    // Handle other errors
+    errorHandler(err, req, res, next);
 });
 
 const port = process.env.PORT || 3000;

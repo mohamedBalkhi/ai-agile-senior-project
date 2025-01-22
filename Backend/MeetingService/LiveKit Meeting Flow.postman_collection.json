@@ -1,0 +1,420 @@
+{
+    "info": {
+        "_postman_id": "03d756a3-dbb2-43df-95a4-6b187c24cc42",
+        "name": "LiveKit Meeting Flow",
+        "description": "Test collection for LiveKit meeting and recording functionality",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Room Management",
+            "item": [
+                {
+                    "name": "1. List Active Rooms",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms"]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Create Room",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"roomName\": \"test-meeting-1\"}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms"]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Get Room Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "4. Update Room Status",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"status\": \"active\"}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/status",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "status"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Participant Management",
+            "item": [
+                {
+                    "name": "1. Get Token for Host",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"identity\": \"participant1\", \"metadata\": {\"name\": \"John\", \"role\": \"host\"}}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/token",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "token"]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Get Token for Participant",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"identity\": \"participant2\", \"metadata\": {\"name\": \"Alice\", \"role\": \"participant\"}}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/token",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "token"]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Update Participant Metadata",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"metadata\": {\"name\": \"John Updated\", \"status\": \"away\"}}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/participant/participant1/metadata",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "participant", "participant1", "metadata"]
+                        }
+                    }
+                },
+                {
+                    "name": "4. Mute Participant Track",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"muted\": true}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/participant/participant1/track/{{trackSid}}/mute",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "participant", "participant1", "track", "{{trackSid}}", "mute"]
+                        }
+                    }
+                },
+                {
+                    "name": "5. Simulate Participant Join",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"event\": \"joined\"}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/participant/participant1/event",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "participant", "participant1", "event"]
+                        }
+                    }
+                },
+                {
+                    "name": "6. Simulate Participant Leave",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"event\": \"left\"}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/participant/participant1/event",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "participant", "participant1", "event"]
+                        }
+                    }
+                },
+                {
+                    "name": "7. Remove Participant",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/participant/participant1",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "participant", "participant1"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Recording Management",
+            "item": [
+                {
+                    "name": "1. Start Recording",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"audioOnly\": true}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/recording/start",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "recording", "start"]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Get Recording Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/recording/status",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "recording", "status"]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Stop Recording",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/recording/stop",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "recording", "stop"]
+                        }
+                    }
+                },
+                {
+                    "name": "4. Get Room Recordings",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/recordings",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "recordings"]
+                        }
+                    }
+                },
+                {
+                    "name": "5. Get Recording URL",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/recordings/{{recordingSid}}",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "recordings", "{{recordingSid}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "6. Recording Webhook",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"event\": \"recording.complete\", \"recordingId\": \"{{recordingSid}}\"}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}/recording/webhook",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}", "recording", "webhook"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Cleanup",
+            "item": [
+                {
+                    "name": "Delete Room",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3000/api/rooms/{{roomName}}",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "3000",
+                            "path": ["api", "rooms", "{{roomName}}"]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// You can add pre-request scripts here"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                    "    const jsonData = pm.response.json();",
+                    "    // Store room name if available",
+                    "    if (jsonData.name) {",
+                    "        pm.environment.set('roomName', jsonData.name);",
+                    "    }",
+                    "    // Store recording ID if available",
+                    "    if (jsonData.recording && jsonData.recording.recordingId) {",
+                    "        pm.environment.set('recordingId', jsonData.recording.recordingId);",
+                    "    }",
+                    "    // Store track SID if available",
+                    "    if (jsonData.trackSid) {",
+                    "        pm.environment.set('trackSid', jsonData.trackSid);",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "roomName",
+            "value": "test-meeting-1"
+        },
+        {
+            "key": "recordingId",
+            "value": ""
+        },
+        {
+            "key": "trackSid",
+            "value": ""
+        }
+    ]
+} 
