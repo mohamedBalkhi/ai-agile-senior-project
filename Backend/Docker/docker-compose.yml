@@ -18,7 +18,9 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:3-management
+    build:
+      context: ..
+      dockerfile: Docker/RabbitMQ.Dockerfile  # <-- point to your new Dockerfile
     ports:
       - "5672:5672"
       - "15672:15672"

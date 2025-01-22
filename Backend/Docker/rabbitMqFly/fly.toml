@@ -1,0 +1,45 @@
+# fly.toml app configuration file generated for agilemeets-rabbitmq on 2024-11-04T16:15:35+03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'agilemeets-rabbitmq'
+primary_region = 'ams'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  RABBITMQ_DEFAULT_PASS = 'guest'
+  RABBITMQ_DEFAULT_USER = 'guest'
+
+[http_service]
+  internal_port = 15672
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 5672
+  processes = ['app']
+
+  [[services.ports]]
+    port = 5672
+    handlers = ['tls']
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 15672
+  processes = ['app']
+
+  [[services.ports]]
+    port = 15672
+    handlers = ['tls', 'http']
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1

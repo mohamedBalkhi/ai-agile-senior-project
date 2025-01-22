@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-adminpassword}
+      MONGO_INITDB_DATABASE: AgileMeets-DB
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ai_network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - ai_network
+
+  ai_service:
+    build:
+      context: ../..
+      dockerfile: Docker/AiService/Ai-Service.Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../AI-Service:/app
+      - ../../AI-Service/audios:/app/audios
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=${SECRET_KEY:-debug-secret-key}
+      - API_KEYS_SERVICE=${API_KEYS_SERVICE:-debug-api-key}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - ADDITIONAL_ALLOWED_HOSTS=*
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_USER=${MONGO_ROOT_USER:-admin}
+      - MONGODB_PASSWORD=${MONGO_ROOT_PASSWORD:-adminpassword}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+    networks:
+      - ai_network
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+networks:
+  ai_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:
