@@ -19,6 +19,13 @@ public class Meeting : BaseEntity
     public string? Location { get; set; }
     public string? MeetingUrl { get; set; }
     
+    // Online Meeting Properties
+    public string? LiveKitRoomSid { get; set; }  // The room SID from LiveKit
+    public string? LiveKitRoomName { get; set; }  // The room name we generate
+    public OnlineMeetingStatus OnlineMeetingStatus { get; set; }
+    public DateTime? OnlineMeetingStartedAt { get; set; }
+    public DateTime? OnlineMeetingEndedAt { get; set; }
+    
     public string? AudioUrl { get; set; }
     public AudioStatus AudioStatus { get; set; }
     public AudioSource AudioSource { get; set; }
@@ -77,6 +84,15 @@ public class Meeting : BaseEntity
             throw new InvalidOperationException("Only scheduled meetings can be started");
         
         Status = MeetingStatus.InProgress;
+        
+        if (Type == MeetingType.Online)
+        {
+            OnlineMeetingStatus = OnlineMeetingStatus.Active;
+            OnlineMeetingStartedAt = DateTime.UtcNow;
+            AudioStatus = AudioStatus.Pending;  // Recording starts automatically
+            AudioSource = AudioSource.MeetingService;
+        }
+        
         StartTime = DateTime.UtcNow;
     }
 
@@ -87,6 +103,16 @@ public class Meeting : BaseEntity
             
         Status = MeetingStatus.Completed;
         ActualEndTime = DateTime.UtcNow;
+        
+        if (Type == MeetingType.Online)
+        {
+            OnlineMeetingStatus = OnlineMeetingStatus.Ended;
+            OnlineMeetingEndedAt = DateTime.UtcNow;
+            if (AudioUrl != null)
+            {
+                AudioStatus = AudioStatus.Available;
+            }
+        }
     }
 
     // Add validation methods
@@ -129,4 +155,11 @@ public class Meeting : BaseEntity
         AIReport = report;
         AIProcessedAt = DateTime.UtcNow;
     }
+
+    // Helper methods for online meetings
+    public string GenerateRoomName() => $"meeting-{Id}";
+
+    public bool IsOnlineMeetingActive() => 
+        Type == MeetingType.Online && 
+        OnlineMeetingStatus == OnlineMeetingStatus.Active;
 }

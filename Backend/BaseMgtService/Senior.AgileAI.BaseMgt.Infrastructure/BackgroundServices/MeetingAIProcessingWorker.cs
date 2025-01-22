@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
+using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -60,15 +61,29 @@ public class MeetingAIProcessingWorker : BackgroundService
 
     private async Task ProcessMeetingsAsync(CancellationToken stoppingToken)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var aiService = scope.ServiceProvider.GetRequiredService<IAIProcessingService>();
+        try
+        {
+            // Process new meetings first
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var aiService = scope.ServiceProvider.GetRequiredService<IAIProcessingService>();
+                await InitiateNewProcessingAsync(unitOfWork, aiService, stoppingToken);
+            }
 
-        // Process both new and pending meetings concurrently
-        await Task.WhenAll(
-            InitiateNewProcessingAsync(unitOfWork, aiService, stoppingToken),
-            UpdatePendingProcessingAsync(unitOfWork, aiService, stoppingToken)
-        );
+            // Then process pending meetings in a separate scope
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var aiService = scope.ServiceProvider.GetRequiredService<IAIProcessingService>();
+                await UpdatePendingProcessingAsync(unitOfWork, aiService, stoppingToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while processing meetings");
+            throw;
+        }
     }
 
     private async Task InitiateNewProcessingAsync(
@@ -79,18 +94,19 @@ public class MeetingAIProcessingWorker : BackgroundService
         var meetings = await unitOfWork.Meetings
             .GetMeetingsForAIProcessingAsync(BatchSize, stoppingToken);
 
-        var tasks = meetings.Select(async meeting =>
+        foreach (var meeting in meetings)
         {
             await _processingThrottle.WaitAsync(stoppingToken);
             try
             {
                 if (!meeting.CanProcessAudio())
                 {
-                    return;
+                    continue;
                 }
 
                 var token = await aiService.SubmitAudioForProcessingAsync(
                     meeting.AudioUrl!,
+                    meeting.Language == MeetingLanguage.English ? "en" : "ar",
                     stoppingToken);
 
                 meeting.InitiateAIProcessing(token);
@@ -113,9 +129,7 @@ public class MeetingAIProcessingWorker : BackgroundService
             {
                 _processingThrottle.Release();
             }
-        });
-
-        await Task.WhenAll(tasks);
+        }
     }
 
     private async Task UpdatePendingProcessingAsync(
@@ -126,7 +140,7 @@ public class MeetingAIProcessingWorker : BackgroundService
         var meetings = await unitOfWork.Meetings
             .GetMeetingsWithPendingAIProcessingAsync(BatchSize, stoppingToken);
 
-        var tasks = meetings.Select(async meeting =>
+        foreach (var meeting in meetings)
         {
             await _processingThrottle.WaitAsync(stoppingToken);
             try
@@ -134,12 +148,12 @@ public class MeetingAIProcessingWorker : BackgroundService
                 if (!_processingJobs.TryGetValue(meeting.Id, out var jobInfo))
                 {
                     _processingJobs[meeting.Id] = (DateTime.UtcNow, 0);
-                    return;
+                    continue;
                 }
 
                 if (meeting.AIProcessingToken is null)
                 {
-                    return;
+                    continue;
                 }
 
                 var (isDone, status) = await aiService.GetProcessingStatusAsync(
@@ -153,12 +167,14 @@ public class MeetingAIProcessingWorker : BackgroundService
                     _processingJobs[meeting.Id] = (jobInfo.StartTime, retryCount);
                     meeting.UpdateAIProcessingStatus(AIProcessingStatus.Processing);
                     await Task.Delay(delay, stoppingToken);
-                    return;
+                    continue;
                 }
 
                 var report = await aiService.GetProcessingReportAsync(
                     meeting.AIProcessingToken,
                     stoppingToken);
+
+                _logger.LogInformation("Processing report key points: {Result}", report.KeyPoints);
 
                 meeting.UpdateAIProcessingStatus(AIProcessingStatus.Completed);
                 meeting.SetAIReport(report);
@@ -185,9 +201,7 @@ public class MeetingAIProcessingWorker : BackgroundService
             {
                 _processingThrottle.Release();
             }
-        });
-
-        await Task.WhenAll(tasks);
+        }
     }
 
     private TimeSpan CalculateDelay(int retryCount)

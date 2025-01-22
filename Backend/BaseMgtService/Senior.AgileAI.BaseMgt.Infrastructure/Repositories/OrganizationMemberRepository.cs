@@ -71,4 +71,11 @@ public class OrganizationMemberRepository : GenericRepository<OrganizationMember
         return await _context.SaveChangesAsync(cancellationToken) > 0;
     }
 
+    public async Task<OrganizationMember?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.OrganizationMembers
+            .Include(m => m.User)
+            .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+    }
+
 }

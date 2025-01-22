@@ -28,4 +28,5 @@ public interface IMeetingRepository : IGenericRepository<Meeting>
         CancellationToken cancellationToken = default);
     Task<List<Meeting>> GetMeetingsForAIProcessingAsync(int batchSize, CancellationToken cancellationToken = default);
     Task<List<Meeting>> GetMeetingsWithPendingAIProcessingAsync(int batchSize, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Meeting>> GetActiveMeetingsAsync(MeetingType type, CancellationToken cancellationToken = default);
 } 

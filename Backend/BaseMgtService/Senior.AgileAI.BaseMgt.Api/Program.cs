@@ -138,6 +138,7 @@ builder.Services.AddHealthChecks()
 
 // Add this to your service registration
 builder.Services.AddHostedService<CalendarSubscriptionCleanupWorker>();
+builder.Services.AddHostedService<OnlineMeetingWorker>();
 
 var app = builder.Build();
 

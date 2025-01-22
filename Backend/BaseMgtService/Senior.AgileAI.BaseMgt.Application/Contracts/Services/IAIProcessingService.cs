@@ -8,9 +8,10 @@ public interface IAIProcessingService
     /// Submits an audio file for AI processing
     /// </summary>
     /// <param name="audioUrl">The S3 URL of the audio file</param>
+    /// <param name="mainLanguage">The main language of the audio file</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Processing token for tracking status</returns>
-    Task<string> SubmitAudioForProcessingAsync(string audioUrl, CancellationToken cancellationToken = default);
+    Task<string> SubmitAudioForProcessingAsync(string audioUrl, string mainLanguage, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the current processing status

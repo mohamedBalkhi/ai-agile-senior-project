@@ -11,5 +11,6 @@ public interface IOrganizationMemberRepository : IGenericRepository<Organization
     Task<List<OrganizationMember>> GetAllMembersAsync(Guid organizationId, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(OrganizationMember organizationMember, CancellationToken cancellationToken);
     Task<List<OrganizationMember>> GetByOrgIdPaginated(Guid orgId, int pageNumber, int pageSize, CancellationToken cancellationToken);
+    Task<OrganizationMember?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
     // ? Custom methods for OrganizationMember repository
 }

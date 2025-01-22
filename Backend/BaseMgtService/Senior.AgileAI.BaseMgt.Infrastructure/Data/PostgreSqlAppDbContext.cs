@@ -3,12 +3,21 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data.Configurations;
+using Npgsql;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Data;
 
 public class PostgreSqlAppDbContext : DbContext
 {
     private readonly IConfiguration _configuration;
+    private static NpgsqlDataSource? _dataSource;
+
+    static PostgreSqlAppDbContext()
+    {
+        // Configure Npgsql to handle JSON serialization
+        // NpgsqlConnection.GlobalTypeMapper.EnableDynamicJson();
+    }
 
     public PostgreSqlAppDbContext(DbContextOptions<PostgreSqlAppDbContext> options, IConfiguration configuration)
         : base(options)
@@ -23,10 +32,24 @@ public class PostgreSqlAppDbContext : DbContext
         // Add this line to automatically handle DateTime conversions
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
+        // Suppress the warning about many service providers
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
+
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseNpgsql(_configuration.GetConnectionString("PostgreSqlConnection"),
-                b => b.MigrationsAssembly("Senior.AgileAI.BaseMgt.Api"));
+            var connectionString = _configuration.GetConnectionString("PostgreSqlConnection");
+
+            // Create data source only once
+            _dataSource ??= new NpgsqlDataSourceBuilder(connectionString)
+                .EnableDynamicJson()
+                .Build();
+
+            optionsBuilder.UseNpgsql(_dataSource, options =>
+            {
+                options.MigrationsAssembly("Senior.AgileAI.BaseMgt.Api");
+                // options.EnableRetryOnFailure();
+            });
         }
     }
 

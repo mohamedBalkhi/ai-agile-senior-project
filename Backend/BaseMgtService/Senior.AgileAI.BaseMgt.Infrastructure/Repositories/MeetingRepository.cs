@@ -134,6 +134,7 @@ public class MeetingRepository : GenericRepository<Meeting>, IMeetingRepository
         .Where(m => 
             m.Project_IdProject == projectId &&
             m.Status != MeetingStatus.Completed &&
+            m.Status != MeetingStatus.Cancelled &&
             m.Id != (excludeMeetingId ?? Guid.Empty));
 
     return !await query.AnyAsync(m =>
@@ -389,6 +390,14 @@ private bool DoTimeSpansOverlap(TimeSpan start1, TimeSpan end1, TimeSpan start2,
                        m.AIProcessingToken != null)
             .OrderBy(m => m.AudioUploadedAt)
             .Take(batchSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Meeting>> GetActiveMeetingsAsync(MeetingType type, CancellationToken cancellationToken = default)
+    {
+        return await _context.Meetings
+            .Where(m => m.Type == type && 
+                       (m.Status == MeetingStatus.Scheduled || m.Status == MeetingStatus.InProgress))
             .ToListAsync(cancellationToken);
     }
 

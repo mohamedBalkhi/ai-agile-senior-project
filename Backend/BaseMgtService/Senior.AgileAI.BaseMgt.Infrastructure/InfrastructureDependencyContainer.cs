@@ -64,6 +64,8 @@ public static class InfrastructureDependencyContainer
         services.AddScoped<IAIProcessingService, AIProcessingService>();
         services.AddScoped<IAudioTranscodingService, FFmpegAudioTranscodingService>();
 
+        // Register OnlineMeetingService
+        services.AddHttpClient<IOnlineMeetingService, OnlineMeetingService>();
 
         // Register AIProcessingService
         services.AddHttpClient<IAIProcessingService, AIProcessingService>();

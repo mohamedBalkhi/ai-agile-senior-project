@@ -41,6 +41,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
 
                     foreach (var meeting in inProgressMeetings)
                     {
+                        
                         meeting.Complete();
                     }
 

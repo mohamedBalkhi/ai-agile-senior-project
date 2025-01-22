@@ -1,5 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
+using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
@@ -14,15 +15,18 @@ public class StartMeetingCommandHandler : IRequestHandler<StartMeetingCommand, b
     private readonly IUnitOfWork _unitOfWork;
     private readonly IProjectAuthorizationHelper _authHelper;
     private readonly IRabbitMQService _rabbitMQService;
+    private readonly IOnlineMeetingService _onlineMeetingService;
 
     public StartMeetingCommandHandler(
         IUnitOfWork unitOfWork,
         IProjectAuthorizationHelper authHelper,
-        IRabbitMQService rabbitMQService)
+        IRabbitMQService rabbitMQService,
+        IOnlineMeetingService onlineMeetingService)
     {
         _unitOfWork = unitOfWork;
         _authHelper = authHelper;
         _rabbitMQService = rabbitMQService;
+        _onlineMeetingService = onlineMeetingService;
     }
 
     public async Task<bool> Handle(StartMeetingCommand request, CancellationToken cancellationToken)
@@ -32,7 +36,6 @@ public class StartMeetingCommandHandler : IRequestHandler<StartMeetingCommand, b
         {
             throw new NotFoundException("Meeting not found");
         }
-
 
         // Check authorization
         var hasAccess = await _authHelper.HasProjectPrivilege(
@@ -50,16 +53,24 @@ public class StartMeetingCommandHandler : IRequestHandler<StartMeetingCommand, b
         using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
         try
         {
+            // For online meetings, start recording
+            if (meeting.Type == MeetingType.Online)
+            {
+                if (string.IsNullOrEmpty(meeting.LiveKitRoomName))
+                {
+                    throw new InvalidOperationException("Online meeting room not created");
+                }
+
+                // Start recording
+                var audioUrl = await _onlineMeetingService.StartRecordingAsync(
+                    meeting.LiveKitRoomName, 
+                    cancellationToken);
+                meeting.AudioUrl = audioUrl;
+            }
+
             // Start meeting
             meeting.Start();
             
-            // For online meetings, we would integrate with meeting service here
-            if (meeting.Type == MeetingType.Online)
-            {
-                // TODO: Integrate with meeting service
-                // meeting.MeetingUrl = await _meetingService.CreateMeetingSession(meeting);
-            }
-
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

@@ -17,6 +17,14 @@ public record MeetingDetailsDTO
     public string? Location { get; init; }
     public string? MeetingUrl { get; init; }
     public string? AudioUrl { get; init; }
+    
+    // Online Meeting Properties
+    public string? LiveKitRoomSid { get; init; }
+    public string? LiveKitRoomName { get; init; }
+    public OnlineMeetingStatus OnlineMeetingStatus { get; init; }
+    public DateTime? OnlineMeetingStartedAt { get; init; }
+    public DateTime? OnlineMeetingEndedAt { get; init; }
+    
     public DateTime? ReminderTime { get; init; }
     public required MeetingStatus Status { get; init; }
     public MeetingMemberDTO? Creator { get; init; }

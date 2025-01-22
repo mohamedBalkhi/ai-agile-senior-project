@@ -22,6 +22,7 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
     private readonly IProjectAuthorizationHelper _authHelper;
     private readonly IRabbitMQService _rabbitMQService;
     private readonly ILogger<CreateMeetingCommandHandler> _logger;
+    private readonly IOnlineMeetingService _onlineMeetingService;
 
     public CreateMeetingCommandHandler(
         IUnitOfWork unitOfWork,
@@ -29,7 +30,8 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
         IAudioStorageService audioStorage,
         IProjectAuthorizationHelper authHelper,
         IRabbitMQService rabbitMQService,
-        ILogger<CreateMeetingCommandHandler> logger)
+        ILogger<CreateMeetingCommandHandler> logger,
+        IOnlineMeetingService onlineMeetingService)
     {
         _unitOfWork = unitOfWork;
         _recurringMeetingService = recurringMeetingService;
@@ -37,6 +39,7 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
         _authHelper = authHelper;
         _rabbitMQService = rabbitMQService;
         _logger = logger;
+        _onlineMeetingService = onlineMeetingService;
     }
 
     public async Task<Guid> Handle(CreateMeetingCommand request, CancellationToken cancellationToken)
@@ -165,6 +168,27 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
 
             await _unitOfWork.Meetings.AddAsync(meeting, cancellationToken);
             await _unitOfWork.CompleteAsync();
+
+            // Handle online meeting setup
+            if (request.Dto.Type == MeetingType.Online)
+            {
+                try
+                {
+                    var roomName = meeting.GenerateRoomName();
+                    var roomResult = await _onlineMeetingService.CreateRoomAsync(roomName, cancellationToken);
+                    
+                    meeting.LiveKitRoomSid = roomResult.Sid;
+                    meeting.LiveKitRoomName = roomName;
+                    meeting.OnlineMeetingStatus = OnlineMeetingStatus.NotStarted;
+                    meeting.AudioStatus = AudioStatus.Pending;
+                    meeting.AudioSource = AudioSource.MeetingService;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create LiveKit room for meeting {MeetingId}", meeting.Id);
+                    throw new InvalidOperationException("Failed to create online meeting room", ex);
+                }
+            }
 
             // Handle recurring pattern if specified
             if (request.Dto.IsRecurring && request.Dto.RecurringPattern != null)

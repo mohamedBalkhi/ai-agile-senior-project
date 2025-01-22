@@ -165,4 +165,42 @@ public class MeetingController : ControllerBase
         return Ok(new ApiResponse<AudioUrlResult>(200, "Audio URL generated successfully", result));
     }
 
+    [HttpPost("{meetingId}/join")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<JoinMeetingResponse>>> JoinMeeting(Guid meetingId)
+    {
+        var userId = _tokenResolver.ExtractUserId();
+        if (userId == null)
+        {
+            return Unauthorized(new ApiResponse<string>(401, "Unauthorized", null));
+        }
+
+        var command = new GenerateMeetingTokenCommand
+        {
+            MeetingId = meetingId,
+            UserId = userId.Value
+        };
+
+        try
+        {
+            var token = await _mediator.Send(command);
+            return Ok(new ApiResponse<JoinMeetingResponse>(200, "Join token generated successfully", new JoinMeetingResponse
+            {
+                Token = token,
+                ServerUrl = "wss://meeting.agilemeets.com"
+            }));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<string>(401, "You are not authorized to join this meeting", null));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ApiResponse<string>(400, ex.Message, null));
+        }
+    }
+
 } 

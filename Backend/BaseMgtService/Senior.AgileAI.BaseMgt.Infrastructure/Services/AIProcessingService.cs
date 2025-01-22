@@ -36,7 +36,7 @@ public class AIProcessingService : IAIProcessingService
         _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
     }
 
-    public async Task<string> SubmitAudioForProcessingAsync(string audioUrl, CancellationToken cancellationToken = default)
+    public async Task<string> SubmitAudioForProcessingAsync(string audioUrl, string mainLanguage, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -46,7 +46,7 @@ public class AIProcessingService : IAIProcessingService
                 TimeSpan.FromHours(12),
                 cancellationToken);
 
-            var request = new SubmitAudioRequest { AudioUrl = presignedUrl };
+            var request = new SubmitAudioRequest { AudioUrl = presignedUrl, MainLanguage = mainLanguage };
             
             // Serialize with proper options
             var jsonOptions = new JsonSerializerOptions 
@@ -155,7 +155,7 @@ public class AIProcessingService : IAIProcessingService
 
             var result = await response.Content.ReadFromJsonAsync<ProcessingReportResponse>(
                 cancellationToken: cancellationToken);
-
+            _logger.LogInformation("Processing report: {Result}", result);
             if (result == null)
                 throw new AIProcessingException("Invalid response from AI service");
 
@@ -177,12 +177,17 @@ public class AIProcessingService : IAIProcessingService
     private record ProcessingReportResponse(
         string Transcript,
         string Summary,
+        [property : JsonPropertyName("key_points")]
         List<string> KeyPoints,
+        [property : JsonPropertyName("main_language")]
         string? MainLanguage);
 
     public class SubmitAudioRequest
     {
         [JsonPropertyName("audio_url")]
         public required string AudioUrl { get; set; }
+
+        [JsonPropertyName("main_language")]
+        public required string MainLanguage { get; set; }
     }
 }

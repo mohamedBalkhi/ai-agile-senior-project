@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
-
+using System.Text.Json;
+using System.Text.Json.Serialization;
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Data.Configurations;
 
 public class MeetingConfiguration : IEntityTypeConfiguration<Meeting>
@@ -93,13 +94,37 @@ public class MeetingConfiguration : IEntityTypeConfiguration<Meeting>
 
             report.Property(r => r.KeyPoints)
                 .HasColumnName("AIKeyPoints")
-                .HasColumnType("jsonb");
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
+                    v => JsonSerializer.Deserialize<List<string>>(v, new JsonSerializerOptions()));
 
             report.Property(r => r.MainLanguage)
                 .HasColumnName("AIMainLanguage")
                 .HasMaxLength(20)
                 .IsRequired();
         });
+
+        // Online Meeting Configuration
+        builder.Property(m => m.LiveKitRoomSid)
+            .HasMaxLength(100)
+            .IsRequired(false);
+
+        builder.Property(m => m.LiveKitRoomName)
+            .HasMaxLength(200)
+            .IsRequired(false);
+
+        builder.Property(m => m.OnlineMeetingStatus)
+            .HasDefaultValue(Domain.Enums.OnlineMeetingStatus.NotStarted)
+            .IsRequired();
+
+        builder.Property(m => m.OnlineMeetingStartedAt)
+            .HasColumnType("timestamp without time zone")
+            .IsRequired(false);
+
+        builder.Property(m => m.OnlineMeetingEndedAt)
+            .HasColumnType("timestamp without time zone")
+            .IsRequired(false);
 
         // Relationships
         builder.HasOne(m => m.Project)

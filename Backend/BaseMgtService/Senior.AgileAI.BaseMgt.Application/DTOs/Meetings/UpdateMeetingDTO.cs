@@ -13,6 +13,7 @@ public record UpdateMeetingDTO
     public string? TimeZone { get; init; }
     public string? Location { get; init; }
     public DateTime? ReminderTime { get; init; }
+    
     public List<Guid>? AddMembers { get; init; }
     public List<Guid>? RemoveMembers { get; init; }
     public RecurringMeetingPatternDTO? RecurringPattern { get; init; }

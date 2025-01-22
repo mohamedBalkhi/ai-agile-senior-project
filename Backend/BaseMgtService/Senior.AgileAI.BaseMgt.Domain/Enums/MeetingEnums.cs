@@ -62,3 +62,10 @@ public enum AIProcessingStatus
     Completed,       // Processing completed successfully
     Failed          // Processing failed
 }
+
+public enum OnlineMeetingStatus
+{
+    NotStarted,      // Room created but meeting hasn't started
+    Active,          // Meeting is ongoing with participants
+    Ended           // Meeting has ended
+}

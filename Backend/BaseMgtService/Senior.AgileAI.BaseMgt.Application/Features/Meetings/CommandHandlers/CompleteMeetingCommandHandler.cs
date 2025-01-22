@@ -1,5 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
+using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
@@ -13,15 +14,18 @@ public class CompleteMeetingCommandHandler : IRequestHandler<CompleteMeetingComm
     private readonly IUnitOfWork _unitOfWork;
     private readonly IProjectAuthorizationHelper _authHelper;
     private readonly IRabbitMQService _rabbitMQService;
+    private readonly IOnlineMeetingService _onlineMeetingService;
 
     public CompleteMeetingCommandHandler(
         IUnitOfWork unitOfWork,
         IProjectAuthorizationHelper authHelper,
-        IRabbitMQService rabbitMQService)
+        IRabbitMQService rabbitMQService,
+        IOnlineMeetingService onlineMeetingService)
     {
         _unitOfWork = unitOfWork;
         _authHelper = authHelper;
         _rabbitMQService = rabbitMQService;
+        _onlineMeetingService = onlineMeetingService;
     }
 
     public async Task<bool> Handle(CompleteMeetingCommand request, CancellationToken cancellationToken)
@@ -48,19 +52,24 @@ public class CompleteMeetingCommandHandler : IRequestHandler<CompleteMeetingComm
         using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
         try
         {
-            // Complete meeting
-            meeting.Complete();
-
-            // For online meetings, get recording from meeting service
+            // For online meetings, stop recording and delete room
             if (meeting.Type == MeetingType.Online)
             {
-                // TODO: Integrate with meeting service
-                // meeting.AudioUrl = await _meetingService.GetRecordingUrl(meeting.MeetingUrl);
-                // meeting.AudioStatus = AudioStatus.Available;
-                // meeting.AudioSource = AudioSource.MeetingService;
-                // meeting.AudioUploadedAt = DateTime.UtcNow;
+                if (string.IsNullOrEmpty(meeting.LiveKitRoomName))
+                {
+                    throw new InvalidOperationException("Online meeting room not found");
+                }
+
+                // Stop recording
+                await _onlineMeetingService.StopRecordingAsync(meeting.LiveKitRoomName, cancellationToken);
+
+                // Delete room
+                await _onlineMeetingService.DeleteRoomAsync(meeting.LiveKitRoomName, cancellationToken);
             }
 
+            // Complete meeting
+            meeting.Complete();
+            
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 
@@ -74,7 +83,8 @@ public class CompleteMeetingCommandHandler : IRequestHandler<CompleteMeetingComm
                         Type = NotificationType.Email,
                         Recipient = member.OrganizationMember.User.Email,
                         Subject = $"Meeting Completed: {meeting.Title}",
-                        Body = $"The meeting {meeting.Title} has been completed."
+                        Body = $"The meeting {meeting.Title} has ended.\n\n" +
+                              $"Duration: {meeting.ActualEndTime?.Subtract(meeting.StartTime).TotalMinutes:F0} minutes"
                     });
                 }
             }
