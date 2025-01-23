@@ -34,21 +34,17 @@ def download_audio_to_storage(url, audio_id):
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
-        
         return file_path, extension.lstrip('.')
         
     except requests.exceptions.RequestException as e:
         raise Exception(f"Failed to download audio: {str(e)}")
     except Exception as e:
         raise Exception(f"Error processing audio download: {str(e)}")
+    
+
 
 def cleanup_audio_file(file_path):
-    """
-    Removes the audio file after processing
-    
-    Args:
-        file_path (str): Path to the file to be removed
-    """
+
     try:
         if os.path.exists(file_path):
             os.remove(file_path)

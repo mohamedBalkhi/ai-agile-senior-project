@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Environment Variables
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 API_KEYS_SERVICE = os.getenv("API_KEYS_SERVICE")
 SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key")  # Provide fallback for SECRET_KEY
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
