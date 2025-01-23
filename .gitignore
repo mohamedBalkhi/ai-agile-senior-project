@@ -230,3 +230,7 @@ FodyWeavers.xsd
 
 
 Backend/NotificationService/Configuration/agile_firebase.json
+Backend/Docker/AiService/ec2.pem
+.aider*
+.env
+AWS.txt
