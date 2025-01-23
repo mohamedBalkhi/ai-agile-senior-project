@@ -1,7 +1,7 @@
 import json
 from .Speech_to_text_component import EnglishSpeechToText, ArabicSpeechToText
 from .Summarization_component import BasicSummarization, AdvancedSummarization
-from .Key_points_Component import BasicKeyPoints, AdvancedKeyPoints
+from .Key_points_Component import  AdvancedKeyPoints
 from .MasterProcessor import MasterProcessor
 
 
@@ -33,11 +33,11 @@ def process_audio(channel, method, properties, body):
             speech_to_text_strategy = EnglishSpeechToText()
 
         if user_plan == "premium":
-            summarization_strategy = AdvancedSummarization()
-            key_points_strategy = AdvancedKeyPoints()
+            summarization_strategy = AdvancedSummarization() #openai
+            key_points_strategy = AdvancedKeyPoints() #openai
         else:
-            summarization_strategy = BasicSummarization()
-            key_points_strategy = BasicKeyPoints()
+            summarization_strategy = BasicSummarization() #deepgram
+            key_points_strategy = AdvancedKeyPoints() #openai
 
         processor = MasterProcessor(
             speech_to_text_strategy,

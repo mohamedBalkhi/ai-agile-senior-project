@@ -7,7 +7,7 @@ import uuid
 from django.utils import timezone
 from ai_processor.authentication import require_api_key
 
-    
+
 
 #? First Api in the processing flow..
 
@@ -21,7 +21,7 @@ class SubmitAudioAPIView(APIView):
         #? Get required and optional parameters from the request
         audio_url = request.data.get("audio_url")
         main_language = request.data.get("main_language") or "en"
-        user_plan = request.data.get("user_plan") or "basic"
+        user_plan = request.data.get("user_plan") or "premium"
 
         # Validate that audio_url is provided
         if not audio_url:
