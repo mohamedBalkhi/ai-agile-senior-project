@@ -312,66 +312,55 @@ private bool DoTimeSpansOverlap(TimeSpan start1, TimeSpan end1, TimeSpan start2,
                     .ThenInclude(om => om.User)
             .ToListAsync(cancellationToken);
     }
+public async Task<(List<Meeting>, bool)> GetProjectMeetingsInRangeAsync(
+    Guid projectId,
+    DateTime? referenceDate,
+    int? pageSize,
+    bool upcomingOnly = false,
+    string? lastMeetingIdString = null, // Use string representation of Guid
+    CancellationToken cancellationToken = default)
+{
+    var utcNow = DateTime.UtcNow;
+    int pageSizeValue = pageSize ?? 30;
 
-    public async Task<(List<Meeting> Meetings, bool HasMorePast, bool HasMoreFuture)> GetProjectMeetingsInRangeAsync(
-        Guid projectId,
-        DateTime startDate,
-        DateTime endDate,
-        int? pageSize,
-        CancellationToken cancellationToken = default)
+    var query = _context.Meetings
+        .Where(m => m.Project_IdProject == projectId);
+
+    if (upcomingOnly)
     {
-        // Ensure dates are in UTC
-        startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
-        endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
-
-        // Get meetings in range first
-        var query = _context.Meetings
-            .Include(m => m.Project)
-            .Include(m => m.Creator)
-                .ThenInclude(c => c.User)
-            .Include(m => m.MeetingMembers)
-            .Include(m => m.RecurringPattern)
-            .Include(m => m.OriginalMeeting)
-                .ThenInclude(om => om!.RecurringPattern)
-            .Where(m => 
-                m.Project_IdProject == projectId &&
-                (
-                    (m.StartTime >= startDate && m.StartTime <= endDate) || // Starts within range
-                    (m.EndTime >= startDate && m.EndTime <= endDate) ||     // Ends within range
-                    (m.StartTime <= startDate && m.EndTime >= endDate)      // Spans across range
-                ))
-            .OrderBy(m => m.StartTime);
-
-        // Get one extra record to check if there are more
-        var meetings = await query
-            .Take((pageSize ?? 30) + 1)
-            .ToListAsync(cancellationToken);
-
-        bool hasMore = meetings.Count > (pageSize ?? 30);
-        if (hasMore)
-        {
-            meetings = meetings.Take(pageSize ?? 30).ToList();
-        }
-
-        // Now check past/future based on the retrieved meetings
-        var earliestMeetingStart = meetings.Any() ? meetings.Min(m => m.StartTime) : startDate;
-        var latestMeetingEnd = meetings.Any() ? meetings.Max(m => m.EndTime) : endDate;
-
-        var hasPastMeetings = await _context.Meetings
-            .Where(m => 
-                m.Project_IdProject == projectId &&
-                m.EndTime < earliestMeetingStart)
-            .AnyAsync(cancellationToken);
-
-        var hasFutureMeetings = hasMore || await _context.Meetings
-            .Where(m => 
-                m.Project_IdProject == projectId &&
-                m.StartTime > latestMeetingEnd)
-            .AnyAsync(cancellationToken);
-
-        return (meetings, hasPastMeetings, hasFutureMeetings);
+        // For upcoming view: Filter strictly after `referenceDate`
+        query = query.Where(m =>
+            m.EndTime > (referenceDate ?? utcNow) ||
+            (m.EndTime == (referenceDate ?? utcNow) && string.Compare(m.Id.ToString(), lastMeetingIdString) != 0)); // Tie-breaking
+    }
+    else
+    {
+        // For historical view: Filter strictly before `referenceDate`
+        query = query.Where(m =>
+            m.EndTime < (referenceDate ?? utcNow) ||
+            (m.EndTime == (referenceDate ?? utcNow) && string.Compare(m.Id.ToString(), lastMeetingIdString) != 0)); // Tie-breaking
     }
 
+    query = upcomingOnly
+        ? query.OrderBy(m => m.EndTime).ThenBy(m => m.Id) // Upcoming: Earliest first
+        : query.OrderByDescending(m => m.EndTime).ThenByDescending(m => m.Id); // Historical: Latest first
+
+    // Fetch meetings and determine if there are more
+    var meetings = await query
+        .Take(pageSizeValue + 1) // Fetch one extra to check for `hasMore`
+        .Include(m => m.Project)
+        .Include(m => m.Creator)
+            .ThenInclude(c => c.User)
+        .Include(m => m.MeetingMembers)
+        .Include(m => m.RecurringPattern)
+        .Include(m => m.OriginalMeeting)
+            .ThenInclude(om => om!.RecurringPattern)
+        .ToListAsync(cancellationToken);
+
+    bool hasMore = meetings.Count > pageSizeValue;
+
+    return (meetings.Take(pageSizeValue).ToList(), hasMore);
+}
     public async Task<List<Meeting>> GetMeetingsForAIProcessingAsync(int batchSize, CancellationToken cancellationToken = default)
     {
         return await _context.Meetings
@@ -398,6 +387,23 @@ private bool DoTimeSpansOverlap(TimeSpan start1, TimeSpan end1, TimeSpan start2,
         return await _context.Meetings
             .Where(m => m.Type == type && 
                        (m.Status == MeetingStatus.Scheduled || m.Status == MeetingStatus.InProgress))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Meeting>> GetPastScheduledMeetingsAsync(
+        DateTime currentTimeUtc,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Meetings
+            .Where(m => 
+                m.Status == MeetingStatus.Scheduled && 
+                m.EndTime <= currentTimeUtc)
+            .OrderBy(m => m.EndTime)
+            .Take(batchSize)
+            .Include(m => m.MeetingMembers)
+                .ThenInclude(mm => mm.OrganizationMember)
+                    .ThenInclude(om => om.User)
             .ToListAsync(cancellationToken);
     }
 

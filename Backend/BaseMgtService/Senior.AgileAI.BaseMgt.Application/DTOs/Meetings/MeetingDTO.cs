@@ -23,4 +23,5 @@ public record MeetingDTO
     public required string ProjectName { get; init; }
      public string? LiveKitRoomSid { get; init; }
     public string? LiveKitRoomName { get; init; }
+    public DateTime CreatedDate { get; init; }
 } 

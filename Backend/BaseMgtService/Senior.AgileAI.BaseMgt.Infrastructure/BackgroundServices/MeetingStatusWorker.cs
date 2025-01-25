@@ -41,7 +41,6 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
 
                     foreach (var meeting in inProgressMeetings)
                     {
-                        
                         meeting.Complete();
                     }
 
@@ -51,6 +50,29 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
                         _logger.LogInformation(
                             "Completed {Count} meetings at {Time} UTC", 
                             inProgressMeetings.Count,
+                            DateTime.UtcNow);
+                    }
+
+                    // Handle past scheduled meetings
+                    var pastScheduledMeetings = await unitOfWork.Meetings.GetPastScheduledMeetingsAsync(
+                        DateTime.UtcNow,
+                        BatchSize,
+                        stoppingToken);
+
+                    foreach (var meeting in pastScheduledMeetings)
+                    {
+                        meeting.Status = MeetingStatus.Cancelled;
+                        _logger.LogInformation(
+                            "Cancelled past scheduled meeting {MeetingId} that never started",
+                            meeting.Id);
+                    }
+
+                    if (pastScheduledMeetings.Any())
+                    {
+                        await unitOfWork.CompleteAsync();
+                        _logger.LogInformation(
+                            "Cancelled {Count} past scheduled meetings at {Time} UTC", 
+                            pastScheduledMeetings.Count,
                             DateTime.UtcNow);
                     }
                 }

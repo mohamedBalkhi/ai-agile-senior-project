@@ -1,13 +1,15 @@
-
 namespace Senior.AgileAI.BaseMgt.Application.DTOs.Meetings;
 
 public class GroupedMeetingsResponse
 {
     public List<MeetingGroupDTO> Groups { get; set; } = new();
-    public bool HasMorePast { get; set; }
-    public bool HasMoreFuture { get; set; }
-    public DateTime? OldestMeetingDate { get; set; }
-    public DateTime? NewestMeetingDate { get; set; }
+    
+    // Pagination metadata
+    public bool HasMore { get; set; }
+    public string? LastMeetingId { get; set; }  // For cursor-based pagination
+    public DateTime? ReferenceDate { get; set; } // Current reference date used
+    public DateTime? NextReferenceDate { get; set; } // Reference date for next page
+    public int TotalMeetingsCount { get; set; } // Total meetings in current response
 }
 
 public class MeetingGroupDTO
