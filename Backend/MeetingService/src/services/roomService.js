@@ -44,10 +44,12 @@ class RoomService {
             }
 
             return {
+                sid: room.sid,
                 name: room.name,
                 numParticipants: room.numParticipants,
-                metadata: room.metadata ? JSON.parse(room.metadata) : {},
-                creationTime: room.creationTime
+                creationTime: room.creationTime,
+                activeRecording: room.activeRecording,
+                metadata: room.metadata ? JSON.parse(room.metadata) : {}
             };
         } catch (error) {
             // actually this means that the room is not found
@@ -116,8 +118,8 @@ class RoomService {
 
             // AWS S3 Configuration
             const s3Config = {
-                accessKey: process.env.AWS_ACCESS_KEY || 'AKIAWCZC556UB3M34MPX',
-                secret: process.env.AWS_SECRET_KEY || '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',
+                accessKey: process.env.AWS_ACCESS_KEY,
+                secret: process.env.AWS_SECRET_KEY ,
                 bucket: process.env.AWS_BUCKET_NAME || 'agilemeets-meetings',
                 region: 'eu-central-1',
                 endpoint: 's3.eu-central-1.amazonaws.com'
@@ -146,7 +148,7 @@ class RoomService {
                 {
                     audioOnly: true,
                     encodingOptions: {
-                        audioBitrate: 128000,
+                        audioBitrate: 128,
                         audioFrequency: 48000,
                         audioChannels: 1
                     }

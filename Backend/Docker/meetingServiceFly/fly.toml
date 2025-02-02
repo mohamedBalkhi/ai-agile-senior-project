@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for agilemeets-meeting on 2025-01-21T23:23:50+03:00
+# fly.toml app configuration file generated for agilemeets-meeting on 2025-01-25T07:09:50+03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,28 +7,30 @@ app = 'agilemeets-meeting'
 primary_region = 'ams'
 
 [build]
-  dockerfile = "Dockerfile"
-  context = "../../MeetingService"
+  dockerfile = 'Dockerfile'
 
 [env]
-  DEFAULT_APP_ADMIN_PASSWORD = 'vXruaalrKXvm9qQG8d80fctH6rW5GyC4q9e1HxXXqhbI'
+  DEFAULT_APP_ADMIN_PASSWORD = '***REDACTED***'
   DEFAULT_APP_ADMIN_USERNAME = 'calladmin'
-  DEFAULT_APP_PASSWORD = '26iohGzECyYEuxTQinyNDqwiUW09aj7xuCp02gFwohbN'
+  DEFAULT_APP_PASSWORD = '***REDACTED***'
   DEFAULT_APP_USERNAME = 'calluser'
   DOMAIN_NAME = 'meeting.agilemeets.com'
   ENABLED_MODULES = 'observability,app'
   LETSENCRYPT_EMAIL = 'agilemeets.noreply@gmail.com'
-  LIVEKIT_API_KEY = 'APIGRZq7hLoEKF4'
-  LIVEKIT_API_SECRET = 'oOrBw7x0O82lLwdzVzHHLwuw4UTk68NqeGavMLG61amU'
+  LIVEKIT_API_KEY = '***REDACTED***'
+  LIVEKIT_API_SECRET = '***REDACTED***'
   LIVEKIT_TURN_DOMAIN_NAME = 'none'
   LIVEKIT_URL = 'wss://meeting.agilemeets.com'
   LOG_LEVEL = 'info'
   NODE_ENV = 'production'
   PORT = '8082'
   RABBITMQ__HOSTNAME = 'agilemeets-rabbitmq.internal'
-  RABBITMQ__PASSWORD = 'guest'
+  RABBITMQ__PASSWORD = '***REDACTED***'
   RABBITMQ__USERNAME = 'guest'
   RABBITMQ__VIRTUALHOST = '/'
+  AWS_ACCESS_KEY = '***REDACTED***'
+  AWS_SECRET_KEY = '***REDACTED***'
+  AWS_BUCKET_NAME = 'agilemeets-meetings'
 
 [http_service]
   internal_port = 8082
@@ -45,13 +47,6 @@ primary_region = 'ams'
     port = 8082
     handlers = ['http']
 
-  [[services.http_checks]]
-    interval = '15s'
-    timeout = '2s'
-    grace_period = '30s'
-    method = 'get'
-    path = '/health'
-    protocol = 'http'
 
 [[vm]]
   memory = '512mb'

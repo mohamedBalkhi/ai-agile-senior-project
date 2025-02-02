@@ -62,6 +62,19 @@ app.options('*', cors());
 // Mount API routes
 app.use('/api', routes);
 
+// Add root route handler
+app.get('/', (req, res) => {
+    logger.info('Root request received', {
+        headers: req.headers,
+        ip: req.ip
+    });
+    res.status(200).json({
+        status: 'OK',
+        message: 'Meeting Service is running',
+        version: process.env.npm_package_version || '1.0.0'
+    });
+});
+
 // Handle timeout errors
 app.use((err, req, res, next) => {
     if (err.timeout) {
@@ -91,8 +104,10 @@ app.use((err, req, res, next) => {
     errorHandler(err, req, res, next);
 });
 
+const host = process.env.HOST || '0.0.0.0';
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
-    logger.info(`Server is running on port ${port}`);
+app.listen(port, host, () => {
+    logger.info(`Server is running on ${host}:${port}`);
+    logger.info(`Health check endpoint available at http://${host}:${port}/api/health`);
 });
