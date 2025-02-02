@@ -3,11 +3,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
+using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices;
 
@@ -32,30 +29,38 @@ public class MeetingAIProcessingWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("{ServiceName} starting", nameof(MeetingAIProcessingWorker));
+        _logger.LogInformation("Starting {ServiceName}", nameof(MeetingAIProcessingWorker));
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await ProcessMeetingsAsync(stoppingToken);
-                
-                // Calculate next delay based on active jobs
-                var nextDelay = _processingJobs.Any() 
-                    ? _initialInterval 
-                    : _maxInterval;
-                
-                await Task.Delay(nextDelay, stoppingToken);
+                using var scope = _scopeFactory.CreateScope();
+                var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var aiService = scope.ServiceProvider.GetRequiredService<IAIProcessingService>();
+
+                try
+                {
+                    // Cleanup stale jobs before processing
+                    CleanupStaleJobs();
+
+                    // Process new and pending meetings
+                    await InitiateNewProcessingAsync(unitOfWork, aiService, stoppingToken);
+                    await UpdatePendingProcessingAsync(unitOfWork, aiService, stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Error during processing loop");
+                }
+
+                await Task.Delay(_initialInterval, stoppingToken);
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while processing meetings");
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Processing loop stopped");
         }
     }
 
@@ -101,8 +106,17 @@ public class MeetingAIProcessingWorker : BackgroundService
             {
                 if (!meeting.CanProcessAudio())
                 {
+                    _logger.LogDebug(
+                        "Meeting {Id} not ready for AI processing",
+                        meeting.Id);
                     continue;
                 }
+
+                _logger.LogInformation(
+                    "Starting AI processing for meeting {Id}. Language: {Language}, AudioUrl: {Url}",
+                    meeting.Id,
+                    meeting.Language,
+                    meeting.AudioUrl);
 
                 var token = await aiService.SubmitAudioForProcessingAsync(
                     meeting.AudioUrl!,
@@ -115,14 +129,30 @@ public class MeetingAIProcessingWorker : BackgroundService
                 await unitOfWork.CompleteAsync();
 
                 _logger.LogInformation(
-                    "Initiated AI processing for meeting {Id}",
-                    meeting.Id);
+                    "Successfully initiated AI processing for meeting {Id}. Token: {Token}",
+                    meeting.Id,
+                    token);
+            }
+            catch (AIProcessingException ex)
+            {
+                _logger.LogError(
+                    "AI service error for meeting {Id}: {Error}",
+                    meeting.Id,
+                    ex.Message);
+
+                // If circuit breaker is open, pause processing
+                if (ex.Message.Contains("Circuit breaker"))
+                {
+                    _logger.LogWarning(
+                        "Circuit breaker open - pausing processing for 30s");
+                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
-                    "Failed to initiate AI processing for meeting {Id}",
+                    "Unexpected error initiating AI processing for meeting {Id}",
                     meeting.Id);
             }
             finally
@@ -145,14 +175,11 @@ public class MeetingAIProcessingWorker : BackgroundService
             await _processingThrottle.WaitAsync(stoppingToken);
             try
             {
-                if (!_processingJobs.TryGetValue(meeting.Id, out var jobInfo))
-                {
-                    _processingJobs[meeting.Id] = (DateTime.UtcNow, 0);
-                    continue;
-                }
-
                 if (meeting.AIProcessingToken is null)
                 {
+                    _logger.LogWarning(
+                        "Meeting {Id} has no processing token",
+                        meeting.Id);
                     continue;
                 }
 
@@ -162,40 +189,45 @@ public class MeetingAIProcessingWorker : BackgroundService
 
                 if (!isDone)
                 {
-                    var retryCount = jobInfo.RetryCount + 1;
-                    var delay = CalculateDelay(retryCount);
-                    _processingJobs[meeting.Id] = (jobInfo.StartTime, retryCount);
+                    _logger.LogInformation(
+                        "Meeting {Id} still processing. Status: {Status}",
+                        meeting.Id,
+                        status);
+                        
                     meeting.UpdateAIProcessingStatus(AIProcessingStatus.Processing);
-                    await Task.Delay(delay, stoppingToken);
+                    await unitOfWork.CompleteAsync();
                     continue;
                 }
+
+                _logger.LogInformation(
+                    "Fetching AI processing report for meeting {Id}",
+                    meeting.Id);
 
                 var report = await aiService.GetProcessingReportAsync(
                     meeting.AIProcessingToken,
                     stoppingToken);
 
-                _logger.LogInformation("Processing report key points: {Result}", report.KeyPoints);
-
                 meeting.UpdateAIProcessingStatus(AIProcessingStatus.Completed);
                 meeting.SetAIReport(report);
-                _processingJobs.Remove(meeting.Id);
-
                 await unitOfWork.CompleteAsync();
 
                 _logger.LogInformation(
-                    "Completed AI processing for meeting {Id} after {Duration}",
-                    meeting.Id,
-                    DateTime.UtcNow - jobInfo.StartTime);
+                    "Completed AI processing for meeting {Id}",
+                    meeting.Id);
+            }
+            catch (AIProcessingException ex) when (ex.Message.Contains("Circuit breaker"))
+            {
+                _logger.LogWarning(
+                    "Circuit breaker open for meeting {Id} - will retry later",
+                    meeting.Id);
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
-                    "Failed to update AI processing status for meeting {Id}",
+                    "Error updating AI processing status for meeting {Id}",
                     meeting.Id);
-
-                meeting.UpdateAIProcessingStatus(AIProcessingStatus.Failed);
-                await unitOfWork.CompleteAsync();
             }
             finally
             {
@@ -208,5 +240,52 @@ public class MeetingAIProcessingWorker : BackgroundService
     {
         var delay = _initialInterval * Math.Pow(1.5, retryCount);
         return delay > _maxInterval ? _maxInterval : delay;
+    }
+
+    private void CleanupStaleJobs()
+    {
+        var staleTimeout = TimeSpan.FromHours(1);
+        var staleJobs = _processingJobs
+            .Where(j => DateTime.UtcNow - j.Value.StartTime > staleTimeout)
+            .ToList();
+
+        foreach (var job in staleJobs)
+        {
+            _logger.LogWarning(
+                "Removing stale job for meeting {Id}. Started: {Start}",
+                job.Key,
+                job.Value.StartTime);
+            _processingJobs.Remove(job.Key);
+        }
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Stopping {ServiceName}", nameof(MeetingAIProcessingWorker));
+        
+        // Wait for active jobs to complete (with timeout)
+        var timeout = TimeSpan.FromSeconds(30);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(timeout);
+        
+        try 
+        {
+            while (_processingJobs.Any())
+            {
+                await Task.Delay(1000, cts.Token);
+                _logger.LogInformation(
+                    "Waiting for {Count} jobs to complete",
+                    _processingJobs.Count);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning(
+                "Shutdown timeout reached with {Count} jobs remaining",
+                _processingJobs.Count);
+        }
+        
+        _processingThrottle.Dispose();
+        await base.StopAsync(cancellationToken);
     }
 }
