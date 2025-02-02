@@ -2,7 +2,6 @@ using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Features.Calendar.Queries;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
-using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
@@ -36,7 +35,7 @@ public class GetCalendarFeedQueryHandler : IRequestHandler<GetCalendarFeedQuery,
         var meetings = subscription.FeedType switch
         {
             CalendarFeedType.Personal => await _unitOfWork.Meetings
-                .GetUserMeetingsAsync(subscription.User_IdUser, true, cancellationToken),
+                .GetUserMeetingsAsync(subscription.User_IdUser, true, false,cancellationToken),
                 
             CalendarFeedType.Project => await _unitOfWork.Meetings
                 .GetProjectMeetingsAsync(subscription.Project_IdProject!.Value, true, cancellationToken),
@@ -48,9 +47,11 @@ public class GetCalendarFeedQueryHandler : IRequestHandler<GetCalendarFeedQuery,
         };
 
         _logger.LogInformation("Found {MeetingCount} meetings for subscription {SubscriptionId}", meetings.Count, subscription.Id);
-
+        var userTimeZone = TimeZoneInfo.FindSystemTimeZoneById(request.timeZondId);
         foreach (var meeting in meetings)
         {
+            var startTime = TimeZoneInfo.ConvertTimeFromUtc(meeting.StartTime, userTimeZone);
+            var EndTime = TimeZoneInfo.ConvertTimeFromUtc(meeting.EndTime, userTimeZone);
             var calendarEvent = new CalendarEvent
             {
                 Summary = meeting.Title,
@@ -59,8 +60,8 @@ public class GetCalendarFeedQueryHandler : IRequestHandler<GetCalendarFeedQuery,
                              $"Language: {meeting.Language}\n" +
                              $"Members: {string.Join(", ", meeting.MeetingMembers.Select(m => m.OrganizationMember.User.FUllName))}\n" +
                              $"Meeting ID: {meeting.Id}", // Include meeting ID for deep linking
-                Start = new CalDateTime(meeting.StartTime),
-                End = new CalDateTime(meeting.EndTime),
+                Start = new CalDateTime(startTime),
+                End = new CalDateTime(EndTime),
                 Location = meeting.Location ?? meeting.MeetingUrl,
                 Uid = meeting.Id.ToString(),
                 Created = new CalDateTime(meeting.CreatedDate),
@@ -70,6 +71,7 @@ public class GetCalendarFeedQueryHandler : IRequestHandler<GetCalendarFeedQuery,
                     MeetingStatus.Scheduled => "CONFIRMED",
                     MeetingStatus.Cancelled => "CANCELLED",
                     MeetingStatus.InProgress => "IN-PROGRESS",
+                    MeetingStatus.Completed => "COMPLETED",
                     _ => "TENTATIVE"
                 }
             };
@@ -80,6 +82,7 @@ public class GetCalendarFeedQueryHandler : IRequestHandler<GetCalendarFeedQuery,
             calendarEvent.Properties.Set("X-PROJECT-ID", meeting.Project_IdProject.ToString());
             calendarEvent.Properties.Set("X-CREATOR-ID", meeting.Creator_IdOrganizationMember.ToString());
             calendarEvent.Properties.Set("X-IS-RECURRING", meeting.IsRecurring.ToString());
+            calendarEvent.Properties.Set("X-MEETING-STATUS", meeting.Status.ToString());
 
             // Add organizer
             if (meeting.Creator?.User != null)

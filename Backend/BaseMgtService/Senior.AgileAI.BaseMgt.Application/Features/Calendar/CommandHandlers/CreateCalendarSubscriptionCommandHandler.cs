@@ -29,6 +29,12 @@ public class CreateCalendarSubscriptionCommandHandler
         CancellationToken cancellationToken)
     {
         await ValidateSubscriptionRequestAsync(request.UserId, request.Dto, cancellationToken);
+        // Check if the user has an active subscription
+        
+        var activeSubscription = await CheckActiveSubscriptionAsync(request.UserId, cancellationToken, request.Dto.FeedType);
+        if (activeSubscription != null)
+            return await CreateSubscriptionDTOAsync(activeSubscription, cancellationToken);
+
         var token = await GenerateUniqueTokenAsync(cancellationToken);
 
         var subscription = new CalendarSubscription
@@ -122,5 +128,15 @@ public class CreateCalendarSubscriptionCommandHandler
             ProjectName = projectName,
             SeriesTitle = seriesTitle
         };
+    }
+
+    private async Task<CalendarSubscription?> CheckActiveSubscriptionAsync(Guid userId, CancellationToken cancellationToken, CalendarFeedType feedType)
+    {
+        var activeSubscription = await _unitOfWork.CalendarSubscriptions
+            .GetActiveByUserIdAsync(userId, cancellationToken);
+        // check each type (I mean based on the type requested)
+        if (activeSubscription.Any(s => s.FeedType == feedType))
+            return activeSubscription.First(s => s.FeedType == feedType);
+        return null;
     }
 } 

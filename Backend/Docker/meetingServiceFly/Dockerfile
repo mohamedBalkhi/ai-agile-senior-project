@@ -2,17 +2,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Install dependencies first (for better caching)
 COPY ../../MeetingService/package*.json ./
-
-# Install dependencies
 RUN npm install --omit=dev
 
 # Copy source code
 COPY ../../MeetingService .
 
-# Expose the port the app runs on
+# Set environment variables
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=8082
+
+# Expose the port
 EXPOSE 8082
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["node", "src/app.js"] 
