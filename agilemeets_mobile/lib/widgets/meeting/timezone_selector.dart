@@ -181,7 +181,7 @@ class _TimeZoneSelectorState extends State<TimeZoneSelector> {
     final offset = _formatOffset(timezone.utcOffset ?? '');
     
     return Material(
-      color: isSelected ? AppTheme.primaryBlue.withOpacity(0.1) : Colors.transparent,
+      color: isSelected ? AppTheme.primaryBlue.withValues(alpha:0.1) : Colors.transparent,
       child: InkWell(
         onTap: () => widget.onChanged(timezone.id ?? ''),
         child: Padding(

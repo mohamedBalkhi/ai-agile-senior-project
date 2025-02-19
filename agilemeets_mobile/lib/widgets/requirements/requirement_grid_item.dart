@@ -38,7 +38,7 @@ class RequirementGridItem extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
-                        color: requirement.priority.color.withOpacity(0.1),
+                        color: requirement.priority.color.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Icon(
@@ -97,7 +97,7 @@ class RequirementGridItem extends StatelessWidget {
                   vertical: 4.h,
                 ),
                 decoration: BoxDecoration(
-                  color: requirement.status.color.withOpacity(0.1),
+                  color: requirement.status.color.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(

@@ -66,7 +66,7 @@ class MeetingAISections extends StatelessWidget {
         border: Border.all(color: AppTheme.cardBorderGrey),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha:0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -87,7 +87,7 @@ class MeetingAISections extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Icon(
@@ -117,7 +117,7 @@ class MeetingAISections extends StatelessWidget {
                             vertical: 2.h,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.warningOrange.withOpacity(0.1),
+                            color: AppTheme.warningOrange.withValues(alpha:0.1),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(

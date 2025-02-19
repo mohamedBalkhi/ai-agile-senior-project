@@ -4,10 +4,6 @@ import '../../data/models/meeting_details_dto.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/timezone_utils.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../logic/cubits/timezone/timezone_cubit.dart';
-import '../../logic/cubits/timezone/timezone_state.dart';
-import '../../data/models/timezone_dto.dart';
 
 class MeetingInfoHeader extends StatelessWidget {
   final MeetingDetailsDTO meeting;

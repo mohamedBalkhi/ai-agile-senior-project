@@ -234,12 +234,15 @@ class _MeetingAIReportState extends State<MeetingAIReport> {
             ],
           ),
           SizedBox(height: 12.h),
-          Text(
-            widget.report.summary ?? 'No summary available',
-            style: TextStyle(
-              color: AppTheme.textGrey,
-              fontSize: 14.sp,
-              height: 1.5,
+          Directionality(
+            textDirection: widget.report.mainLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+            child: Text(
+              widget.report.summary ?? 'No summary available',
+              style: TextStyle(
+                color: AppTheme.textGrey,
+                fontSize: 14.sp,
+                height: 1.5,
+              ),
             ),
           ),
         ],
@@ -280,34 +283,38 @@ class _MeetingAIReportState extends State<MeetingAIReport> {
             ],
           ),
           SizedBox(height: 12.h),
-          ...widget.report.keyPoints!.map((point) => Padding(
-                padding: EdgeInsets.only(bottom: 12.h),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: 6.h),
-                      child: Container(
-                        width: 6.w,
-                        height: 6.w,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primaryBlue,
-                          shape: BoxShape.circle,
+          ...widget.report.keyPoints!.map((point) => Directionality(
+                textDirection: widget.report.mainLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    textDirection: widget.report.mainLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 6.h),
+                        child: Container(
+                          width: 6.w,
+                          height: 6.w,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primaryBlue,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        point,
-                        style: TextStyle(
-                          color: AppTheme.textGrey,
-                          fontSize: 14.sp,
-                          height: 1.5,
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          point.trim().replaceFirst(RegExp(r'^[-\s]+'), ''),
+                          style: TextStyle(
+                            color: AppTheme.textGrey,
+                            fontSize: 14.sp,
+                            height: 1.5,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               )),
         ],
@@ -346,12 +353,15 @@ class _MeetingAIReportState extends State<MeetingAIReport> {
             ],
           ),
           SizedBox(height: 12.h),
-          Text(
-            displayText,
-            style: TextStyle(
-              color: AppTheme.textGrey,
-              fontSize: 14.sp,
-              height: 1.5,
+          Directionality(
+            textDirection: widget.report.mainLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+            child: Text(
+              displayText,
+              style: TextStyle(
+                color: AppTheme.textGrey,
+                fontSize: 14.sp,
+                height: 1.5,
+              ),
             ),
           ),
           if (transcript.length > 500) ...[
@@ -385,8 +395,6 @@ class _MeetingAIReportState extends State<MeetingAIReport> {
         return 'Processing completed';
       case AIProcessingStatus.failed:
         return 'Processing failed.';
-      default:
-        return 'Unknown status';
-    }
+      }
   }
 }

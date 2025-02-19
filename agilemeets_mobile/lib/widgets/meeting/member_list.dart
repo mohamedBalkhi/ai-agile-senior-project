@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:agilemeets/data/models/project/project_member_dto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -94,7 +93,7 @@ class MemberList extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withOpacity(0.1),
+                        color: AppTheme.primaryBlue.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
@@ -109,7 +108,7 @@ class MemberList extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                       decoration: BoxDecoration(
-                        color: AppTheme.textGrey.withOpacity(0.1),
+                        color: AppTheme.textGrey.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
