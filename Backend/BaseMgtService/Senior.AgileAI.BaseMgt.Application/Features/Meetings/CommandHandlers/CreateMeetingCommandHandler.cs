@@ -7,7 +7,6 @@ using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Models;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Services;
 using FluentValidation;
 using FluentValidation.Results;
@@ -198,7 +197,7 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
                     meeting.OnlineMeetingStatus = OnlineMeetingStatus.NotStarted;
                     meeting.AudioStatus = AudioStatus.Pending;
                     meeting.AudioSource = AudioSource.MeetingService;
-
+                    _unitOfWork.Meetings.Update(meeting);
                     await _unitOfWork.CompleteAsync();
                 }
                 catch (Exception ex)
@@ -277,7 +276,7 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
                     }
                 }
             }
-
+            
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

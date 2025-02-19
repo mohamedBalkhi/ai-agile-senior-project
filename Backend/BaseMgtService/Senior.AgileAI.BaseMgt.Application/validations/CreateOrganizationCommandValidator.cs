@@ -1,6 +1,5 @@
 using FluentValidation;
 using Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.Commands;
-using Senior.AgileAI.BaseMgt.Application.Validations;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 namespace Senior.AgileAI.BaseMgt.Application.Validations

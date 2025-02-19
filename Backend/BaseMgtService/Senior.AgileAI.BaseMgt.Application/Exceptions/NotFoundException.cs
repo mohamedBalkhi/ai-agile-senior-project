@@ -1,5 +1,3 @@
-using System;
-
 namespace Senior.AgileAI.BaseMgt.Application.Exceptions
 {
     public class NotFoundException : Exception

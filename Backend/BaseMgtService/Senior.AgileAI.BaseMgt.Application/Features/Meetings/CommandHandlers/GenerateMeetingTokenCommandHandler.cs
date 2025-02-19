@@ -3,7 +3,6 @@ using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.CommandHandlers;
@@ -79,6 +78,14 @@ public class GenerateMeetingTokenCommandHandler : IRequestHandler<GenerateMeetin
                 { "hasAdminPrivilege", member.HasAdministrativePrivilege.ToString().ToLower() }
             },
             cancellationToken);
+
+        // Only update HasConfirmed if the user is a meeting member (not just the creator)
+        if (meetingMember != null)
+        {
+            meetingMember.HasConfirmed = true;
+            _unitOfWork.MeetingMembers.Update(meetingMember);
+            await _unitOfWork.CompleteAsync();
+        }
 
         return token;
     }

@@ -4,9 +4,6 @@ using Senior.AgileAI.BaseMgt.Application.DTOs.Meetings;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Queries;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
-using System;
-using System.Globalization;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.QueryHandlers;
@@ -107,6 +104,7 @@ public class GetProjectMeetingsQueryHandler : IRequestHandler<GetProjectMeetings
             Type = meeting.Type,
             Status = meeting.Status,
             CreatorName = meeting.Creator?.User?.FUllName ?? string.Empty,
+            CreatorId = meeting.Creator?.User?.Id ?? Guid.Empty,
             TimeZoneId = meeting.TimeZoneId,
             ProjectId = meeting.Project_IdProject.ToString(),
             ProjectName = meeting.Project?.Name ?? string.Empty,

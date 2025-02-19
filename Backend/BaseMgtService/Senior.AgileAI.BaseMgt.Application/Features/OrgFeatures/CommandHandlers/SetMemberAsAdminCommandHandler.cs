@@ -1,7 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.Commands;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Models;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandlers

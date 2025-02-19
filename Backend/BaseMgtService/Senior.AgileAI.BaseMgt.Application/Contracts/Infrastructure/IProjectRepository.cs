@@ -10,6 +10,6 @@ public interface IProjectRepository : IGenericRepository<Project>
     Task<Project> AddAsync(Project entity, CancellationToken cancellationToken);
     Task<Project> GetProjectByIdAsync(Guid id, CancellationToken cancellationToken);
     void UpdateProject(Project project);
-
+    Task<List<Project>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     
 }

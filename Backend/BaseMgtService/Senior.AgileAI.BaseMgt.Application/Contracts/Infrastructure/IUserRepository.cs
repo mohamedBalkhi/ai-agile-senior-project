@@ -1,6 +1,4 @@
 using Senior.AgileAI.BaseMgt.Domain.Entities;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 

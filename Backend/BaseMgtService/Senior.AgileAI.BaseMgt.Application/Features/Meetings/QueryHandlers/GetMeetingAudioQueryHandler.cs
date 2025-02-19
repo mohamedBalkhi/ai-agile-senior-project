@@ -4,8 +4,6 @@ using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Queries;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
-using System.IO;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.QueryHandlers;
 

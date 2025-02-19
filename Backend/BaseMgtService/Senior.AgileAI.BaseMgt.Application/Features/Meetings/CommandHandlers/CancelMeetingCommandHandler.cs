@@ -4,7 +4,6 @@ using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Models;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.CommandHandlers;
@@ -64,6 +63,7 @@ public class CancelMeetingCommandHandler : IRequestHandler<CancelMeetingCommand,
         {
             // Update meeting status
             meeting.Status = MeetingStatus.Cancelled;
+            _unitOfWork.Meetings.Update(meeting);
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

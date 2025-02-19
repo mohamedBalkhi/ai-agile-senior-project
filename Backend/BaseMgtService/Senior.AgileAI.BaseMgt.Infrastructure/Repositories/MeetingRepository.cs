@@ -3,7 +3,6 @@ using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
-using Microsoft.Extensions.Logging;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Repositories;
 
@@ -43,7 +42,7 @@ public class MeetingRepository : GenericRepository<Meeting>, IMeetingRepository
         {
             query = query
                 .Include(m => m.RecurringPattern)
-                    .ThenInclude(rp => rp.Exceptions)
+                    .ThenInclude(rp => rp!.Exceptions)
                 .Include(m => m.OriginalMeeting)
                 .Include(m => m.RecurringInstances)
                 .Include(m => m.MeetingMembers)
@@ -78,27 +77,33 @@ public class MeetingRepository : GenericRepository<Meeting>, IMeetingRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Meeting>> GetUserMeetingsAsync(Guid userId, bool includeFullDetails = false, CancellationToken cancellationToken = default)
+    public async Task<List<Meeting>> GetUserMeetingsAsync(Guid userId, bool includeFullDetails = false, bool upcomingOnly = false, CancellationToken cancellationToken = default)
     {
-        // Log the full query execution
         var query = _context.Meetings
+            .Include(m => m.Project)
             .Include(m => m.Creator)
                 .ThenInclude(c => c.User)
             .Include(m => m.MeetingMembers)
                 .ThenInclude(mm => mm.OrganizationMember)
                     .ThenInclude(om => om.User)
+            .Include(m => m.RecurringPattern)
+            .Include(m => m.OriginalMeeting)
             .Where(m => m.MeetingMembers.Any(mm => mm.OrganizationMember.User_IdUser == userId) || 
-                        m.Creator.User_IdUser == userId)
-            .OrderByDescending(m => m.StartTime);
+                        m.Creator.User_IdUser == userId);
 
+        if (upcomingOnly)
+        {
+            query = query.Where(m => m.EndTime > DateTime.UtcNow && 
+                                   (m.Status == MeetingStatus.Scheduled || m.Status == MeetingStatus.InProgress));
+            query = query.OrderBy(m => m.StartTime);
+            query = query.Take(5);
+        }
+        else
+        {
+            query = query.OrderByDescending(m => m.StartTime);
+        }
 
-
-        var results = await query.ToListAsync(cancellationToken);
-        
-        
-     
-
-        return results;
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task<List<Meeting>> GetUpcomingMeetingsAsync(Guid projectId, DateTime fromDate, CancellationToken cancellationToken = default)
@@ -158,7 +163,7 @@ public class MeetingRepository : GenericRepository<Meeting>, IMeetingRepository
             .Include(m => m.Creator)
                 .ThenInclude(c => c.User)
             .Where(m => (m.RecurringPattern != null && m.RecurringPattern.Id == recurringPatternId) ||
-                        (m.OriginalMeeting != null && m.OriginalMeeting.RecurringPattern.Id == recurringPatternId))
+                        (m.OriginalMeeting != null && m.OriginalMeeting.RecurringPattern!.Id == recurringPatternId))
             .Where(m => m.StartTime >= fromDate && m.Status != MeetingStatus.Cancelled)
             .OrderBy(m => m.StartTime)
             .ToListAsync(cancellationToken);
@@ -179,8 +184,8 @@ public class MeetingRepository : GenericRepository<Meeting>, IMeetingRepository
             .Include(m => m.Creator)
                 .ThenInclude(c => c.User)
             .Where(m => (m.RecurringPattern != null && m.RecurringPattern.Id == recurringPatternId) ||
-                        (m.OriginalMeeting != null && m.OriginalMeeting.RecurringPattern.Id == recurringPatternId) ||
-                        (m.RecurringInstances.Any(ri => ri.RecurringPattern.Id == recurringPatternId)));
+                        (m.OriginalMeeting != null && m.OriginalMeeting.RecurringPattern!.Id == recurringPatternId) ||
+                        m.RecurringInstances.Any(ri => ri.RecurringPattern!.Id == recurringPatternId));
 
         return await query
             .OrderBy(m => m.StartTime)

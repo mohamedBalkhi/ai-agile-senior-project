@@ -1,10 +1,8 @@
 using MediatR;
-using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Features.projects.commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
-using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Models;
 #nullable disable
 

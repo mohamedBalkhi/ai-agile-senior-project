@@ -7,7 +7,6 @@ using Senior.AgileAI.BaseMgt.Application.Common;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Common.Utils;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers
 {

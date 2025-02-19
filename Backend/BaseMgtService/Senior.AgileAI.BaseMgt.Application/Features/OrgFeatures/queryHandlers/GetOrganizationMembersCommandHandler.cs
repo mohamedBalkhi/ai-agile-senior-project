@@ -2,7 +2,6 @@ using MediatR;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.queries;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.QueryHandlers
 {

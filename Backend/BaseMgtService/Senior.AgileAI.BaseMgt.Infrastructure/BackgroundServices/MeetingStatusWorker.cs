@@ -38,6 +38,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
                     foreach (var meeting in inProgressMeetings)
                     {
                         meeting.Complete();
+                        unitOfWork.Meetings.Update(meeting);
                     }
 
                     if (inProgressMeetings.Any())
@@ -61,6 +62,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
                         _logger.LogInformation(
                             "Cancelled past scheduled meeting {MeetingId} that never started",
                             meeting.Id);
+                        unitOfWork.Meetings.Update(meeting);
                     }
 
                     if (pastScheduledMeetings.Any())

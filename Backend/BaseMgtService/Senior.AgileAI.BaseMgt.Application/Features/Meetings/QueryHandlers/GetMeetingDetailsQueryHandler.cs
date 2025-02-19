@@ -4,7 +4,6 @@ using Senior.AgileAI.BaseMgt.Application.DTOs.Meetings;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Queries;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.DTOs.TimeZone;
 using Senior.AgileAI.BaseMgt.Domain.Constants;
 

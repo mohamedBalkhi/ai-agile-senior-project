@@ -9,5 +9,6 @@ public interface INotificationTokenRepository : IGenericRepository<NotificationT
     Task<bool> DeleteToken(string token, string deviceId, CancellationToken cancellationToken = default);
     Task<List<NotificationToken>> GetTokensToClean(CancellationToken cancellationToken = default);
     Task<int> GetUserTokenCount(Guid userId, CancellationToken cancellationToken = default);
+    Task<NotificationToken?> GetOldestTokenByUserId(Guid userId, CancellationToken cancellationToken = default);
     Task<bool> ValidateTokenFormat(string token);
 } 

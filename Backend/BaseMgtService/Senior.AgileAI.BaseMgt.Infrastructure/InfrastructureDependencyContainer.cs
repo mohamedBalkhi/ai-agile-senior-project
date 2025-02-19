@@ -67,6 +67,7 @@ public static class InfrastructureDependencyContainer
         // Register OnlineMeetingService with optimized HTTP client
         services.AddHttpClient<IOnlineMeetingService, OnlineMeetingService>(client =>
         {
+            client.BaseAddress = new Uri(configuration["MeetingService:Url"]);
             client.DefaultRequestHeaders.ConnectionClose = false;
         })
         .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler

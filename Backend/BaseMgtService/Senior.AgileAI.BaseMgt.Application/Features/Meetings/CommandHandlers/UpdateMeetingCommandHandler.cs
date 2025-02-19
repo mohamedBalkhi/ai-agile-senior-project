@@ -5,7 +5,6 @@ using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Models;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.CommandHandlers;
 
@@ -143,7 +142,7 @@ public class UpdateMeetingCommandHandler : IRequestHandler<UpdateMeetingCommand,
                 meeting.RecurringPattern.RecurringEndDate = request.Dto.RecurringPattern.RecurringEndDate;
                 meeting.RecurringPattern.DaysOfWeek = request.Dto.RecurringPattern.DaysOfWeek;
             }
-
+            _unitOfWork.Meetings.Update(meeting);
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

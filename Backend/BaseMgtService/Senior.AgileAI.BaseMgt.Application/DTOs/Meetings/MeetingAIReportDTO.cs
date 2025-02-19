@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 
 namespace Senior.AgileAI.BaseMgt.Application.DTOs.Meetings;

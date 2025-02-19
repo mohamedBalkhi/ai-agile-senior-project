@@ -1,7 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
 {
@@ -27,6 +26,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
                 result = true;
                 user.IsTrusted = true;
             }
+            _unitOfWork.Users.Update(user);
             await _unitOfWork.CompleteAsync();
             return result;
         }

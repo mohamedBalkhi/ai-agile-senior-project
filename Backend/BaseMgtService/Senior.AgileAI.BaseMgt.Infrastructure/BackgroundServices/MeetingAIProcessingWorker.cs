@@ -125,7 +125,7 @@ public class MeetingAIProcessingWorker : BackgroundService
 
                 meeting.InitiateAIProcessing(token);
                 _processingJobs.Add(meeting.Id, (DateTime.UtcNow, 0));
-
+                unitOfWork.Meetings.Update(meeting);
                 await unitOfWork.CompleteAsync();
 
                 _logger.LogInformation(
@@ -195,6 +195,7 @@ public class MeetingAIProcessingWorker : BackgroundService
                         status);
                         
                     meeting.UpdateAIProcessingStatus(AIProcessingStatus.Processing);
+                    unitOfWork.Meetings.Update(meeting);
                     await unitOfWork.CompleteAsync();
                     continue;
                 }
@@ -209,6 +210,7 @@ public class MeetingAIProcessingWorker : BackgroundService
 
                 meeting.UpdateAIProcessingStatus(AIProcessingStatus.Completed);
                 meeting.SetAIReport(report);
+                unitOfWork.Meetings.Update(meeting);
                 await unitOfWork.CompleteAsync();
 
                 _logger.LogInformation(

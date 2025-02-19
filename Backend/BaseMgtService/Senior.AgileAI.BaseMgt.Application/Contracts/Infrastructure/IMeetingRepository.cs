@@ -7,7 +7,7 @@ public interface IMeetingRepository : IGenericRepository<Meeting>
 {
     Task<Meeting?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Meeting>> GetProjectMeetingsAsync(Guid projectId, bool includeFullDetails = false, CancellationToken cancellationToken = default);
-    Task<List<Meeting>> GetUserMeetingsAsync(Guid userId, bool includeFullDetails = false, CancellationToken cancellationToken = default);
+    Task<List<Meeting>> GetUserMeetingsAsync(Guid userId, bool includeFullDetails = false, bool upcomingOnly = false, CancellationToken cancellationToken = default);
     Task<List<Meeting>> GetMemberMeetingsAsync(Guid organizationMemberId, bool includeFullDetails = false, CancellationToken cancellationToken = default);
     Task<List<Meeting>> GetUpcomingMeetingsAsync(Guid projectId, DateTime fromDate, CancellationToken cancellationToken = default);
     Task<List<Meeting>> GetMeetingsByStatusAsync(Guid projectId, MeetingStatus status, CancellationToken cancellationToken = default);

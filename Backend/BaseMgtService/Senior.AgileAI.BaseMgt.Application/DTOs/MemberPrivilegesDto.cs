@@ -1,5 +1,3 @@
-using Senior.AgileAI.BaseMgt.Domain.Enums;
-
 namespace Senior.AgileAI.BaseMgt.Application.DTOs
 {
     public class MemberPrivilegesDto

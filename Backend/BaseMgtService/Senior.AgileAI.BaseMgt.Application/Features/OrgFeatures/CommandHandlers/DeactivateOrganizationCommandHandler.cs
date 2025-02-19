@@ -28,6 +28,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
             var members = await _unitOfWork.OrganizationMembers.GetAllMembersAsync(organization.Id, cancellationToken);
 
             organization.IsActive = false;
+            _unitOfWork.Organizations.Update(organization);
             await _unitOfWork.CompleteAsync();
 
             // Notify all members

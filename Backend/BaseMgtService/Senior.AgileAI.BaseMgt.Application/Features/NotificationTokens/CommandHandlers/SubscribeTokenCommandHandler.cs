@@ -29,7 +29,10 @@ public class SubscribeTokenCommandHandler : IRequestHandler<SubscribeTokenComman
 
         if (existingToken != null)
         {
-            return true; // Token already exists
+            existingToken.UpdatedDate = DateTime.UtcNow;
+            _unitOfWork.NotificationTokens.Update(existingToken);
+            await _unitOfWork.CompleteAsync();
+            return true;
         }
 
         // Check token limit per user
@@ -38,14 +41,22 @@ public class SubscribeTokenCommandHandler : IRequestHandler<SubscribeTokenComman
 
         if (userTokenCount >= MaxTokensPerUser)
         {
-            throw new ValidationException($"Maximum number of tokens ({MaxTokensPerUser}) reached for this user");
+            // Get and remove oldest token
+            var oldestToken = await _unitOfWork.NotificationTokens
+                .GetOldestTokenByUserId(request.UserId, cancellationToken);
+            
+            if (oldestToken != null)
+            {
+                _unitOfWork.NotificationTokens.Remove(oldestToken);
+            }
         }
 
         var notificationToken = new NotificationToken
         {
             Token = request.Dto.Token,
             DeviceId = request.Dto.DeviceId,
-            User_IdUser = request.UserId
+            User_IdUser = request.UserId,
+            UpdatedDate = DateTime.UtcNow
         };
 
         await _unitOfWork.NotificationTokens.AddAsync(notificationToken);
@@ -53,4 +64,4 @@ public class SubscribeTokenCommandHandler : IRequestHandler<SubscribeTokenComman
 
         return true;
     }
-} 
+}

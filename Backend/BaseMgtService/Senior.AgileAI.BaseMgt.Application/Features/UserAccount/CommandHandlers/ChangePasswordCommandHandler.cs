@@ -20,8 +20,10 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
         {
             var user = await _unitOfWork.Users.GetByIdAsync(request.DTO.UserId);
             user.Password = _authService.HashPassword(user, request.DTO.NewPassword);
+            _unitOfWork.Users.Update(user);
             await _unitOfWork.CompleteAsync();
             return true;
         }
+
     }
 }

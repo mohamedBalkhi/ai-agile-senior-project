@@ -100,6 +100,8 @@ public class OnlineMeetingWorker : BackgroundService
                     {
                         meeting.Status = MeetingStatus.Cancelled;
                     }
+                    unitOfWork.Meetings.Update(meeting);
+
                     
                     await unitOfWork.CompleteAsync();
 

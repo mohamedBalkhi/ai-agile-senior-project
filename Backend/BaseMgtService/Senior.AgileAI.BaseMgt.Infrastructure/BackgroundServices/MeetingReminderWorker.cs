@@ -48,6 +48,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
                     {
                         await SendRemindersAsync(meeting, stoppingToken);
                         meeting.ReminderSent = true;
+                        unitOfWork.Meetings.Update(meeting);
                     }
 
                     if (meetings.Any())

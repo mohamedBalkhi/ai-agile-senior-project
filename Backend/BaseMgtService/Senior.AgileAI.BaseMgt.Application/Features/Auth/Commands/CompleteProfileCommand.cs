@@ -1,5 +1,4 @@
 using MediatR;
-using Senior.AgileAI.BaseMgt.Application.Common;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands

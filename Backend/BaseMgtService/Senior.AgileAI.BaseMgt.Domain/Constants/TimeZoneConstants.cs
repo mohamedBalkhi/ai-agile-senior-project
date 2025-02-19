@@ -1,5 +1,3 @@
-using System;
-
 namespace Senior.AgileAI.BaseMgt.Domain.Constants;
 
 public static class TimeZoneConstants

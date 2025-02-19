@@ -36,13 +36,15 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
                 Deactivated = false,
             };
 
+            // Hash the password before adding the user
+            user.Password = _authService.HashPassword(user, user.Password);
+            user.Code = GenerateCode();
+
+            // Add the user and save changes in one transaction
             var createdUser = await _unitOfWork.Users.AddAsync(user, cancellationToken);
-            createdUser.Password = _authService.HashPassword(createdUser, createdUser.Password);
-            createdUser.Code = GenerateCode();
-
-
             await _unitOfWork.CompleteAsync();
 
+            // Send notification after successful save
             await _rabbitMQService.PublishNotificationAsync(new NotificationMessage
             {
                 Type = NotificationType.Email,

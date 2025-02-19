@@ -23,6 +23,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
                 throw new NotFoundException("User not found");
             }
             user.Password = _authorizeService.HashPassword(user, request.NewPassword);
+            _unitOfWork.Users.Update(user);
             await _unitOfWork.CompleteAsync();
             return true;
         }

@@ -54,8 +54,8 @@ public class UploadMeetingAudioCommandValidator : AbstractValidator<UploadMeetin
             .NotNull().WithMessage("Audio file is required")
             .DependentRules(() => {
                 RuleFor(x => x.AudioFile)
-                    .MustAsync(async (file, ct) => {
-                        return await _audioStorage.ValidateAudioFileAsync(file);
+                    .Must((file) => {
+                        return _audioStorage.ValidateAudioFile(file);
                     }).WithMessage("Invalid audio file format or size");
             });
 

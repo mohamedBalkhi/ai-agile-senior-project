@@ -5,8 +5,6 @@ using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using System.Text;
 using Senior.AgileAI.BaseMgt.Application.Models;
-using System.Linq;
-using Senior.AgileAI.BaseMgt.Application.DTOs;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandlers
 {

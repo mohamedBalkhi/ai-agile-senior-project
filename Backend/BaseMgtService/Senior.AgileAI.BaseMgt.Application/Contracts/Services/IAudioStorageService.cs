@@ -7,7 +7,7 @@ public interface IAudioStorageService
     Task<string> UploadAudioAsync(Guid meetingId, IFormFile audioFile, CancellationToken cancellationToken = default);
     Task<Stream> GetAudioAsync(string audioUrl, CancellationToken cancellationToken = default);
     Task DeleteAudioAsync(string audioUrl, CancellationToken cancellationToken = default);
-    Task<bool> ValidateAudioFileAsync(IFormFile file, CancellationToken cancellationToken = default);
+    bool ValidateAudioFile(IFormFile file, CancellationToken cancellationToken = default);
     Task<AudioMetadata> GetAudioMetadataAsync(string audioUrl, CancellationToken cancellationToken = default);
     Task<string> GetPreSignedUrlAsync(string audioUrl, TimeSpan expiration, CancellationToken cancellationToken = default);
     Task<string> TranscodeToM4AAsync(string sourceUrl, CancellationToken cancellationToken = default);

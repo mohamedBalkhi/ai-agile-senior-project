@@ -11,6 +11,7 @@ public record MeetingDTO
     public required MeetingType Type { get; init; }
     public required MeetingStatus Status { get; init; }
     public required string CreatorName { get; init; }
+    public required Guid CreatorId { get; init; }
     public required string TimeZoneId { get; init; }
     public int MemberCount { get; init; }
     public bool IsRecurring { get; init; }
