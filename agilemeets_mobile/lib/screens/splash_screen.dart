@@ -5,10 +5,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../logic/cubits/auth/auth_cubit.dart';
 import '../logic/cubits/auth/auth_state.dart';
 import '../utils/onboarding_preference.dart';
-import 'onboarding_screen.dart';
 import 'dart:developer' as developer;
 import 'dart:math';
 import '../services/auth_navigation_service.dart';
+import '../widgets/shared/error_view.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -27,7 +27,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _setupAnimation();
-    print("Init Splash Screen");
     Future.delayed(const Duration(milliseconds: 2000), _initializeApp);
   }
 
@@ -59,7 +58,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     try {
       _isNavigating = true;
       final hasSeenOnboarding = await OnboardingPreference.hasSeenOnboarding();
-      print("hasSeenOnboarding: $hasSeenOnboarding");
       if (!mounted) return;
       
       await Future.delayed(const Duration(milliseconds: 100));
@@ -71,9 +69,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         name: 'SplashScreen'
       );
       
-      // Handle current state if it's already set
+      // Handle current state if it's already set and not in error
       if (currentState.status != AuthStatus.initial && 
-          currentState.status != AuthStatus.loading) {
+          currentState.status != AuthStatus.loading &&
+          currentState.error == null) {
         AuthNavigationService.handleAuthState(
           context,
           status: currentState.status,
@@ -82,11 +81,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         );
         return;
       }
-      print("Checking auth status");
+
       // Otherwise check auth status
       context.read<AuthCubit>().checkAuthStatus();
       developer.log('Checking auth status', name: 'SplashScreen');
-      print("Checking auth status");
       if (!mounted) return;
       
       // Listen for state changes
@@ -99,7 +97,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           name: 'SplashScreen'
         );
         
-        if (state.status != AuthStatus.loading) {
+        // Handle navigation when error is cleared or for non-network errors
+        if (state.status != AuthStatus.loading && 
+            (state.error == null || !state.error!.contains('Network error'))) {
           handled = true;
           AuthNavigationService.handleAuthState(
             context,
@@ -118,9 +118,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       );
       if (!mounted) return;
       
-      // Clean up notifications on failed auth
-      await context.read<AuthCubit>().handleFailedAuth();
-      Navigator.of(context).pushReplacementNamed('/login');
+      // Let the AuthCubit handle the error state
+      context.read<AuthCubit>().checkAuthStatus();
     }
   }
 
@@ -128,47 +127,68 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppTheme.primaryBlue.withOpacity(0.05),
-              AppTheme.backgroundGrey,
-            ],
-            stops: const [0.0, 0.8],
-          ),
-        ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 48.w,
-                  height: 48.w,
-                  child: CustomPaint(
-                    painter: LoadingPainter(
-                      animation: _rotateAnimation,
-                      color: AppTheme.primaryBlue,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                Text(
-                  'Agile Meets',
-                  style: TextStyle(
-                    color: AppTheme.textGrey,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+      body: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, state) {
+          developer.log('Splash screen state: ${state.status}', name: 'Splash Screen');
+          developer.log('Splash screen error: ${state.error}', name: 'Splash Screen');
+          
+          // Show error view for network errors with retry button
+          if (state.error?.contains('Network error') ?? false) {
+            return ErrorView(
+              message: 'Network error. Please check your connection and try again.',
+              onRetry: () async {
+                _isNavigating = false; // Reset navigation flag
+                context.read<AuthCubit>().checkAuthStatus(isRetrying: true);
+                // Re-initialize app after retry
+                await _initializeApp();
+              },
+              isRetrying: state.status == AuthStatus.loading,
+            );
+          }
+
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppTheme.primaryBlue.withValues(alpha:0.05),
+                  AppTheme.backgroundGrey,
+                ],
+                stops: const [0.0, 0.8],
+              ),
             ),
-          ),
-        ),
+            child: Center(
+              child: FadeTransition(
+                opacity: _scaleAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 48.w,
+                      height: 48.w,
+                      child: CustomPaint(
+                        painter: LoadingPainter(
+                          animation: _rotateAnimation,
+                          color: AppTheme.primaryBlue,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    Text(
+                      'Agile Meets',
+                      style: TextStyle(
+                        color: AppTheme.textGrey,
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -201,7 +221,7 @@ class LoadingPainter extends CustomPainter {
     for (int i = 0; i < 3; i++) {
       final rotationOffset = (i * 2 * pi / 3);
       final startAngle = animation.value * pi * 2 + rotationOffset;
-      paint.color = color.withOpacity(1 - (i * 0.2));
+      paint.color = color.withValues(alpha:1 - (i * 0.2));
       
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),

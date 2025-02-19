@@ -11,7 +11,14 @@ class AuthNavigationService {
     required bool isInSignupFlow,
     required bool hasSeenOnboarding,
   }) {
-    if (status == AuthStatus.loading) return;
+    // Only skip navigation during loading state
+    if (status == AuthStatus.loading) {
+      developer.log(
+        'Skipping navigation during loading state',
+        name: 'AuthNavigation'
+      );
+      return;
+    }
 
     developer.log(
       'Handling navigation for status: $status (signup: $isInSignupFlow)',
@@ -23,12 +30,12 @@ class AuthNavigationService {
       isInSignupFlow: isInSignupFlow,
       hasSeenOnboarding: hasSeenOnboarding,
     );
-    print("Route: $route");
 
     developer.log(
       'Navigating to $route (status: $status, signup: $isInSignupFlow)',
       name: 'AuthNavigation'
     );
+    
     if (route == '/reset-password') {
       Navigator.of(context).pushReplacementNamed(route, arguments: context.read<AuthCubit>().state.userEmail);
     } else {
@@ -41,7 +48,6 @@ class AuthNavigationService {
     required bool isInSignupFlow,
     required bool hasSeenOnboarding,
   }) {
-    print("Determining route for status: $status (signup: $isInSignupFlow)");
 
     // Handle signup flow states first
     if (isInSignupFlow) {

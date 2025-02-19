@@ -4,6 +4,7 @@ enum AuthenticationEvent {
   unauthorized,
   tokenRefreshed,
   loggedOut,
+  networkError,
 }
 
 class AuthEventBus {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:developer' as developer;
 
 import 'package:agilemeets/core/errors/app_exception.dart';
@@ -12,6 +13,7 @@ import '../../../models/decoded_token.dart';
 import 'package:agilemeets/utils/secure_storage.dart';
 import 'package:agilemeets/data/api/api_client.dart';
 import 'package:agilemeets/services/notification_service.dart';
+import 'package:dio/dio.dart';
 
 // Hide the old ValidationException to avoid conflicts
 // import '../../../data/exceptions/validation_exception.dart' hide ValidationException;
@@ -53,15 +55,20 @@ class AuthCubit extends Cubit<AuthState> {
     return AuthStatus.authenticated;
   }
 
-  Future<void> checkAuthStatus() async {
+  Future<void> checkAuthStatus({bool isRetrying = false}) async {
+    developer.log('Checking auth state', name: 'Auth Cubit');
     if (_isCheckingStatus) return;
     
     try {
       _isCheckingStatus = true;
       
-      // Don't check auth during error states
-      if (state.status == AuthStatus.error || 
-          state.status == AuthStatus.validationError) {
+      // Don't check auth during error states unless retrying
+      developer.log('State status: ${state.status}', name: 'Auth Cubit');
+      // do we have an error?
+      developer.log('Error ${AuthStatus.error} ${AuthStatus.validationError}');
+      if (!isRetrying &&(state.status == AuthStatus.error || 
+           state.status == AuthStatus.validationError) &&
+          state.status != AuthStatus.loading) {
         return;
       }
 
@@ -75,20 +82,6 @@ class AuthCubit extends Cubit<AuthState> {
         emit(state.copyWith(
           status: AuthStatus.emailVerificationRequired,
           isInSignupFlow: true,
-        ));
-        return;
-      }
-      
-      // If we're already unauthenticated, re-emit the state to trigger navigation
-      if (state.status == AuthStatus.unauthenticated && !state.isInSignupFlow) {
-        developer.log(
-          'Already unauthenticated, re-emitting state',
-          name: 'AuthCubit'
-        );
-        emit(state.copyWith(status: AuthStatus.loading));
-        emit(AuthState.initial().copyWith(
-          status: AuthStatus.unauthenticated,
-          isInSignupFlow: false,
         ));
         return;
       }
@@ -120,25 +113,46 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(state.copyWith(status: AuthStatus.loading));
       
-      final newToken = await ApiClient().refreshToken();
-      if (newToken != null) {
-        final newDecodedToken = DecodedToken.fromJwt(newToken);
-        final nextStatus = await _determineAuthStatus(newDecodedToken);
-        
+      try {
+        final newToken = await ApiClient().refreshToken();
+        if (newToken != null) {
+          final newDecodedToken = DecodedToken.fromJwt(newToken);
+          final nextStatus = await _determineAuthStatus(newDecodedToken);
+          
+          developer.log(
+            'Auth status determined: $nextStatus',
+            name: 'AuthCubit'
+          );
+          
+          emit(state.copyWith(
+            status: nextStatus,
+            decodedToken: newDecodedToken,
+            isAdmin: newDecodedToken.isAdmin,
+            isTrusted: newDecodedToken.isTrusted,
+            isActive: newDecodedToken.isActive,
+            isInSignupFlow: false,
+            error: null, // Clear any previous errors
+          ));
+        }
+      } catch (e) {
         developer.log(
-          'Auth status determined: $nextStatus',
-          name: 'AuthCubit'
+          'Error during token refresh: $e',
+          name: 'AuthCubit',
+          error: e,
         );
         
-        emit(state.copyWith(
-          status: nextStatus,
-          decodedToken: newDecodedToken,
-          isAdmin: newDecodedToken.isAdmin,
-          isTrusted: newDecodedToken.isTrusted,
-          isActive: newDecodedToken.isActive,
-          isInSignupFlow: false,
-        ));
-      } else {
+        // Handle network errors (both DioException and NetworkException)
+        if (e is NetworkException || 
+            (e is DioException && _isNetworkError(e))) {
+          authEventBus.add(AuthenticationEvent.networkError);
+          emit(state.copyWith(
+            status: AuthStatus.error,
+            error: 'Network error. Please check your connection.',
+          ));
+          return;
+        }
+        
+        // For auth errors, clear tokens and logout
         await SecureStorage.deleteAllTokens();
         emit(state.copyWith(
           status: AuthStatus.unauthenticated,
@@ -151,14 +165,35 @@ class AuthCubit extends Cubit<AuthState> {
         name: 'AuthCubit',
         error: e,
       );
-      emit(state.copyWith(
-        status: AuthStatus.unauthenticated,
-        error: null,
-        isInSignupFlow: false,
-      ));
+      
+      // Handle network errors (both DioException and NetworkException)
+      if (e is NetworkException || 
+          (e is DioException && _isNetworkError(e))) {
+        authEventBus.add(AuthenticationEvent.networkError);
+        emit(state.copyWith(
+          status: AuthStatus.error,
+          error: 'Network error. Please check your connection.',
+        ));
+      } else {
+        // For other errors, clear tokens and logout
+        await SecureStorage.deleteAllTokens();
+        emit(state.copyWith(
+          status: AuthStatus.unauthenticated,
+          error: null,
+          isInSignupFlow: false,
+        ));
+      }
     } finally {
       _isCheckingStatus = false;
     }
+  }
+
+  bool _isNetworkError(DioException error) {
+    return error.type == DioExceptionType.connectionTimeout ||
+           error.type == DioExceptionType.sendTimeout ||
+           error.type == DioExceptionType.receiveTimeout ||
+           error.type == DioExceptionType.connectionError ||
+           error.error is SocketException;
   }
 
   Future<void> login(String email, String password) async {
@@ -482,14 +517,6 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // Helper method to clear signup flow and errors
-  void _clearSignupFlow() {
-    _isInSignupFlow = false;
-    emit(state.copyWith(
-      error: null,
-      validationErrors: null,
-      isInSignupFlow: false,
-    ));
-  }
 
   void clearErrors() {
     emit(state.copyWith(
