@@ -55,7 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppTheme.primaryBlue.withOpacity(0.05),
+                  AppTheme.primaryBlue.withValues(alpha:0.05),
                   AppTheme.backgroundGrey,
                 ],
                 stops: const [0.0, 0.8],
@@ -84,7 +84,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha:0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),

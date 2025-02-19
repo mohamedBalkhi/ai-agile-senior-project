@@ -5,7 +5,6 @@ import '../logic/cubits/auth/auth_cubit.dart';
 import '../logic/cubits/auth/auth_state.dart';
 import '../widgets/verification_code_widget.dart';
 import '../widgets/auth_header.dart';
-import '../widgets/custom_card.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 

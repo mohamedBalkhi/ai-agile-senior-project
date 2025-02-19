@@ -51,7 +51,7 @@ class PrivilegeSelector extends StatelessWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           color: effectiveValue == level 
-                              ? AppTheme.primaryBlue.withOpacity(0.1)
+                              ? AppTheme.primaryBlue.withValues(alpha:0.1)
                               : null,
                           borderRadius: BorderRadius.circular(24.r),
                         ),
@@ -74,7 +74,7 @@ class PrivilegeSelector extends StatelessWidget {
                                   color: effectiveValue == level 
                                       ? AppTheme.primaryBlue
                                       : isWriteOnly && level != PrivilegeLevel.write
-                                          ? AppTheme.textGrey.withOpacity(0.5)
+                                          ? AppTheme.textGrey.withValues(alpha:0.5)
                                           : AppTheme.textGrey,
                                   fontSize: 14.sp,
                                   fontWeight: effectiveValue == level

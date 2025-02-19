@@ -36,7 +36,7 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   Future<void> completeProfile(CompleteProfileDTO dto) async {
     try {
-      emit(state.copyWith(status: ProfileStatus.updating));
+      emit(state.copyWith(status: ProfileStatus.loading));
       
       final success = await _profileRepository.completeProfile(dto);
       
@@ -69,14 +69,13 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   Future<void> updateProfile(UpdateProfileDTO dto, String userId) async {
     try {
-      emit(state.copyWith(status: ProfileStatus.updating));
+      emit(state.copyWith(status: ProfileStatus.loading));
       
       final responseUserId = await _profileRepository.updateProfile(dto, userId);
       
       if (responseUserId.isNotEmpty) {
-        // Reload profile to get updated information
-
         emit(state.copyWith(status: ProfileStatus.completed));
+        // Reload profile to get updated information
         await loadProfile(userId);
       } else {
         emit(state.copyWith(

@@ -1,4 +1,3 @@
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,8 +56,6 @@ class EmailVerificationScreen extends StatelessWidget {
             }
           },
           builder: (context, state) {
-            print('Building with status: ${state.status}');
-            print('Error: ${state.error}');
     
             if (state.error != null && state.status == AuthStatus.emailVerificationRequired) {
               context.read<AuthCubit>().clearErrors();

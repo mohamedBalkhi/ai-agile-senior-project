@@ -1,6 +1,5 @@
 import 'package:agilemeets/widgets/auth_header.dart';
 import 'package:agilemeets/widgets/custom_button.dart';
-import 'package:agilemeets/widgets/custom_card.dart';
 import 'package:agilemeets/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,7 +18,6 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {

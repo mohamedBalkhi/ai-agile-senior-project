@@ -33,4 +33,7 @@ class ProjectRequirementsDTO {
     'priority': priority.value,
     'status': status.value,
   };
+
+  @override
+  String toString() => 'ProjectRequirementsDTO(id: $id, title: $title)';
 } 

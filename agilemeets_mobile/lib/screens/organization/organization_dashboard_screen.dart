@@ -1,5 +1,4 @@
 import 'package:agilemeets/data/models/organization/get_org_project_dto.dart';
-import 'package:agilemeets/data/models/project/project_info_dto.dart';
 import 'package:agilemeets/logic/cubits/organization/organization_cubit.dart';
 import 'package:agilemeets/logic/cubits/organization/organization_state.dart';
 import 'package:agilemeets/screens/shell_screen.dart';
@@ -10,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:agilemeets/widgets/organization/team_members_list.dart';
 import 'package:agilemeets/widgets/organization/projects_list.dart';
+import 'package:agilemeets/screens/profile_screen.dart';
 
 class OrganizationDashboardScreen extends StatefulWidget {
   const OrganizationDashboardScreen({super.key});
@@ -35,23 +35,41 @@ class _OrganizationDashboardScreenState extends State<OrganizationDashboardScree
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Organization'),
+            title: const Text('Management'),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                context.read<OrganizationCubit>()
+                  .loadOrganization();
+              },
+              tooltip: 'Refresh',
+            ),
+            actions: [
+              Material(
+                type: MaterialType.transparency,
+                child: IconButton(
+                  icon: const Hero(
+                    tag: 'profile_icon',
+                    child: Icon(Icons.person_outline),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
+                    );
+                  },
+                  tooltip: 'Profile',
+                ),
+              ),
+            ],
             bottom: state.status == OrganizationStatus.loading
                 ? PreferredSize(
                     preferredSize: Size.fromHeight(2.h),
                     child: const LinearProgressIndicator(),
                   )
                 : null,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () {
-                  context.read<OrganizationCubit>()
-                    .loadOrganization();
-                },
-                tooltip: 'Refresh',
-              ),
-            ],
           ),
           body: RefreshIndicator(
             onRefresh: () async {
@@ -60,10 +78,18 @@ class _OrganizationDashboardScreenState extends State<OrganizationDashboardScree
               ]);
             },
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.all(16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'Organization Overview',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
                   _buildStats(context, state),
                   SizedBox(height: 24.h),
                   _buildTeamSection(context, state),
@@ -154,7 +180,7 @@ class _OrganizationDashboardScreenState extends State<OrganizationDashboardScree
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Column(
@@ -188,7 +214,7 @@ class _OrganizationDashboardScreenState extends State<OrganizationDashboardScree
           Text(
             label,
             style: AppTheme.subtitle.copyWith(
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
               fontWeight: FontWeight.w500,
             ),
           ),

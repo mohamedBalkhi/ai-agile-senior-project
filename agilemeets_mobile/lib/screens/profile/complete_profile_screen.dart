@@ -1,7 +1,6 @@
 import 'package:agilemeets/logic/cubits/auth/auth_cubit.dart';
 import 'package:agilemeets/logic/cubits/auth/auth_state.dart';
 import 'package:agilemeets/utils/app_theme.dart';
-import 'package:agilemeets/utils/route_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -145,6 +144,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             }
           },
           builder: (context, state) {
+            if (state.status == ProfileStatus.loading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            
             return SafeArea(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -156,7 +161,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         buildWhen: (previous, current) => !current.isInSignupFlow,
                         builder: (context, authState) {
                           if (!authState.isInSignupFlow) {
-                            final name = authState.decodedToken?.fullName;
                             final email = authState.userEmail;
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,7 +397,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           style: TextStyle(
             fontSize: 16.sp,
             color: _selectedDate == null
-                ? theme.textTheme.bodyMedium?.color?.withOpacity(0.5)
+                ? theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5)
                 : theme.textTheme.bodyMedium?.color,
           ),
         ),

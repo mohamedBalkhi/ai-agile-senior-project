@@ -9,7 +9,6 @@ import '../logic/cubits/auth/auth_cubit.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../utils/app_theme.dart';
-import '../utils/route_guard.dart';
 
 class CreateOrganizationScreen extends StatefulWidget {
   const CreateOrganizationScreen({super.key});

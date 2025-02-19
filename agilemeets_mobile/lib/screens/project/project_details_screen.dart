@@ -5,9 +5,7 @@ import 'package:agilemeets/data/models/project/project_member_dto.dart';
 import 'package:agilemeets/data/repositories/requirements_repository.dart';
 import 'package:agilemeets/logic/cubits/auth/auth_cubit.dart';
 import 'package:agilemeets/logic/cubits/requirements/requirements_cubit.dart';
-import 'package:agilemeets/screens/meeting/project_meetings_screen.dart';
 import 'package:agilemeets/screens/project/requirements_screen.dart';
-import 'package:agilemeets/utils/route_constants.dart';
 import 'package:agilemeets/widgets/project/update_privileges_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -135,18 +133,18 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
               controller: _tabController,
               tabs: tabs,
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.meeting_room),
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    RouteConstants.meetings,
-                    arguments: project.projectId,
-                  );
-                },
-              ),
-            ],
+            // actions: [
+            //   IconButton(
+            //     icon: const Icon(Icons.meeting_room),
+            //     onPressed: () {
+            //       Navigator.pushNamed(
+            //         context,
+            //         RouteConstants.meetings,
+            //         arguments: project.projectId,
+            //       );
+            //     },
+            //   ),
+            // ],
           ),
           body: TabBarView(
             controller: _tabController,
@@ -238,7 +236,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
                     Container(
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withOpacity(0.1),
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Icon(
@@ -337,10 +335,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: _getPrivilegeLevelColor(level).withOpacity(0.1),
+        color: _getPrivilegeLevelColor(level).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: _getPrivilegeLevelColor(level).withOpacity(0.3),
+          color: _getPrivilegeLevelColor(level).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -358,7 +356,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
           Container(
             padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
             decoration: BoxDecoration(
-              color: _getPrivilegeLevelColor(level).withOpacity(0.2),
+              color: _getPrivilegeLevelColor(level).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Text(
@@ -426,9 +424,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
                 margin: EdgeInsets.only(bottom: 8.h),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                    backgroundColor: AppTheme.primaryBlue.withValues(alpha: 0.1),
                     child: Text(
-                      member.name?.substring(0, 1).toUpperCase() ?? '?',
+                      member.name.substring(0, 1).toUpperCase(),
                       style: TextStyle(
                         color: AppTheme.primaryBlue,
                         fontWeight: FontWeight.bold,
@@ -438,13 +436,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
                   ),
                   title: Row(
                     children: [
-                      Text(member.name ?? 'Unknown'),
+                      Text(member.name),
                       if (isProjectManager) ...[
                         SizedBox(width: 8.w),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryBlue.withOpacity(0.1),
+                            color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
@@ -462,7 +460,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryBlue.withOpacity(0.1),
+                            color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
@@ -478,7 +476,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> with Ticker
                     ],
                   ),
                   subtitle: Text(
-                    member.email ?? '', 
+                    member.email, 
                     style: AppTheme.subtitle.copyWith(fontSize: 11.sp)
                   ),
                   trailing: canManage && !isProjectManager && !member.isAdmin

@@ -66,9 +66,9 @@ class _UpdateMemberPrivilegesDialogState extends State<UpdateMemberPrivilegesDia
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                  backgroundColor: AppTheme.primaryBlue.withValues(alpha:0.1),
                   child: Text(
-                    widget.member.name?.substring(0, 1).toUpperCase() ?? '?',
+                    widget.member.name.substring(0, 1).toUpperCase(),
                     style: TextStyle(
                       color: AppTheme.primaryBlue,
                       fontWeight: FontWeight.bold,
@@ -86,7 +86,7 @@ class _UpdateMemberPrivilegesDialogState extends State<UpdateMemberPrivilegesDia
                         style: AppTheme.headingMedium,
                       ),
                       Text(
-                        widget.member.name ?? '',
+                        widget.member.name,
                         style: AppTheme.subtitle,
                       ),
                     ],

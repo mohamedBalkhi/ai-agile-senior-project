@@ -150,7 +150,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Column(
@@ -184,7 +184,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
           Text(
             label,
             style: AppTheme.subtitle.copyWith(
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha:0.8),
               fontWeight: FontWeight.w500,
             ),
           ),

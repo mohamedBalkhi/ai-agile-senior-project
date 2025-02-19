@@ -73,7 +73,7 @@ class AuthHeader extends StatelessWidget {
           subtitle,
           style: subtitleStyle ?? TextStyle(
             fontSize: 16.sp,
-            color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+            color: theme.textTheme.bodyMedium?.color?.withValues(alpha:0.7),
           ),
           textAlign: TextAlign.center,
         ).animate()

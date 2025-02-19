@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 class DateFormatter {
   static final DateFormat _timeFormat = DateFormat('h:mm a');
   static final DateFormat _dateFormat = DateFormat('MMM d, yyyy');
+  static final DateFormat _shortDateFormat = DateFormat('MMM d');
   static final DateFormat _fullFormat = DateFormat('MMM d, yyyy h:mm a');
 
   static String formatTime(DateTime time) {
@@ -10,6 +11,14 @@ class DateFormatter {
   }
 
   static String formatDate(DateTime date) {
+    return _dateFormat.format(date);
+  }
+
+  static String formatDateCompact(DateTime date) {
+    final now = DateTime.now();
+    if (date.year == now.year) {
+      return _shortDateFormat.format(date);
+    }
     return _dateFormat.format(date);
   }
 
@@ -23,9 +32,10 @@ class DateFormatter {
                      start.day == end.day;
 
     if (isSameDay) {
-      return '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)}';
+      return '${formatDateCompact(start)} ${formatTime(start)} - ${formatTime(end)}';
     }
 
-    return '${formatDateTime(start)} - ${formatDateTime(end)}';
+    // For different days, show a more compact format
+    return '${formatTime(start)} ${formatDateCompact(start)} - ${formatTime(end)} ${formatDateCompact(end)}';
   }
 } 
