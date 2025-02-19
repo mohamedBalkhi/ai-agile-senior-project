@@ -1,5 +1,4 @@
 using MediatR;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
 
 #nullable disable
 

@@ -1,6 +1,5 @@
 using FluentValidation;
 using Senior.AgileAI.BaseMgt.Application.Common;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using System.Net;
 using System.Text.Json;
 

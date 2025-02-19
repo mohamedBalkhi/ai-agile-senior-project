@@ -1,12 +1,10 @@
-using Senior.AgileAI.BaseMgt.Application.Models;
-
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 
 public interface IOnlineMeetingService
 {
     Task<RoomResult> CreateRoomAsync(string roomName, CancellationToken cancellationToken = default);
     Task<bool> DeleteRoomAsync(string roomName, CancellationToken cancellationToken = default);
-    Task<RoomResult> GetRoomAsync(string roomName, CancellationToken cancellationToken = default);
+    Task<RoomResult?> GetRoomAsync(string roomName, CancellationToken cancellationToken = default);
     Task<string> StartRecordingAsync(string roomName, CancellationToken cancellationToken = default);
     Task<bool> StopRecordingAsync(string roomName, CancellationToken cancellationToken = default);
     Task<RecordingStatus> GetRecordingStatusAsync(string roomName, CancellationToken cancellationToken = default);

@@ -62,7 +62,9 @@ public class CalendarSubscriptionCleanupWorker : BackgroundService
         foreach (var subscription in expiredSubscriptions)
         {
             subscription.IsActive = false;
+            unitOfWork.CalendarSubscriptions.Update(subscription);
         }
+        
 
         await unitOfWork.CompleteAsync();
         _logger.LogInformation(

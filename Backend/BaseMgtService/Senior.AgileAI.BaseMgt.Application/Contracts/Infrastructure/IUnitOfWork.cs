@@ -1,5 +1,4 @@
 using Senior.AgileAI.BaseMgt.Application.Contracts.infrastructure;
-using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 

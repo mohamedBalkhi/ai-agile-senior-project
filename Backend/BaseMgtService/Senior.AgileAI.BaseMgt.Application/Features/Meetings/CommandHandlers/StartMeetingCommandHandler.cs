@@ -5,8 +5,6 @@ using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Models;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
-using FluentValidation;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.CommandHandlers;
 
@@ -70,6 +68,7 @@ public class StartMeetingCommandHandler : IRequestHandler<StartMeetingCommand, b
 
             // Start meeting
             meeting.Start();
+            _unitOfWork.Meetings.Update(meeting);
             
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);

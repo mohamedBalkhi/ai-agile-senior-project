@@ -58,4 +58,11 @@ public class NotificationTokenRepository : GenericRepository<NotificationToken>,
         return Task.FromResult(true);
     }
 
+    public async Task<NotificationToken?> GetOldestTokenByUserId(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.NotificationTokens
+            .Where(nt => nt.User_IdUser == userId)
+            .OrderBy(nt => nt.UpdatedDate)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 } 

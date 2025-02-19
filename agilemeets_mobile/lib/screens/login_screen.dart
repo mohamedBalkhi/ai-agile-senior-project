@@ -1,5 +1,4 @@
 import 'package:agilemeets/core/errors/app_exception.dart';
-import 'package:agilemeets/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -193,19 +192,9 @@ class _LoginScreenState extends State<LoginScreen> with NavigationMixin {
   }
 
   void _handleSignUp() {
-    replaceTo('/signup');
+    navigateToAndReplace('/signup');
   }
 
-  String? _getFieldError(AuthState state, String fieldName) {
-    if (state.validationErrors == null) return null;
-    
-    final errors = state.validationErrors!
-        .where((e) => e.propertyName.toLowerCase().contains(fieldName.toLowerCase()))
-        .map((e) => e.errorMessage)
-        .toList();
-        
-    return errors.isEmpty ? null : errors.first;
-  }
 
   bool _hasFieldErrors(AuthState state, String fieldName) {
     if (state.validationErrors == null) return false;

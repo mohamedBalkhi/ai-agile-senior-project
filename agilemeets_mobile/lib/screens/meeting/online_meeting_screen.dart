@@ -1,6 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
-import 'package:collection/collection.dart' show DeepCollectionEquality, IterableExtension, ListEquality; // for firstWhereOrNull
+import 'package:collection/collection.dart' show IterableExtension; // for firstWhereOrNull
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_background/flutter_background.dart';
@@ -8,22 +8,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'package:livekit_client/livekit_client.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:throttling/throttling.dart';
 
-import '../../logic/cubits/auth/auth_cubit.dart';
 import '../../logic/cubits/meeting/meeting_cubit.dart';
 import '../../logic/cubits/meeting/meeting_state.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/shared/loading_indicator.dart';
 // Add this class to mirror Android's Activity result codes
-class ActivityResult {
-  static const int RESULT_OK = -1;
-  static const int RESULT_CANCELED = 0;
-}
-/// An example meeting screen that includes:
-/// - A "Pre-Join" UI to let users toggle mic & camera before connecting.
-/// - A high-level UI for an ongoing meeting with toggles for audio/video, camera switch, and leave.
+
 class OnlineMeetingScreen extends StatefulWidget {
   final String meetingId;
 
@@ -39,7 +30,6 @@ class _OnlineMeetingScreenState extends State<OnlineMeetingScreen> {
   EventsListener<RoomEvent>? _listener;
 
 
-final _updateThrottler = Throttling(duration: const Duration(milliseconds: 100));
 
   // 
    bool _isReconnecting = false;
@@ -65,7 +55,6 @@ final _updateThrottler = Throttling(duration: const Duration(milliseconds: 100))
 
   // Add these new state variables
 Participant? _selectedParticipant;
-Participant? _activeScreenShareParticipant;
 bool _isScreenSharing = false;
 
 
@@ -474,7 +463,7 @@ void _refreshParticipants() {
       final cameraPub = localParticipant.videoTrackPublications.firstWhereOrNull(
         (pub) => pub.track?.source == TrackSource.camera,
       );
-      final track = cameraPub?.track as LocalVideoTrack?;
+      final track = cameraPub?.track;
       if (track == null) {
         log('No camera track found to switch.', name: 'OnlineMeetingScreen');
         return;
@@ -853,7 +842,7 @@ void _refreshParticipants() {
                 // Video renderer
                 if (hasVideo)
                   VideoTrackRenderer(
-                    videoTrack!,
+                    videoTrack,
                     fit: webrtc.RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
                   )
                 else
@@ -894,7 +883,7 @@ void _refreshParticipants() {
                         vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withOpacity(0.9),
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
@@ -967,7 +956,7 @@ void _refreshParticipants() {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

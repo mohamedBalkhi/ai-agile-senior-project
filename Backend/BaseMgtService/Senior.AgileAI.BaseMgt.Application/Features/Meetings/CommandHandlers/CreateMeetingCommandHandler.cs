@@ -7,7 +7,6 @@ using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Models;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Services;
 using FluentValidation;
 using FluentValidation.Results;
@@ -120,6 +119,13 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
                 DateTime.SpecifyKind(request.Dto.EndTime, DateTimeKind.Unspecified), 
                 timeZoneInfo);
 
+            // Convert reminder time to UTC
+            var reminderTimeUtc = request.Dto.ReminderTime.HasValue
+                ? TimeZoneInfo.ConvertTimeToUtc(
+                    DateTime.SpecifyKind(request.Dto.ReminderTime.Value, DateTimeKind.Unspecified),
+                    timeZoneInfo)
+                : startTimeUtc.AddMinutes(-15); // Default reminder 15 minutes before start
+
             meeting = new Meeting
             {
                 Title = request.Dto.Title,
@@ -130,7 +136,7 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
                 EndTime = endTimeUtc,
                 TimeZoneId = request.Dto.TimeZone,
                 Location = request.Dto.Location,
-                ReminderTime = request.Dto.ReminderTime ?? request.Dto.StartTime.AddMinutes(-15),
+                ReminderTime = reminderTimeUtc,
                 Project_IdProject = request.Dto.ProjectId,
                 Creator_IdOrganizationMember = member.Id,
                 Status = request.Dto.Type == MeetingType.Done ? 
@@ -175,18 +181,29 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
                 try
                 {
                     var roomName = meeting.GenerateRoomName();
+                    if (string.IsNullOrEmpty(roomName))
+                    {
+                        throw new InvalidOperationException("Failed to generate room name for online meeting");
+                    }
+
                     var roomResult = await _onlineMeetingService.CreateRoomAsync(roomName, cancellationToken);
-                    
+                    if (roomResult == null)
+                    {
+                        throw new InvalidOperationException("Failed to create online meeting room - null response from service");
+                    }
+
                     meeting.LiveKitRoomSid = roomResult.Sid;
                     meeting.LiveKitRoomName = roomName;
                     meeting.OnlineMeetingStatus = OnlineMeetingStatus.NotStarted;
                     meeting.AudioStatus = AudioStatus.Pending;
                     meeting.AudioSource = AudioSource.MeetingService;
+                    _unitOfWork.Meetings.Update(meeting);
+                    await _unitOfWork.CompleteAsync();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create LiveKit room for meeting {MeetingId}", meeting.Id);
-                    throw new InvalidOperationException("Failed to create online meeting room", ex);
+                    _logger.LogError(ex, "Failed to create LiveKit room for meeting {MeetingId}: {Error}", meeting.Id, ex.Message);
+                    throw new InvalidOperationException($"Failed to create online meeting room: {ex.Message}", ex);
                 }
             }
 
@@ -259,7 +276,7 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
                     }
                 }
             }
-
+            
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

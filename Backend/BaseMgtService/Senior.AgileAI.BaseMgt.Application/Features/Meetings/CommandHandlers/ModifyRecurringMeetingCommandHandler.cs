@@ -2,7 +2,6 @@ using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.DTOs.Meetings;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
 using Senior.AgileAI.BaseMgt.Application.Models;
 using Senior.AgileAI.BaseMgt.Application.Services;
@@ -113,6 +112,7 @@ public class ModifyRecurringMeetingCommandHandler : IRequestHandler<ModifyRecurr
                     "Modified instance");
             }
 
+            _unitOfWork.Meetings.Update(meeting);
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

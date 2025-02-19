@@ -1,6 +1,3 @@
-using Senior.AgileAI.BaseMgt.Domain.Entities;
-using System.Collections.Generic;
-using System.Threading;
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 
 public interface IGenericRepository<T> where T : class

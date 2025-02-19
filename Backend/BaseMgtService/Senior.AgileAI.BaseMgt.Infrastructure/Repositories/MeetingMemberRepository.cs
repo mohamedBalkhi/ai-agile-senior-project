@@ -39,6 +39,7 @@ public class MeetingMemberRepository : GenericRepository<MeetingMember>, IMeetin
             return false;
 
         member.HasConfirmed = hasConfirmed;
+        _context.MeetingMembers.Update(member);
         return true;
     }
 } 

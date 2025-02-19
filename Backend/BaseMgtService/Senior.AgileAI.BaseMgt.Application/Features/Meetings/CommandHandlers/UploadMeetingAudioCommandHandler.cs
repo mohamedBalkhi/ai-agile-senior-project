@@ -4,7 +4,6 @@ using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.CommandHandlers;
 
@@ -52,7 +51,7 @@ public class UploadMeetingAudioCommandHandler : IRequestHandler<UploadMeetingAud
         }
 
         // Validate audio file
-        if (!await _audioStorage.ValidateAudioFileAsync(request.AudioFile, cancellationToken))
+        if (!_audioStorage.ValidateAudioFile(request.AudioFile))
         {
             throw new InvalidOperationException("Invalid audio file");
         }
@@ -71,13 +70,17 @@ public class UploadMeetingAudioCommandHandler : IRequestHandler<UploadMeetingAud
             meeting.AudioStatus = AudioStatus.Available;
             meeting.AudioSource = AudioSource.Upload;
             meeting.AudioUploadedAt = DateTime.UtcNow;
+            if (meeting.Status != MeetingStatus.Completed)
+            {
+                meeting.Complete();
+            }
             
             // Reset AI processing status to ensure it gets picked up by the worker
             meeting.AIProcessingStatus = AIProcessingStatus.NotStarted;
             meeting.AIProcessingToken = null;
             meeting.AIReport = null;
             meeting.AIProcessedAt = null;
-
+            _unitOfWork.Meetings.Update(meeting);
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

@@ -2,23 +2,16 @@ using Senior.AgileAI.BaseMgt.Infrastructure.Extensions;
 using Senior.AgileAI.BaseMgt.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
 using Senior.AgileAI.BaseMgt.Infrastructure.Options;
 using Senior.AgileAI.BaseMgt.Application;
 using Senior.AgileAI.BaseMgt.Application.Common.Constants;
 using Microsoft.OpenApi.Models;
-using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
-using Senior.AgileAI.BaseMgt.Infrastructure.Services;
-using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Api.Middleware;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices;
-
+using System.Threading.RateLimiting;
+using Polly;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add HTTP logging configuration
@@ -140,10 +133,33 @@ builder.Services.AddHealthChecks()
 builder.Services.AddHostedService<CalendarSubscriptionCleanupWorker>();
 builder.Services.AddHostedService<OnlineMeetingWorker>();
 
+// Replace the existing HttpClient configuration with this
+builder.Services.AddHttpClient("DefaultClient")
+    .AddTransientHttpErrorPolicy(p => 
+        p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(600)))
+    .AddTransientHttpErrorPolicy(p => 
+        p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+
+// Add in your service configuration
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter("GlobalLimiter",
+            partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 200,
+                Window = TimeSpan.FromSeconds(1)
+            }));
+});
+
 var app = builder.Build();
 
 // Add HTTP logging middleware
 app.UseHttpLogging();
+
+// Move UseStaticFiles() here, before UseHttpsRedirection
+app.UseStaticFiles();
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -151,7 +167,7 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
-app.UseAuthorization();
+
 app.UseGlobalExceptionHandler();
 
 // Allow all CORS
@@ -162,6 +178,11 @@ app.UseCors(builder =>
            .AllowAnyHeader();
 });
 
+// Add in your middleware pipeline (before UseRouting)
+app.UseRateLimiter();
+
+app.UseRouting();
+app.UseAuthorization();
 app.MapControllers();
 
 // Apply migrations and seed data at startup

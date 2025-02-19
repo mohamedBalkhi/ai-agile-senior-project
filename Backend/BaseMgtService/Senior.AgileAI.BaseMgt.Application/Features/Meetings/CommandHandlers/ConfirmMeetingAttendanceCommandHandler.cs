@@ -1,7 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Commands;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Models;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.Meetings.CommandHandlers;
@@ -64,7 +63,6 @@ public class ConfirmMeetingAttendanceCommandHandler : IRequestHandler<ConfirmMee
             {
                 throw new InvalidOperationException("Failed to update confirmation status");
             }
-
             await _unitOfWork.CompleteAsync();
             await transaction.CommitAsync(cancellationToken);
 

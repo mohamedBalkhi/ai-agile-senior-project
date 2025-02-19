@@ -2,7 +2,6 @@ using MediatR;
 using FluentValidation;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Models;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Commands;
 using Senior.AgileAI.BaseMgt.Application.Validations;
 

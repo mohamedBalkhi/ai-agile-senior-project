@@ -1,7 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Models;
 
 
@@ -30,7 +29,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
             else
             {
                 user.Code = GenerateCode();
-
+                _unitOfWork.Users.Update(user);
 
                 await _unitOfWork.CompleteAsync();
 

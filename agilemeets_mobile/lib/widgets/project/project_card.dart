@@ -45,7 +45,7 @@ class ProjectCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          project.projectName ?? 'Unnamed Project',
+                          project.projectName,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         if (project.projectDescription != null) ...[

@@ -1,7 +1,6 @@
 // Sign up Page
 
 import 'package:agilemeets/core/errors/app_exception.dart';
-import 'package:agilemeets/core/errors/validation_error.dart';
 import 'package:agilemeets/widgets/auth_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +14,6 @@ import '../data/models/country_dto.dart';
 import '../data/repositories/country_repository.dart';
 import 'login_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:agilemeets/widgets/error_handlers/form_validation_errors.dart';
 import 'package:agilemeets/extensions/context_extensions.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -72,12 +70,6 @@ class _SignUpPageState extends State<SignUpPage> {
     return errors.isEmpty ? null : errors.first;
   }
 
-  bool _hasFieldErrors(AuthState state, String fieldName) {
-    if (state.validationErrors == null) return false;
-    
-    return state.validationErrors!
-        .any((e) => e.propertyName.toLowerCase().contains(fieldName.toLowerCase()));
-  }
 
   void _handleSignUp() {
     if (!_formKey.currentState!.validate()) return;
@@ -95,7 +87,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     
     return Scaffold(
       body: BlocConsumer<AuthCubit, AuthState>(
@@ -361,7 +352,7 @@ class _SignUpPageState extends State<SignUpPage> {
           style: TextStyle(
             fontSize: 16.sp,
             color: _selectedDate == null
-                ? theme.textTheme.bodyMedium?.color?.withOpacity(0.5)
+                ? theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5)
                 : theme.textTheme.bodyMedium?.color,
           ),
         ),

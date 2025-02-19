@@ -1,5 +1,4 @@
 using MediatR;
-using Senior.AgileAI.BaseMgt.Application.Common;
 using Senior.AgileAI.BaseMgt.Application.Features.Auth.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
@@ -23,6 +22,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Auth.CommandHandlers
             member.User.IsActive = true;
 
             member.User.Password = _authService.HashPassword(member.User, request.Dto.Password);
+            _unitOfWork.Users.Update(member.User);
             await _unitOfWork.CompleteAsync();
             return true;
 

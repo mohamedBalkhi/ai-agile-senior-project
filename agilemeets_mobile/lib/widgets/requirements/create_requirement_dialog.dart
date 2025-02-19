@@ -95,7 +95,7 @@ class _CreateRequirementDialogState extends State<CreateRequirementDialog> {
                     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                     decoration: BoxDecoration(
                       color: _priority == priority 
-                          ? priority.color.withOpacity(0.1)
+                          ? priority.color.withValues(alpha:0.1)
                           : AppTheme.cardGrey,
                       borderRadius: BorderRadius.circular(16.r),
                       border: Border.all(
@@ -146,7 +146,7 @@ class _CreateRequirementDialogState extends State<CreateRequirementDialog> {
                           ),
                           decoration: BoxDecoration(
                             color: _status == status
-                                ? status.color.withOpacity(0.1)
+                                ? status.color.withValues(alpha:0.1)
                                 : null,
                             borderRadius: BorderRadius.circular(12.r),
                           ),

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/models/requirements/project_requirements_dto.dart';
-import '../../data/models/requirements/update_requirements_dto.dart';
 import '../../data/enums/req_priority.dart';
 import '../../data/enums/requirements_status.dart';
 import '../../logic/cubits/requirements/requirements_cubit.dart';
@@ -68,7 +67,6 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
         previous.error != current.error,
       listener: (context, state) {
         if (state.status == RequirementsStatus.error) {
-          print('error: ${state.error}');
           
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -113,10 +111,8 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
         }
       },
       builder: (context, state) {
-        final hasRequirements = state.requirements?.isNotEmpty ?? false;
-        final hasActiveFilters = state.priorityFilter != null || 
-                               state.statusFilter != null || 
-                               (_searchController.text.isNotEmpty);
+        final hasRequirements = state.requirements.isNotEmpty ?? false;
+        final hasActiveFilters = state.filters.hasActiveFilters;
         
         return Scaffold(
           body: RefreshIndicator(
@@ -197,8 +193,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                     child: RequirementsFilterBar(
-                      selectedPriority: state.priorityFilter,
-                      selectedStatus: state.statusFilter,
+                      filters: state.filters,
                       onPriorityChanged: (priority) => _updateFilter(priority: priority),
                       onStatusChanged: (status) => _updateFilter(status: status),
                       onClearFilters: () {
@@ -206,6 +201,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
                         context.read<RequirementsCubit>().clearFilters();
                         _refreshList();
                       },
+                      isFiltering: state.isFilteringInProgress,
                     ),
                   ).animate().fadeIn().slideY(begin: 0.2),
                 
@@ -299,7 +295,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
 
   List<Widget> _buildSelectionActions(BuildContext context, RequirementsState state) {
     final validSelectedIds = state.selectedRequirementIds
-        .where((id) => state.requirements?.any((r) => r.id == id) ?? false)
+        .where((id) => state.requirements.any((r) => r.id == id) ?? false)
         .toList();
 
     return [
@@ -370,7 +366,6 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
             );
             _refreshList();
           } else if (state.status == RequirementsStatus.error) {
-            print('error: ${state.error}');
             
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -443,7 +438,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
   }
 
   Widget _buildRequirementsGrid(RequirementsState state) {
-    if (state.requirements?.isEmpty ?? true) {
+    if (state.requirements.isEmpty ?? true) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -477,9 +472,9 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
         mainAxisSpacing: 12.h,
         childAspectRatio: 0.85,
       ),
-      itemCount: state.requirements!.length + (state.hasMorePages ? 1 : 0),
+      itemCount: state.requirements.length + (state.hasMorePages ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == state.requirements!.length) {
+        if (index == state.requirements.length) {
           return Center(
             child: Padding(
               padding: EdgeInsets.all(16.w),
@@ -488,7 +483,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
           );
         }
 
-        final requirement = state.requirements![index];
+        final requirement = state.requirements[index];
         return RequirementGridItem(
           requirement: requirement,
           isSelected: state.selectedRequirementIds.contains(requirement.id),
@@ -505,36 +500,19 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
   }
 
   void _updateFilter({ReqPriority? priority, RequirementStatus? status}) {
-    final cubit = context.read<RequirementsCubit>();
-    final currentState = cubit.state;
-    
-    // Only update if there's an actual change
-    if (priority == currentState.priorityFilter || 
-        status == currentState.statusFilter) {
-      cubit.updateFilters(
-        projectId: widget.projectId,
-        priority: priority == currentState.priorityFilter ? null : priority,
-        status: status == currentState.statusFilter ? null : status,
-        searchQuery: _searchController.text,
-      );
-    } else {
-      cubit.updateFilters(
-        projectId: widget.projectId,
-        priority: priority,
-        status: status,
-        searchQuery: _searchController.text,
-      );
-    }
+    context.read<RequirementsCubit>().updateFilters(
+      projectId: widget.projectId,
+      priority: priority,
+      status: status,
+      searchQuery: _searchController.text,
+    );
   }
 
   void _onSearch() {
     context.read<RequirementsCubit>().updateFilters(
       projectId: widget.projectId,
       searchQuery: _searchController.text,
-      priority: context.read<RequirementsCubit>().state.priorityFilter,
-      status: context.read<RequirementsCubit>().state.statusFilter,
     );
-    _refreshList();
   }
 
   @override

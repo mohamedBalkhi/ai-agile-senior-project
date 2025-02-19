@@ -1,7 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Models;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandlers
@@ -26,6 +25,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
             }
 
             user.IsActive = false;
+            _unitOfWork.Users.Update(user);
             await _unitOfWork.CompleteAsync();
 
             // Send email notification

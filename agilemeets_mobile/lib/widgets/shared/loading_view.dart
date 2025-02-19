@@ -16,7 +16,7 @@ class LoadingView extends StatelessWidget {
             height: 40.w,
             child: CircularProgressIndicator(
               strokeWidth: 3.w,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
             ),
           ),
           SizedBox(height: 16.h),

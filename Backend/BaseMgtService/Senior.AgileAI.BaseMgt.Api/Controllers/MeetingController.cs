@@ -33,17 +33,51 @@ public class MeetingController : ControllerBase
     }
 
     [HttpGet("GetProjectMeetings")]
-    public async Task<ActionResult<ApiResponse<List<MeetingDTO>>>> GetProjectMeetings(
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<GroupedMeetingsResponse>>> GetProjectMeetings(
         [FromQuery] Guid projectId,
-        [FromQuery] bool upcomingOnly,
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] string timeZoneId,
+        [FromQuery] DateTime? referenceDate,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? lastMeetingId = null)
     {
         var userId = _tokenResolver.ExtractUserId();
-        var query = new GetProjectMeetingsQuery(projectId, userId ?? Guid.Empty, upcomingOnly, fromDate, toDate, pageSize);
+        var query = new GetProjectMeetingsQuery(
+            projectId, 
+            userId ?? Guid.Empty, 
+            timeZoneId,
+            false, // historical view
+            referenceDate,
+            pageSize,
+            lastMeetingId);
         var result = await _mediator.Send(query);
-        return Ok(new ApiResponse<GroupedMeetingsResponse>(200, "Meetings retrieved successfully", result));
+        return Ok(new ApiResponse<GroupedMeetingsResponse>(200, "Historical meetings retrieved successfully", result));
+    }
+
+    [HttpGet("GetUpcomingProjectMeetings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<GroupedMeetingsResponse>>> GetUpcomingProjectMeetings(
+        [FromQuery] Guid projectId,
+        [FromQuery] string timeZoneId,
+        [FromQuery] DateTime? referenceDate,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? lastMeetingId = null)
+    {
+        var userId = _tokenResolver.ExtractUserId();
+        var query = new GetProjectMeetingsQuery(
+            projectId, 
+            userId ?? Guid.Empty, 
+            timeZoneId,
+            true, // upcoming view
+            referenceDate,
+            pageSize,
+            lastMeetingId);
+        var result = await _mediator.Send(query);
+        return Ok(new ApiResponse<GroupedMeetingsResponse>(200, "Upcoming meetings retrieved successfully", result));
     }
 
     [HttpGet("GetMeetingDetails")]

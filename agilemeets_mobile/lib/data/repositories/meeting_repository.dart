@@ -2,7 +2,6 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:agilemeets/core/errors/app_exception.dart';
 import 'package:agilemeets/data/models/api_response.dart';
-import 'package:agilemeets/data/models/meeting_dto.dart';
 import 'package:agilemeets/data/models/meeting_details_dto.dart';
 import 'package:agilemeets/data/models/modify_recurring_meeting_dto.dart';
 import 'package:agilemeets/data/models/meeting_ai_report_dto.dart';
@@ -19,9 +18,9 @@ import 'package:agilemeets/data/models/join_meeting_response.dart';
 class MeetingRepository extends BaseRepository {
   Future<ApiResponse<GroupedMeetingsResponse>> getProjectMeetings(
     String projectId, {
-    bool upcomingOnly = true,
-    DateTime? fromDate,
-    DateTime? toDate,
+    required String timeZoneId,
+    DateTime? referenceDate,
+    String? lastMeetingId,
     int pageSize = 10,
   }) async {
     return safeApiCall(
@@ -31,9 +30,38 @@ class MeetingRepository extends BaseRepository {
           '/api/Meeting/GetProjectMeetings',
           queryParameters: {
             'projectId': projectId,
-            'upcomingOnly': upcomingOnly,
-            if (fromDate != null) 'fromDate': fromDate.toIso8601String(),
-            if (toDate != null) 'toDate': toDate.toIso8601String(),
+            'timeZoneId': timeZoneId,
+            if (referenceDate != null) 'referenceDate': referenceDate.toIso8601String(),
+            if (lastMeetingId != null) 'lastMeetingId': lastMeetingId,
+            'pageSize': pageSize,
+          },
+        );
+
+        return ApiResponse<GroupedMeetingsResponse>.fromJson(
+          response.data,
+          (json) => GroupedMeetingsResponse.fromJson(json as Map<String, dynamic>),
+        );
+      },
+    );
+  }
+
+  Future<ApiResponse<GroupedMeetingsResponse>> getUpcomingProjectMeetings(
+    String projectId, {
+    required String timeZoneId,
+    DateTime? referenceDate,
+    String? lastMeetingId,
+    int pageSize = 10,
+  }) async {
+    return safeApiCall(
+      context: 'getUpcomingProjectMeetings',
+      call: () async {
+        final response = await apiClient.get(
+          '/api/Meeting/GetUpcomingProjectMeetings',
+          queryParameters: {
+            'projectId': projectId,
+            'timeZoneId': timeZoneId,
+            if (referenceDate != null) 'referenceDate': referenceDate.toIso8601String(),
+            if (lastMeetingId != null) 'lastMeetingId': lastMeetingId,
             'pageSize': pageSize,
           },
         );
@@ -62,6 +90,67 @@ class MeetingRepository extends BaseRepository {
       },
     );
   }
+
+  Future<ApiResponse<String>> createMeetingWithAudio({
+  required String title,
+  String? goal,
+  required int language,
+  required int type,
+  required DateTime startTime,
+  required DateTime endTime,
+  required String timeZone,
+  required String projectId,
+  required List<String> memberIds,
+  String? location,
+  DateTime? reminderTime,
+  required File audioFile,  // now required for meetings of type "done"
+  bool isRecurring = false,
+  Map<String, dynamic>? recurringPattern,
+  void Function(double)? onProgress,
+  CancelToken? cancelToken,
+}) async {
+  return safeApiCall(
+    context: 'createMeetingWithAudio',
+    call: () async {
+      final formData = FormData.fromMap({
+        'Title': title,
+        'Goal': goal,
+        'Language': language,
+        'Type': type,
+        'StartTime': startTime.toIso8601String(),
+        'EndTime': endTime.toIso8601String(),
+        'TimeZone': timeZone,
+        'ProjectId': projectId,
+        'MemberIds': memberIds,
+        'Location': location,
+        'ReminderTime': reminderTime?.toIso8601String(),
+        'IsRecurring': isRecurring,
+        'AudioFile': await MultipartFile.fromFile(audioFile.path),
+      });
+  
+
+      final response = await apiClient.post(
+        '/api/Meeting/CreateMeeting',
+        data: formData,
+        cancelToken: cancelToken,
+        onSendProgress: (sent, total) {
+          if (total != 0 && onProgress != null) {
+            onProgress(sent / total);
+          }
+        },
+        options: Options(
+          sendTimeout: const Duration(minutes: 30),
+          receiveTimeout: const Duration(minutes: 30),
+        ),
+      );
+
+      return ApiResponse<String>.fromJson(
+        response.data,
+        (json) => json as String,
+      );
+    },
+  );
+}
 
   Future<ApiResponse<String>> createMeeting({
     required String title,
@@ -194,6 +283,22 @@ class MeetingRepository extends BaseRepository {
     return safeApiCall(
       context: 'uploadAudio',
       call: () async {
+        // Verify file exists and is readable before starting upload
+        if (!await audioFile.exists()) {
+          throw const ServerException(
+            'Audio file not found',
+            code: 'FILE_NOT_FOUND',
+          );
+        }
+
+        final fileSize = await audioFile.length();
+        if (fileSize == 0) {
+          throw const ServerException(
+            'Audio file is empty',
+            code: 'INVALID_FILE',
+          );
+        }
+
         final formData = FormData.fromMap({
           'audioFile': await MultipartFile.fromFile(
             audioFile.path,
@@ -201,21 +306,53 @@ class MeetingRepository extends BaseRepository {
           ),
         });
 
-        final response = await apiClient.post(
-          '/api/Meeting/$meetingId/UploadAudio',
-          data: formData,
-          cancelToken: cancelToken,
-          onSendProgress: (sent, total) {
-            if (total != -1 && onProgress != null) {
-              onProgress(sent / total);
-            }
-          },
-        );
+        // Set up cancel token listener for cleanup
+        cancelToken?.whenCancel.then((_) {
+          log('Upload cancelled by user', name: 'MeetingRepository');
+        });
 
-        return ApiResponse<String>.fromJson(
-          response.data,
-          (json) => json as String,
-        );
+        try {
+          final response = await apiClient.post(
+            '/api/Meeting/$meetingId/UploadAudio',
+            data: formData,
+            cancelToken: cancelToken,
+            onSendProgress: (sent, total) {
+              if (total != -1 && onProgress != null && !cancelToken!.isCancelled) {
+                onProgress(sent / total);
+              }
+            },
+            options: Options(
+              // Set reasonable timeouts for large file uploads
+              sendTimeout: const Duration(minutes: 30),
+              receiveTimeout: const Duration(minutes: 30),
+              // Don't retry cancelled uploads
+              listFormat: ListFormat.multiCompatible,
+              validateStatus: (status) {
+                return status != null && status < 500;
+              },
+            ),
+          );
+
+          if (cancelToken?.isCancelled ?? false) {
+            throw const ServerException(
+              'Upload cancelled by user',
+              code: 'UPLOAD_CANCELLED',
+            );
+          }
+
+          return ApiResponse<String>.fromJson(
+            response.data,
+            (json) => json as String,
+          );
+        } catch (e) {
+          if (e is DioException && e.type == DioExceptionType.cancel) {
+            throw const ServerException(
+              'Upload cancelled by user',
+              code: 'UPLOAD_CANCELLED',
+            );
+          }
+          rethrow;
+        }
       },
     );
   }

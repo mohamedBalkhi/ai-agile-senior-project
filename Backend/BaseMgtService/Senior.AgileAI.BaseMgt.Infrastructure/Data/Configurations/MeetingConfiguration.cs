@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Data.Configurations;
 
 public class MeetingConfiguration : IEntityTypeConfiguration<Meeting>
@@ -99,10 +98,7 @@ public class MeetingConfiguration : IEntityTypeConfiguration<Meeting>
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<List<string>>(v, new JsonSerializerOptions()));
 
-            report.Property(r => r.MainLanguage)
-                .HasColumnName("AIMainLanguage")
-                .HasMaxLength(20)
-                .IsRequired();
+         
         });
 
         // Online Meeting Configuration

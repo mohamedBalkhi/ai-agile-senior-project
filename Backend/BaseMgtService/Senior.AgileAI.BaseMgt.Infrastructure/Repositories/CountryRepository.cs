@@ -1,7 +1,6 @@
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 
 

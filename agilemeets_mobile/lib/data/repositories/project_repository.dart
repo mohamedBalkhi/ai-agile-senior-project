@@ -1,5 +1,4 @@
 import 'package:agilemeets/data/models/api_response.dart';
-import 'package:agilemeets/data/models/project/project_dto.dart';
 import 'package:agilemeets/data/models/project/project_info_dto.dart';
 import 'package:agilemeets/data/models/project/project_member_dto.dart';
 import 'package:agilemeets/data/models/project/member_privileges_dto.dart';

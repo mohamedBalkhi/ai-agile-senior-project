@@ -50,9 +50,7 @@ class MeetingCard extends StatelessWidget {
               ),
               SizedBox(height: 8.h),
               Text(
-                meeting.startTime != null
-                    ? DateFormat('MMM d, y • h:mm a').format(meeting.startTime!)
-                    : 'No date set',
+                DateFormat('MMM d, y • h:mm a').format(meeting.startTime),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               if (meeting.type == MeetingType.online && meeting.status == MeetingStatus.inProgress) ...[
@@ -67,7 +65,7 @@ class MeetingCard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => OnlineMeetingScreen(
-                            meetingId: meeting.id ?? '',
+                            meetingId: meeting.id,
                           ),
                         ),
                       );

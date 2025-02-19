@@ -47,7 +47,7 @@ class RequirementsList extends StatelessWidget {
     final privileges = context.read<ProjectCubit>().state.memberPrivileges;
     final canWrite = privileges?.canManageRequirements() ?? false;
 
-    if (requirements.isEmpty) {
+    if (requirements.isEmpty && !isLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -64,17 +64,20 @@ class RequirementsList extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
             Text(
-              'Add your first requirement to get started',
+              canWrite 
+                ? 'Add your first requirement to get started'
+                : 'No requirements have been added yet',
               style: AppTheme.subtitle,
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 24.h),
-            if (canWrite)
+            if (canWrite) ...[
+              SizedBox(height: 24.h),
               FilledButton.icon(
                 onPressed: () => _showCreateDialog(context),
                 icon: const Icon(Icons.add),
                 label: const Text('Add Requirement'),
               ),
+            ],
           ],
         ).animate().fadeIn().slideY(begin: 0.3),
       );
@@ -82,11 +85,11 @@ class RequirementsList extends StatelessWidget {
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification is ScrollEndNotification &&
-            notification.metrics.extentAfter == 0 &&
-            hasMore &&
-            onLoadMore != null) {
-          onLoadMore!();
+        if (!isLoading && 
+            hasMore && 
+            notification is ScrollEndNotification &&
+            notification.metrics.extentAfter < 200.h) {
+          onLoadMore?.call();
         }
         return false;
       },
@@ -95,15 +98,12 @@ class RequirementsList extends StatelessWidget {
         itemCount: requirements.length + (isLoading ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == requirements.length) {
-            print('isLoading: $isLoading');
-            print('hasMore: $hasMore');
-            
             return Center(
               child: Padding(
                 padding: EdgeInsets.all(16.w),
                 child: const CircularProgressIndicator(),
               ),
-            );
+            ).animate().fadeIn();
           }
 
           final requirement = requirements[index];
@@ -117,7 +117,7 @@ class RequirementsList extends StatelessWidget {
             onTap: selectionMode
                 ? () => onRequirementSelected?.call(requirement.id)
                 : () => onRequirementTap?.call(requirement),
-          ).animate().fadeIn(delay: Duration(milliseconds: 100 * index));
+          ).animate().fadeIn(delay: Duration(milliseconds: 50 * index));
         },
       ),
     );
@@ -139,7 +139,19 @@ class RequirementsList extends StatelessWidget {
                 projectId,
                 filePath,
               );
-              Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            },
+            onWebFileUpload: (bytes, fileName) async {
+              await context.read<RequirementsCubit>().uploadWebRequirementsFile(
+                projectId,
+                bytes,
+                fileName,
+              );
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
           );
         },

@@ -7,15 +7,24 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../logic/cubits/meeting/meeting_cubit.dart';
-import 'dart:developer';
+import 'dart:developer' as dev;
 
 class MeetingAudioPlayer extends StatefulWidget {
-  final String meetingId;
+  final String? meetingId;
+  final String? audioUrl;
+  final String? filePath;
 
   const MeetingAudioPlayer({
-    Key? key,
-    required this.meetingId,
-  }) : super(key: key);
+    super.key,
+    this.meetingId,
+    this.audioUrl,
+  }) : filePath = null;
+
+  const MeetingAudioPlayer.fromFile({
+    super.key,
+    required this.filePath,
+  }) : meetingId = null,
+       audioUrl = null;
 
   @override
   State<MeetingAudioPlayer> createState() => _MeetingAudioPlayerState();
@@ -90,7 +99,7 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
       }
       return null;
     } catch (e) {
-      log('Error checking cache: $e', name: 'MeetingAudioPlayer');
+      dev.log('Error checking cache: $e', name: 'MeetingAudioPlayer');
       return null;
     }
   }
@@ -106,20 +115,6 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
     return filePath;
   }
 
-  String _getContentType(String url) {
-    final extension = _getFileExtension(url);
-    switch (extension) {
-      case 'm4a':
-        return 'audio/mp4'; // AAC audio
-      case 'mp3':
-        return 'audio/mpeg';
-      case 'wav':
-        return 'audio/wav';
-      default:
-        return 'audio/*';
-    }
-  }
-
   Future<void> _initAudioPlayer() async {
     if (_isInitialized) return;
 
@@ -129,55 +124,53 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
     });
 
     try {
-      log('Initializing audio player', name: 'MeetingAudioPlayer');
+      dev.log('Initializing audio player', name: 'MeetingAudioPlayer');
 
-      final audioUrl =
-          await context.read<MeetingCubit>().getMeetingAudioUrl(widget.meetingId);
-      if (!mounted) return;
+      if (widget.filePath != null) {
+        dev.log('Loading audio from file: ${widget.filePath}');
+        await _player.setFilePath(widget.filePath!);
+      } else if (widget.audioUrl != null) {
+        dev.log('Loading audio from URL: ${widget.audioUrl}');
+        await _player.setUrl(widget.audioUrl!);
+        _audioUrl = widget.audioUrl;
+      } else if (widget.meetingId != null) {
+        final audioUrl = await context.read<MeetingCubit>().getMeetingAudioUrl(widget.meetingId!);
+        if (!mounted) return;
 
-      final extension = _getFileExtension(audioUrl);
-      log('File extension: $extension', name: 'MeetingAudioPlayer');
+        final extension = _getFileExtension(audioUrl);
+        dev.log('File extension: $extension', name: 'MeetingAudioPlayer');
 
-      // Check if we have a cached version
-      final cachedPath = await _getCachedFilePath(widget.meetingId, extension);
-      if (cachedPath != null) {
-        log('Using cached audio file: $cachedPath', name: 'MeetingAudioPlayer');
-        _cachedFilePath = cachedPath;
-        await _player.setFilePath(
-          cachedPath,
-          preload: true,
-        );
+        // Check if we have a cached version
+        final cachedPath = await _getCachedFilePath(widget.meetingId!, extension);
+        if (cachedPath != null) {
+          dev.log('Using cached audio file: $cachedPath', name: 'MeetingAudioPlayer');
+          _cachedFilePath = cachedPath;
+          await _player.setFilePath(cachedPath);
+        } else {
+          dev.log('Setting audio source: $audioUrl', name: 'MeetingAudioPlayer');
+
+          // Prepare cache file path
+          final cacheFilePath = await _cacheFile(widget.meetingId!, extension);
+          
+          _cachedFilePath = cacheFilePath;
+
+          await _player.setUrl(audioUrl);
+        }
+        _audioUrl = audioUrl;
       } else {
-        log('Setting audio source: $audioUrl', name: 'MeetingAudioPlayer');
-
-        // Prepare cache file path
-        final cacheFilePath = await _cacheFile(widget.meetingId, extension);
-        _cachedFilePath = cacheFilePath;
-
-        await _player.setUrl(
-          audioUrl,
-          preload: true,
-        );
-
-        // Optionally, download and cache the file for offline access
-        // Uncomment the following lines if you wish to cache the file immediately
-        /*
-        final response = await HttpClient().getUrl(Uri.parse(audioUrl));
-        final file = File(cacheFilePath);
-        await response.pipe(file.openWrite());
-        */
+        dev.log('No audio source provided');
+        return;
       }
 
       if (!mounted) return;
       setState(() {
-        _audioUrl = audioUrl;
         _isInitialized = true;
         _isLoading = false;
       });
 
-      log('Audio source set successfully', name: 'MeetingAudioPlayer');
+      dev.log('Audio source set successfully', name: 'MeetingAudioPlayer');
     } catch (e, stackTrace) {
-      log('Error initializing audio player: $e\n$stackTrace',
+      dev.log('Error initializing audio player: $e\n$stackTrace',
           name: 'MeetingAudioPlayer');
       if (mounted) {
         setState(() {
@@ -190,7 +183,7 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
   }
 
   Future<void> _downloadAudio() async {
-    if (_isDownloading || _audioUrl == null) return;
+    if (_isDownloading || widget.meetingId == null) return;
 
     try {
       setState(() {
@@ -199,17 +192,17 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
       });
 
       final extension = _getFileExtension(_audioUrl!);
-      final cachedPath = await _getCachedFilePath(widget.meetingId, extension);
+      final cachedPath = await _getCachedFilePath(widget.meetingId!, extension);
 
       String? filePath;
       if (cachedPath != null && File(cachedPath).existsSync()) {
         filePath = await context.read<MeetingCubit>().downloadMeetingAudio(
-              widget.meetingId,
+              widget.meetingId!,
               cachedFile: cachedPath,
             );
       } else {
         filePath = await context.read<MeetingCubit>().downloadMeetingAudio(
-          widget.meetingId,
+          widget.meetingId!,
         );
       }
 
@@ -227,7 +220,7 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
         throw Exception('Failed to download audio');
       }
     } catch (e) {
-      log('Error downloading audio: $e', name: 'MeetingAudioPlayer');
+      dev.log('Error downloading audio: $e', name: 'MeetingAudioPlayer');
       if (mounted) {
         setState(() => _error = 'Failed to download audio');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -308,12 +301,14 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
                             ],
                           ),
                         ),
-                        SizedBox(width: 16.w),
-                        Icon(
-                          Icons.download,
-                          color: AppTheme.textGrey,
-                          size: 24.w,
-                        ),
+                        if (widget.meetingId != null) ...[
+                          SizedBox(width: 16.w),
+                          Icon(
+                            Icons.download,
+                            color: AppTheme.textGrey,
+                            size: 24.w,
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -372,22 +367,23 @@ class _MeetingAudioPlayerState extends State<MeetingAudioPlayer>
             _buildSpeedMenuItem(2.0),
           ],
         ),
-        IconButton(
-          icon: _isDownloading
-              ? SizedBox(
-                  width: 24.w,
-                  height: 24.w,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+        if (widget.meetingId != null)
+          IconButton(
+            icon: _isDownloading
+                ? SizedBox(
+                    width: 24.w,
+                    height: 24.w,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+                    ),
+                  )
+                : Icon(
+                    Icons.download,
+                    color: _isInitialized ? AppTheme.primaryBlue : AppTheme.textGrey,
                   ),
-                )
-              : Icon(
-                  Icons.download,
-                  color: _isInitialized ? AppTheme.primaryBlue : AppTheme.textGrey,
-                ),
-          onPressed: _isInitialized && !_isDownloading ? _downloadAudio : null,
-        ),
+            onPressed: _isInitialized && !_isDownloading ? _downloadAudio : null,
+          ),
       ],
     );
   }

@@ -1,19 +1,22 @@
 import '../services/navigation_service.dart';
+import '../core/service_locator.dart';
 
 mixin NavigationMixin {
-  void navigateTo(String route, {Object? arguments}) {
-    NavigationService.navigateTo(route, arguments: arguments);
+  NavigationService get _navigationService => getIt<NavigationService>();
+
+  Future<void> navigateTo(String route, {Object? arguments}) async {
+    await _navigationService.navigateTo(route, arguments: arguments);
   }
 
-  void replaceTo(String route, {Object? arguments}) {
-    NavigationService.replaceTo(route, arguments: arguments);
+  Future<void> navigateToAndReplace(String route, {Object? arguments}) async {
+    await _navigationService.navigateToAndReplace(route, arguments: arguments);
   }
 
   void goBack() {
-    NavigationService.goBack();
+    _navigationService.goBack();
   }
 
-  void navigateToAndClear(String route, {Object? arguments}) {
-    NavigationService.navigateToAndRemoveUntil(route, arguments: arguments);
+  Future<void> navigateToAndClear(String route, {Object? arguments}) async {
+    await _navigationService.navigateToAndRemoveUntil(route, arguments: arguments);
   }
 } 

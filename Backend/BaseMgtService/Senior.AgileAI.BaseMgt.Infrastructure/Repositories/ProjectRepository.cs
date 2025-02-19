@@ -51,4 +51,16 @@ public class ProjectRepository : GenericRepository<Project>, IProjectRepository
     }
 
     // Implement custom methods for Project repository
+    public async Task<List<Project>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await _context.Projects
+            .Include(p => p.ProjectManager)
+            .Include(p => p.ProjectPrivileges)
+                .ThenInclude(pp => pp.OrganizationMember)
+            .Where(p => p.ProjectManager.User_IdUser == userId || 
+                        p.ProjectPrivileges.Any(pp => pp.OrganizationMember.User_IdUser == userId))
+            .Include(p => p.ProjectManager)
+                .ThenInclude(pm => pm.User)
+            .ToListAsync(cancellationToken);
+    }
 }

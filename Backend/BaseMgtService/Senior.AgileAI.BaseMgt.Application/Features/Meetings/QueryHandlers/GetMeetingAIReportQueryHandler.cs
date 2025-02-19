@@ -2,7 +2,6 @@ using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.DTOs.Meetings;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 using Senior.AgileAI.BaseMgt.Application.Features.Meetings.Queries;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
 
@@ -73,7 +72,7 @@ public class GetMeetingAIReportQueryHandler : IRequestHandler<GetMeetingAIReport
             Transcript = meeting.AIReport.Transcript,
             Summary = meeting.AIReport.Summary,
             KeyPoints = meeting.AIReport.KeyPoints,
-            MainLanguage = meeting.AIReport.MainLanguage,
+            MainLanguage = meeting.Language == MeetingLanguage.Arabic ? "ar" : "en",
             ProcessingStatus = meeting.AIProcessingStatus,
             ProcessedAt = meeting.AIProcessedAt
         };

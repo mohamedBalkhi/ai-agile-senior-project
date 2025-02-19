@@ -1,5 +1,4 @@
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using Microsoft.Extensions.Options;
@@ -8,6 +7,9 @@ using Senior.AgileAI.BaseMgt.Infrastructure.Options;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Models;
 using Senior.AgileAI.BaseMgt.Application.Constants;
+using Polly.Retry;
+using Polly.CircuitBreaker;
+using Senior.AgileAI.BaseMgt.Infrastructure.Resilience;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.Services;
 
@@ -17,11 +19,18 @@ public class RabbitMQService : IRabbitMQService, IDisposable
     private readonly IConnection _connection;
     private readonly IModel _channel;
     private readonly ILogger<RabbitMQService> _logger;
+    private readonly IResiliencePolicy<RabbitMQService> _resiliencePolicy;
 
-    public RabbitMQService(IOptions<RabbitMQOptions> options, ILogger<RabbitMQService> logger)
+    public RabbitMQService(
+        IOptions<RabbitMQOptions> options,
+        ILogger<RabbitMQService> logger,
+        IResiliencePolicy<RabbitMQService> resiliencePolicy)
     {
         _options = options.Value;
         _logger = logger;
+        _resiliencePolicy = resiliencePolicy;
+        
+
         
         try
         {
@@ -62,40 +71,36 @@ public class RabbitMQService : IRabbitMQService, IDisposable
 
     public async Task PublishMessageAsync<T>(string queueName, T message) where T : class
     {
-        if (!_options.Queues.TryGetValue(queueName, out var actualQueueName))
+        await _resiliencePolicy.ExecuteAsync(async () =>
         {
-            throw new ArgumentException($"Queue {queueName} is not configured.", nameof(queueName));
-        }
+            if (!_options.Queues.TryGetValue(queueName, out var actualQueueName))
+            {
+                throw new ArgumentException($"Queue {queueName} is not configured.", nameof(queueName));
+            }
 
-        try
-        {
-            // _logger.LogInformation($"Declaring queue: {actualQueueName}");
-            // _channel.QueueDeclare(queue: actualQueueName,
-            //                     durable: true,
-            //                     exclusive: false,
-            //                     autoDelete: false,
-            //                     arguments: null);
+            try
+            {
+                string json = JsonConvert.SerializeObject(message);
+                var body = Encoding.UTF8.GetBytes(json);
 
-            string json = JsonConvert.SerializeObject(message);
-            var body = Encoding.UTF8.GetBytes(json);
+                var properties = _channel.CreateBasicProperties();
+                properties.Persistent = true;
 
-            var properties = _channel.CreateBasicProperties();
-            properties.Persistent = true;
+                _logger.LogInformation($"Publishing message to queue '{actualQueueName}': {json}");
+                _channel.BasicPublish(exchange: "",
+                                    routingKey: actualQueueName,
+                                    basicProperties: properties,
+                                    body: body);
 
-            _logger.LogInformation($"Publishing message to queue '{actualQueueName}': {json}");
-            _channel.BasicPublish(exchange: "",
-                                routingKey: actualQueueName,
-                                basicProperties: properties,
-                                body: body);
-
-            _logger.LogInformation($"Message successfully published to queue '{actualQueueName}'");
-            await Task.CompletedTask;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error publishing message to queue '{actualQueueName}'");
-            throw;
-        }
+                _logger.LogInformation($"Message successfully published to queue '{actualQueueName}'");
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error publishing message to queue '{actualQueueName}'");
+                throw;
+            }
+        });
     }
 
     public void Dispose()

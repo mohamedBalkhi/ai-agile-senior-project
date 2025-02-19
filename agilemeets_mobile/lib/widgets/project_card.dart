@@ -27,7 +27,7 @@ class ProjectCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha:0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -65,7 +65,7 @@ class ProjectCard extends StatelessWidget {
               date,
               style: TextStyle(
                 color: title == 'Mobile App' 
-                    ? Colors.white.withOpacity(0.7) 
+                    ? Colors.white.withValues(alpha:0.7) 
                     : AppTheme.textGrey,
                 fontSize: 12.sp,
               ),
@@ -74,7 +74,7 @@ class ProjectCard extends StatelessWidget {
             LinearProgressIndicator(
               value: progress,
               backgroundColor: title == 'Mobile App' 
-                  ? Colors.white.withOpacity(0.2) 
+                  ? Colors.white.withValues(alpha:0.2) 
                   : AppTheme.cardGrey,
               valueColor: AlwaysStoppedAnimation(
                 title == 'Mobile App' 

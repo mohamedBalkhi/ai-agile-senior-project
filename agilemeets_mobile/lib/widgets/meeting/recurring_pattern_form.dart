@@ -101,7 +101,7 @@ class RecurringPatternForm extends StatelessWidget {
                   child: TextFormField(
                     initialValue: pattern.interval.toString(),
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -206,7 +206,7 @@ class RecurringPatternForm extends StatelessWidget {
       selected: isSelected,
       onSelected: (_) => _toggleDay(day),
       backgroundColor: Colors.white,
-      selectedColor: AppTheme.primaryBlue.withOpacity(0.1),
+      selectedColor: AppTheme.primaryBlue.withValues(alpha:0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
         side: BorderSide(

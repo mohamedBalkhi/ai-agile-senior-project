@@ -130,6 +130,7 @@ public class RecurringMeetingService : IRecurringMeetingService
                 meeting.StartTime, "Rescheduled");
         }
 
+        _unitOfWork.Meetings.Update(meeting);
         await _unitOfWork.CompleteAsync();
     }
 

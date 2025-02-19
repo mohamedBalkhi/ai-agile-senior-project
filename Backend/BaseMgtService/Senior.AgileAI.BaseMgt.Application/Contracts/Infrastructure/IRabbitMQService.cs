@@ -1,5 +1,4 @@
 using Senior.AgileAI.BaseMgt.Application.Models;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
 
 namespace Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 

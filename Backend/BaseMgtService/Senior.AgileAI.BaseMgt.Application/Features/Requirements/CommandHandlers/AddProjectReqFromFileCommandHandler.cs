@@ -1,6 +1,4 @@
 using MediatR;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
-using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Commands;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 

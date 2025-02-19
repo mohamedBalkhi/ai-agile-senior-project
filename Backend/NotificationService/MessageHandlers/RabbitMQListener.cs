@@ -162,6 +162,12 @@ namespace NotificationService.MessageHandlers
                 _channel.BasicAck(eventArgs.DeliveryTag, false);
                 _logger.LogInformation($"Successfully processed and acknowledged message: {eventArgs.DeliveryTag}");
             }
+            catch (AuthenticationException authEx)
+            {
+                _logger.LogError(authEx, $"Permanent auth error. Will NOT requeue: {content}");
+                // Don't requeue authentication errors as they're likely permanent
+                _channel.BasicNack(eventArgs.DeliveryTag, false, false);
+            }
             catch (SmtpCommandException smtpEx) when (smtpEx.Message.Contains("Too many login attempts"))
             {
                 _logger.LogError(smtpEx, $"SMTP rate limit exceeded: {content}");

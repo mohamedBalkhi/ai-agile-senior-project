@@ -122,7 +122,6 @@ class ProjectCubit extends Cubit<ProjectState> {
 
   Future<void> loadProjectMembers(String projectId) async {
     try {
-      print('Before loading members - selectedProject: ${state.selectedProject?.projectName}');
       developer.log(
         'Before loading members - selectedProject: ${state.selectedProject?.projectName}',
         name: 'ProjectCubit',
@@ -133,13 +132,11 @@ class ProjectCubit extends Cubit<ProjectState> {
       if (response.statusCode == 200 && response.data != null) {
         emit(state.copyWith(projectMembers: response.data));
       }
-      print('After loading members - selectedProject: ${state.selectedProject?.projectName}');
       developer.log(
         'After loading members - selectedProject: ${state.selectedProject?.projectName}',
         name: 'ProjectCubit',
       );
     } catch (e) {
-      print(e);
       developer.log(
         'Error loading project members: $e',
         name: 'ProjectCubit',
@@ -151,11 +148,9 @@ class ProjectCubit extends Cubit<ProjectState> {
   Future<void> loadMemberPrivileges(String projectId) async {
     try {
       final response = await _projectRepository.getMemberPrivileges(projectId);
-      print('Before setting member privileges - selectedProject: ${state.selectedProject?.projectName}');
       if (response.statusCode == 200 && response.data != null) {
         emit(state.copyWith(memberPrivileges: response.data));
       }
-      print('After setting member privileges - selectedProject: ${state.selectedProject?.projectName}');
     } catch (e) {
       developer.log(
         'Error loading member privileges: $e',

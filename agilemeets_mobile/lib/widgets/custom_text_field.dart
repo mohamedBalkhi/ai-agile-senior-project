@@ -96,7 +96,7 @@ class CustomTextField extends StatelessWidget {
         suffixIcon: suffixIcon,
         errorText: errorText,
         filled: true,
-        fillColor: enabled ? AppTheme.cardGrey : AppTheme.cardGrey.withOpacity(0.5),
+        fillColor: enabled ? AppTheme.cardGrey : AppTheme.cardGrey.withValues(alpha:0.5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide.none,

@@ -1,9 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq;
 using Microsoft.Extensions.Hosting;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Domain.Enums;
@@ -41,8 +37,8 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
 
                     foreach (var meeting in inProgressMeetings)
                     {
-                        
                         meeting.Complete();
+                        unitOfWork.Meetings.Update(meeting);
                     }
 
                     if (inProgressMeetings.Any())
@@ -51,6 +47,30 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
                         _logger.LogInformation(
                             "Completed {Count} meetings at {Time} UTC", 
                             inProgressMeetings.Count,
+                            DateTime.UtcNow);
+                    }
+
+                    // Handle past scheduled meetings
+                    var pastScheduledMeetings = await unitOfWork.Meetings.GetPastScheduledMeetingsAsync(
+                        DateTime.UtcNow,
+                        BatchSize,
+                        stoppingToken);
+
+                    foreach (var meeting in pastScheduledMeetings)
+                    {
+                        meeting.Status = MeetingStatus.Cancelled;
+                        _logger.LogInformation(
+                            "Cancelled past scheduled meeting {MeetingId} that never started",
+                            meeting.Id);
+                        unitOfWork.Meetings.Update(meeting);
+                    }
+
+                    if (pastScheduledMeetings.Any())
+                    {
+                        await unitOfWork.CompleteAsync();
+                        _logger.LogInformation(
+                            "Cancelled {Count} past scheduled meetings at {Time} UTC", 
+                            pastScheduledMeetings.Count,
                             DateTime.UtcNow);
                     }
                 }

@@ -99,7 +99,7 @@ class _MemberSelectorDialogState extends State<MemberSelectorDialog> {
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                          backgroundColor: AppTheme.primaryBlue.withValues(alpha:0.1),
                           child: Text(
                             member.name.substring(0, 1).toUpperCase(),
                             style: const TextStyle(

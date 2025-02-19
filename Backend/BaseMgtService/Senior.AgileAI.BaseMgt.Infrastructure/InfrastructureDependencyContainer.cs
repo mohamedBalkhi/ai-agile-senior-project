@@ -1,15 +1,15 @@
 using Amazon.S3;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Senior.AgileAI.BaseMgt.Application.Common.Utils;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Services;
-using Senior.AgileAI.BaseMgt.Application.Services;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices;
 using Senior.AgileAI.BaseMgt.Infrastructure.Repositories;
+using Senior.AgileAI.BaseMgt.Infrastructure.Resilience;
 using Senior.AgileAI.BaseMgt.Infrastructure.Services;
 using Senior.AgileAI.BaseMgt.Infrastructure.Services.FileParsingStrategy;
 using Senior.AgileAI.BaseMgt.Infrastructure.Utils;
@@ -64,11 +64,107 @@ public static class InfrastructureDependencyContainer
         services.AddScoped<IAIProcessingService, AIProcessingService>();
         services.AddScoped<IAudioTranscodingService, FFmpegAudioTranscodingService>();
 
-        // Register OnlineMeetingService
-        services.AddHttpClient<IOnlineMeetingService, OnlineMeetingService>();
+        // Register OnlineMeetingService with optimized HTTP client
+        services.AddHttpClient<IOnlineMeetingService, OnlineMeetingService>(client =>
+        {
+            client.BaseAddress = new Uri(configuration["MeetingService:Url"]);
+            client.DefaultRequestHeaders.ConnectionClose = false;
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+            ConnectTimeout = TimeSpan.FromSeconds(30),
+            EnableMultipleHttp2Connections = true
+        })
+        .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
         // Register AIProcessingService
-        services.AddHttpClient<IAIProcessingService, AIProcessingService>();
+        services.AddHttpClient<IAIProcessingService, AIProcessingService>(client =>
+        {
+            client.DefaultRequestHeaders.ConnectionClose = false;
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+            ConnectTimeout = TimeSpan.FromSeconds(30),
+            EnableMultipleHttp2Connections = true
+        })
+        .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+
+        // Register service-specific resilience policies
+        services.AddSingleton<IResiliencePolicy<OnlineMeetingService>>(sp =>
+        {
+            var config = configuration.GetSection("Resilience:OnlineMeeting");
+            return new ResiliencePolicy<OnlineMeetingService>(
+                sp.GetRequiredService<ILogger<OnlineMeetingService>>(),
+                new ResiliencePolicyOptions
+                {
+                    MaxRetries = config.GetValue<int>("MaxRetries"),
+                    CircuitBreakerFailureThreshold = config.GetValue<double>("CircuitBreakerFailureThreshold"),
+                    CircuitBreakerSamplingDuration = TimeSpan.FromMinutes(
+                        config.GetValue<int>("CircuitBreakerSamplingDurationMinutes")),
+                    CircuitBreakerDurationOfBreak = TimeSpan.FromSeconds(
+                        config.GetValue<int>("CircuitBreakerDurationOfBreakSeconds")),
+                    TimeoutDuration = TimeSpan.FromSeconds(
+                        config.GetValue<int>("TimeoutSeconds"))
+                });
+        });
+
+        services.AddSingleton<IResiliencePolicy<AIProcessingService>>(sp =>
+        {
+            var config = configuration.GetSection("Resilience:AIProcessing");
+            return new ResiliencePolicy<AIProcessingService>(
+                sp.GetRequiredService<ILogger<AIProcessingService>>(),
+                new ResiliencePolicyOptions
+                {
+                    MaxRetries = config.GetValue<int>("MaxRetries"),
+                    CircuitBreakerFailureThreshold = config.GetValue<double>("CircuitBreakerFailureThreshold"),
+                    CircuitBreakerSamplingDuration = TimeSpan.FromMinutes(
+                        config.GetValue<int>("CircuitBreakerSamplingDurationMinutes")),
+                    CircuitBreakerDurationOfBreak = TimeSpan.FromMinutes(
+                        config.GetValue<int>("CircuitBreakerDurationOfBreakMinutes")),
+                    TimeoutDuration = TimeSpan.FromMinutes(
+                        config.GetValue<int>("TimeoutMinutes"))
+                });
+        });
+
+        services.AddSingleton<IResiliencePolicy<RabbitMQService>>(sp =>
+        {
+            var config = configuration.GetSection("Resilience:RabbitMQ");
+            return new ResiliencePolicy<RabbitMQService>(
+                sp.GetRequiredService<ILogger<RabbitMQService>>(),
+                new ResiliencePolicyOptions
+                {
+                    MaxRetries = config.GetValue<int>("MaxRetries"),
+                    CircuitBreakerFailureThreshold = config.GetValue<double>("CircuitBreakerFailureThreshold"),
+                    CircuitBreakerSamplingDuration = TimeSpan.FromMinutes(
+                        config.GetValue<int>("CircuitBreakerSamplingDurationMinutes")),
+                    CircuitBreakerDurationOfBreak = TimeSpan.FromMinutes(
+                        config.GetValue<int>("CircuitBreakerDurationOfBreakMinutes")),
+                    TimeoutDuration = TimeSpan.FromSeconds(
+                        config.GetValue<int>("TimeoutSeconds"))
+                });
+        });
+
+        services.AddSingleton<IResiliencePolicy<AudioStorageService>>(sp =>
+        {
+            var config = configuration.GetSection("Resilience:AudioStorage");
+            return new ResiliencePolicy<AudioStorageService>(
+                sp.GetRequiredService<ILogger<AudioStorageService>>(),
+                new ResiliencePolicyOptions
+                {
+                    MaxRetries = config.GetValue<int>("MaxRetries"),
+                    CircuitBreakerFailureThreshold = config.GetValue<double>("CircuitBreakerFailureThreshold"),
+                    CircuitBreakerSamplingDuration = TimeSpan.FromMinutes(
+                        config.GetValue<int>("CircuitBreakerSamplingDurationMinutes")),
+                    CircuitBreakerDurationOfBreak = TimeSpan.FromMinutes(
+                        config.GetValue<int>("CircuitBreakerDurationOfBreakMinutes")),
+                    TimeoutDuration = TimeSpan.FromMinutes(
+                        config.GetValue<int>("TimeoutMinutes"))
+                });
+        });
 
         return services;
     }

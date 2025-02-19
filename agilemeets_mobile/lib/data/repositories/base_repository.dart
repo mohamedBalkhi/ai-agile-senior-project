@@ -118,7 +118,7 @@ abstract class BaseRepository {
     String? error,
     StackTrace? stackTrace,
   }) {
-    final message = StringBuffer('$operation');
+    final message = StringBuffer(operation);
     if (params != null) {
       message.write(' with params: $params');
     }

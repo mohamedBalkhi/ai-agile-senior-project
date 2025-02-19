@@ -4,10 +4,6 @@ using Microsoft.Extensions.Logging;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Services;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices;
 
@@ -60,6 +56,7 @@ public class RecurringMeetingGeneratorWorker : BackgroundService
 
                         pattern.LastGeneratedDate = DateTime.UtcNow;
                     }
+                    unitOfWork.RecurringMeetingPatterns.Update(pattern);
                 }
 
                 await unitOfWork.CompleteAsync();

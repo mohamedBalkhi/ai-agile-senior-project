@@ -7,7 +7,7 @@ using FluentValidation;
 using Senior.AgileAI.BaseMgt.Application.Common;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-
+using System.IO;
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers
 {
@@ -23,21 +23,42 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
 
 
         [HttpPost("CreateOrganization")]
-        public async Task<ActionResult<ApiResponse<Guid>>> CreateOrganization(CreateOrganizationDTO dto)
+        public async Task<ActionResult<ApiResponse<Guid>>> CreateOrganization([FromForm] CreateOrganizationDTO dto)
         {
             try
             {
+                if (dto.LogoFile != null)
+                {
+                    // Validate file
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+                    var extension = Path.GetExtension(dto.LogoFile.FileName).ToLowerInvariant();
+                    
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        return BadRequest(new ApiResponse<Guid>(400, "Invalid file type. Only jpg, jpeg, and png files are allowed.", Guid.Empty));
+                    }
+
+                    if (dto.LogoFile.Length > 5 * 1024 * 1024) // 5MB limit
+                    {
+                        return BadRequest(new ApiResponse<Guid>(400, "File size exceeds 5MB limit.", Guid.Empty));
+                    }
+                }
+
                 var command = new CreateOrganizationCommand(dto);
                 var result = await _mediator.Send(command);
                 return Ok(new ApiResponse<Guid>(200, "Organization created successfully", result));
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new { Message = "Validation failed", Errors = ex.Errors });
+                var errors = ex.Errors.ToDictionary(
+                    error => error.PropertyName,
+                    error => error.ErrorMessage
+                );
+                return BadRequest(new ApiResponse<Guid>(400, "Validation failed", Guid.Empty, errors: errors));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error occurred while processing your request", Error = ex.Message });
+                return StatusCode(500, new ApiResponse<Guid>(500, "An error occurred while processing your request", Guid.Empty) { Error = ex.Message });
             }
         }
 

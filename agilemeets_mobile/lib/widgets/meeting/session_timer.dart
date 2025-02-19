@@ -9,11 +9,11 @@ class SessionTimer extends StatefulWidget {
   final Duration? initialDuration;
 
   const SessionTimer({
-    Key? key,
+    super.key,
     required this.isRecording,
     required this.isPaused,
     this.initialDuration,
-  }) : super(key: key);
+  });
 
   @override
   State<SessionTimer> createState() => _SessionTimerState();

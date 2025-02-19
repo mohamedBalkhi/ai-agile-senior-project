@@ -2,7 +2,6 @@ using MediatR;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Features.projects.queries;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
-using Senior.AgileAI.BaseMgt.Domain.Enums;
 using Senior.AgileAI.BaseMgt.Application.Common.Authorization;
 namespace Senior.AgileAI.BaseMgt.Application.Features.projects.queryhandlers
 {

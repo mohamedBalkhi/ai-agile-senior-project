@@ -28,7 +28,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.Requirements.CommandHandle
                 return false;
 
             var saveResult = await _unitOfWork.CompleteAsync();
-            return true;
+            return saveResult > 0;
         }
     }
 }

@@ -1,9 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq;
 using Microsoft.Extensions.Hosting;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Models;
@@ -52,6 +48,7 @@ namespace Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices
                     {
                         await SendRemindersAsync(meeting, stoppingToken);
                         meeting.ReminderSent = true;
+                        unitOfWork.Meetings.Update(meeting);
                     }
 
                     if (meetings.Any())

@@ -1,8 +1,6 @@
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Features.projects.commands;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.projects.commandhandlers
 {

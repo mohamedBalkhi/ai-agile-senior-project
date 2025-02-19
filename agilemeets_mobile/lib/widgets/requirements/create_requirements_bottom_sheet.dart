@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
 import '../../data/models/requirements/req_dto.dart';
 import '../../data/enums/req_priority.dart';
 import '../../data/enums/requirements_status.dart';
@@ -326,7 +330,7 @@ class _CreateRequirementsBottomSheetState extends State<CreateRequirementsBottom
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
               decoration: BoxDecoration(
                 color: _priority == priority 
-                    ? priority.color.withOpacity(0.1)
+                    ? priority.color.withValues(alpha:0.1)
                     : AppTheme.cardGrey,
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(
@@ -380,7 +384,7 @@ class _CreateRequirementsBottomSheetState extends State<CreateRequirementsBottom
                     ),
                     decoration: BoxDecoration(
                       color: _status == status
-                          ? status.color.withOpacity(0.1)
+                          ? status.color.withValues(alpha:0.1)
                           : null,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
@@ -450,9 +454,7 @@ class _CreateRequirementsBottomSheetState extends State<CreateRequirementsBottom
         ).animate().fadeIn().scale(delay: 200.ms),
         SizedBox(height: 24.h),
         TextButton.icon(
-          onPressed: () {
-            // TODO: Implement template download
-          },
+          onPressed: _downloadTemplate,
           icon: const Icon(Icons.download),
           label: const Text('Download Template'),
         ).animate().fadeIn(delay: 400.ms),
@@ -511,6 +513,36 @@ class _CreateRequirementsBottomSheetState extends State<CreateRequirementsBottom
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error picking file: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadTemplate() async {
+    try {
+      // Get the template from assets
+      final byteData = await rootBundle.load('assets/template/reqs_template.xlsx');
+      
+      // Get temporary directory
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/reqs_template.xlsx');
+      
+      // Write the file
+      await tempFile.writeAsBytes(byteData.buffer.asUint8List());
+      
+      // Share the file
+      await Share.shareXFiles(
+        [XFile(tempFile.path)],
+        subject: 'Requirements Template',
+      );
+      
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error downloading template: $e'),
             backgroundColor: AppTheme.errorRed,
           ),
         );

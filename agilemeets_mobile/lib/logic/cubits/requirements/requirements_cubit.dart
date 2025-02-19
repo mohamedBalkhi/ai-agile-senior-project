@@ -23,6 +23,12 @@ class RequirementsCubit extends Cubit<RequirementsState> {
   /// Timer for debouncing requirements loading
   Timer? _loadRequirementsDebouncer;
 
+  /// Timer for debouncing filter updates
+  Timer? _filterDebouncer;
+
+  /// Debounce time for filter updates
+  static const Duration _debounceTime = Duration(milliseconds: 300);
+
   RequirementsCubit(this._repository) : super(const RequirementsState());
 
   Future<void> loadRequirements(String projectId, {bool refresh = false}) async {
@@ -32,7 +38,7 @@ class RequirementsCubit extends Cubit<RequirementsState> {
           status: RequirementsStatus.loading,
           currentPage: 1,
           hasMorePages: true,
-          requirements: null,
+          requirements: [],
           selectedRequirementIds: {},
         ));
       } else if (state.status == RequirementsStatus.loading || !state.hasMorePages) {
@@ -40,51 +46,62 @@ class RequirementsCubit extends Cubit<RequirementsState> {
       } else {
         emit(state.copyWith(status: RequirementsStatus.loading));
       }
-      print('state.priorityFilter: ${state.priorityFilter}');
-      print('state.statusFilter: ${state.statusFilter}');
-      print('state.searchQuery: ${state.searchQuery}');
-      print('state.currentPage: ${state.currentPage}');
+      
       final filter = RequirementsFilter(
-        priority: state.priorityFilter,
-        status: state.statusFilter,
-        searchQuery: state.searchQuery,
+        priority: state.filters.priority,
+        status: state.filters.status,
+        searchQuery: state.filters.searchQuery,
         pageNumber: refresh ? 1 : state.currentPage,
         pageSize: _pageSize,
       );
 
       final response = await _repository.getProjectRequirements(projectId, filter);
-      print('response.statusCode: ${response.statusCode}');
-      print('response.data: ${response.data}');
-      if (response.statusCode == 200 && response.data != null) {
-        print('response.data: in if ${response.data}');
-        final newRequirements = response.data!;
+      
+      if (response.statusCode == 200) {
+        final newRequirements = response.data ?? [];
         final hasMore = newRequirements.length >= _pageSize;
-        final newTotalRequirements = state.requirements == null ? newRequirements : [...(state.requirements ?? []), ...newRequirements];
-        print('newTotalRequirements: $newTotalRequirements');
+        
+        final List<ProjectRequirementsDTO> updatedRequirements = refresh 
+            ? newRequirements 
+            : [...state.requirements, ...newRequirements];
+            
         emit(state.copyWith(
           status: RequirementsStatus.loaded,
-          requirements: refresh 
-              ? newRequirements 
-              : newTotalRequirements,
+          requirements: updatedRequirements,
           currentPage: refresh ? 2 : state.currentPage + 1,
           hasMorePages: hasMore,
+          error: null,
+          isFilteringInProgress: false,
         ));
-        print('state.requirements: ${state.requirements}');
       } else {
         emit(state.copyWith(
           status: RequirementsStatus.error,
           error: response.message ?? 'Failed to load requirements',
+          isFilteringInProgress: false,
         ));
       }
-    } catch (e) {
+    } on ValidationException catch (e) {
       developer.log(
-        'Error loading requirements: $e',
+        'Validation error loading requirements',
         name: 'RequirementsCubit',
         error: e,
       );
       emit(state.copyWith(
+        status: RequirementsStatus.validationError,
+        validationErrors: e.errors,
+        isFilteringInProgress: false,
+      ));
+    } catch (e, stackTrace) {
+      developer.log(
+        'Error loading requirements: $e',
+        name: 'RequirementsCubit',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      emit(state.copyWith(
         status: RequirementsStatus.error,
         error: e.toString(),
+        isFilteringInProgress: false,
       ));
     }
   }
@@ -114,15 +131,21 @@ class RequirementsCubit extends Cubit<RequirementsState> {
         ));
       }
     } on ValidationException catch (e) {
+      developer.log(
+        'Validation error adding requirements',
+        name: 'RequirementsCubit',
+        error: e,
+      );
       emit(state.copyWith(
         status: RequirementsStatus.validationError,
         validationErrors: e.errors,
       ));
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
         'Error adding requirements: $e',
         name: 'RequirementsCubit',
         error: e,
+        stackTrace: stackTrace,
       );
       emit(state.copyWith(
         status: RequirementsStatus.error,
@@ -143,7 +166,6 @@ class RequirementsCubit extends Cubit<RequirementsState> {
 
       if (response.statusCode == 200 && response.data == true) {
         emit(state.copyWith(status: RequirementsStatus.updated));
-        // Refresh the requirements list
         await loadRequirements(projectId, refresh: true);
       } else {
         emit(state.copyWith(
@@ -152,15 +174,21 @@ class RequirementsCubit extends Cubit<RequirementsState> {
         ));
       }
     } on ValidationException catch (e) {
+      developer.log(
+        'Validation error updating requirement',
+        name: 'RequirementsCubit',
+        error: e,
+      );
       emit(state.copyWith(
         status: RequirementsStatus.validationError,
         validationErrors: e.errors,
       ));
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
         'Error updating requirement: $e',
         name: 'RequirementsCubit',
         error: e,
+        stackTrace: stackTrace,
       );
       emit(state.copyWith(
         status: RequirementsStatus.error,
@@ -179,22 +207,23 @@ class RequirementsCubit extends Cubit<RequirementsState> {
       final response = await _repository.deleteRequirements(requirementIds);
 
       if (response.statusCode == 200 && response.data != null) {
-        // First emit deleted status with cleared selection
         emit(state.copyWith(
           status: RequirementsStatus.deleted,
           selectedRequirementIds: {},
         ));
+        await loadRequirements(projectId, refresh: true);
       } else {
         emit(state.copyWith(
           status: RequirementsStatus.error,
           error: response.message ?? 'Failed to delete requirements',
         ));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
         'Error deleting requirements: $e',
         name: 'RequirementsCubit',
         error: e,
+        stackTrace: stackTrace,
       );
       emit(state.copyWith(
         status: RequirementsStatus.error,
@@ -202,7 +231,6 @@ class RequirementsCubit extends Cubit<RequirementsState> {
       ));
     }
   }
-
 
   Future<void> uploadRequirementsFile(String projectId, String filePath) async {
     try {
@@ -215,18 +243,19 @@ class RequirementsCubit extends Cubit<RequirementsState> {
 
       if (response.statusCode == 200 && response.data == true) {
         emit(state.copyWith(status: RequirementsStatus.created));
-        // Don't load requirements here - let the UI handle it
+        await loadRequirements(projectId, refresh: true);
       } else {
         emit(state.copyWith(
           status: RequirementsStatus.error,
           error: response.message ?? 'Failed to upload requirements file',
         ));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
         'Error uploading requirements file: $e',
         name: 'RequirementsCubit',
         error: e,
+        stackTrace: stackTrace,
       );
       emit(state.copyWith(
         status: RequirementsStatus.error,
@@ -235,26 +264,17 @@ class RequirementsCubit extends Cubit<RequirementsState> {
     }
   }
 
-  Future<void> uploadWebRequirementsFile(String projectId, List<int> bytes, String fileName) async {
-    await _uploadFile(projectId, webBytes: bytes, fileName: fileName);
-  }
-
-  Future<void> _uploadFile(
-    String projectId, {
-    File? file,
-    List<int>? webBytes,
-    String? fileName,
-  }) async {
+  Future<void> uploadWebRequirementsFile(
+    String projectId,
+    List<int> bytes,
+    String fileName,
+  ) async {
     try {
-      emit(state.copyWith(
-        status: RequirementsStatus.creating,
-        error: null,
-      ));
+      emit(state.copyWith(status: RequirementsStatus.creating));
 
       final response = await _repository.uploadRequirementsFile(
         projectId,
-        file: file,
-        webBytes: webBytes,
+        webBytes: bytes,
         fileName: fileName,
       );
 
@@ -267,11 +287,12 @@ class RequirementsCubit extends Cubit<RequirementsState> {
           error: response.message ?? 'Failed to upload requirements file',
         ));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'Error uploading requirements file: $e',
+        'Error uploading web requirements file: $e',
         name: 'RequirementsCubit',
         error: e,
+        stackTrace: stackTrace,
       );
       emit(state.copyWith(
         status: RequirementsStatus.error,
@@ -286,47 +307,32 @@ class RequirementsCubit extends Cubit<RequirementsState> {
     RequirementStatus? status,
     String? searchQuery,
   }) {
-    // Keep existing filters unless explicitly changed
-    final newPriority = priority != null ? 
-        (priority == state.priorityFilter ? null : priority) : 
-        state.priorityFilter;
-        
-    final newStatus = status != null ? 
-        (status == state.statusFilter ? null : status) : 
-        state.statusFilter;
-        
-    final newSearchQuery = searchQuery ?? state.searchQuery;
+    _filterDebouncer?.cancel();
 
-    // Only emit if there are actual changes
-    if (newPriority != state.priorityFilter || 
-        newStatus != state.statusFilter || 
-        newSearchQuery != state.searchQuery) {
-      
-      emit(state.copyWith(
-        priorityFilter: newPriority,
-        statusFilter: newStatus,
-        searchQuery: newSearchQuery,
-        currentPage: 1,
-        // Don't reset requirements immediately
-        // requirements: null, // Remove this
-      ));
+    final newFilters = state.filters.copyWith(
+      priority: priority,
+      status: status,
+      searchQuery: searchQuery,
+    );
 
-      // Debounce the API call
-      _loadRequirementsDebouncer?.cancel();
-      _loadRequirementsDebouncer = Timer(const Duration(milliseconds: 300), () {
-        loadRequirements(
-          projectId,
-          refresh: true,
-        );
-      });
-    }
+    // Only proceed if filters actually changed
+    if (newFilters == state.filters) return;
+
+    emit(state.copyWith(
+      isFilteringInProgress: true,
+      filters: newFilters,
+    ));
+
+    _filterDebouncer = Timer(_debounceTime, () {
+      loadRequirements(projectId, refresh: true);
+    });
   }
 
   void clearFilters() {
+    _filterDebouncer?.cancel();
     emit(state.copyWith(
-      priorityFilter: null,
-      statusFilter: null,
-      searchQuery: null,
+      filters: const FilterState(),
+      isFilteringInProgress: false,
       currentPage: 1,
       hasMorePages: true,
       selectedRequirementIds: {},
@@ -335,7 +341,7 @@ class RequirementsCubit extends Cubit<RequirementsState> {
 
   void toggleRequirementSelection(String requirementId) {
     final requirements = state.requirements;
-    if (requirements == null || !requirements.any((r) => r.id == requirementId)) {
+    if (!requirements.any((r) => r.id == requirementId)) {
       final newSelection = Set<String>.from(state.selectedRequirementIds)
         ..remove(requirementId);
       emit(state.copyWith(selectedRequirementIds: newSelection));
@@ -356,14 +362,14 @@ class RequirementsCubit extends Cubit<RequirementsState> {
   }
 
   void selectAllRequirements() {
-    if (state.requirements == null) return;
-    final allIds = state.requirements!.map((r) => r.id).toSet();
+    final allIds = state.requirements.map((r) => r.id).toSet();
     emit(state.copyWith(selectedRequirementIds: allIds));
   }
 
   @override
   Future<void> close() {
     _loadRequirementsDebouncer?.cancel();
+    _filterDebouncer?.cancel();
     return super.close();
   }
 } 

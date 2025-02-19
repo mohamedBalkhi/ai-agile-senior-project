@@ -1,4 +1,4 @@
-package com.agilemeets.mobile
+package com.agilemeets.mobile.screen
 
 import android.app.Activity
 import android.app.Notification

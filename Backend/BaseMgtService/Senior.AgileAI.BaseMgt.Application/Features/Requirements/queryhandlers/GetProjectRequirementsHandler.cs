@@ -1,8 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Queries;
-using Senior.AgileAI.BaseMgt.Domain.Entities;
-using Senior.AgileAI.BaseMgt.Application.Features.Requirements.Filters;
 
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 

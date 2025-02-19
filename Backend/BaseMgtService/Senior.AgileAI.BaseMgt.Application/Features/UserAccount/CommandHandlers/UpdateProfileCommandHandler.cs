@@ -1,7 +1,6 @@
 using MediatR;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
 using Senior.AgileAI.BaseMgt.Application.Features.UserAccount.Commands;
-using Senior.AgileAI.BaseMgt.Application.Exceptions;
 
 
 namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandlers
@@ -26,7 +25,7 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.UserAccount.CommandHandler
             if (command.DTO.FullName != null) user.FUllName = command.DTO.FullName;
             if (command.DTO.BirthDate != null) user.BirthDate = command.DTO.BirthDate.Value;
             if (command.DTO.CountryId != null) user.Country_IdCountry = command.DTO.CountryId.Value;
-            
+            _unitOfWork.Users.Update(user);
             await _unitOfWork.CompleteAsync();
             return user.Id;
         }

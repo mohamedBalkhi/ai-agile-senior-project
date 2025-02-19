@@ -1,5 +1,3 @@
-using System.Threading.Tasks.Dataflow;
-
 namespace Senior.AgileAI.BaseMgt.Domain.Entities;
 
 public class User : BaseEntity

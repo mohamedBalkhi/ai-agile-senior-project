@@ -25,6 +25,7 @@ public class RevokeCalendarSubscriptionCommandHandler
             return false;
 
         subscription.IsActive = false;
+        _unitOfWork.CalendarSubscriptions.Update(subscription);
         await _unitOfWork.CompleteAsync();
         return true;
     }

@@ -30,7 +30,7 @@ class AppTheme {
     border: Border.all(color: const Color(0xFFE5E7EB)),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.03),
+        color: Colors.black.withValues(alpha:0.03),
         blurRadius: 10,
         offset: const Offset(0, 4),
       ),
@@ -62,7 +62,7 @@ class AppTheme {
       backgroundColor: Colors.white,
       elevation: 0,
       height: 65,
-      indicatorColor: primaryBlue.withOpacity(0.08),
+      indicatorColor: primaryBlue.withValues(alpha:0.08),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return const TextStyle(

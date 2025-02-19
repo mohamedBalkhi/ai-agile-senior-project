@@ -9,6 +9,8 @@ import '../../data/enums/meeting_status.dart';
 import '../../data/enums/meeting_type.dart';
 import '../../screens/meeting/online_meeting_screen.dart';
 import '../../utils/app_theme.dart';
+import '../../logic/cubits/auth/auth_cubit.dart';
+import '../../logic/cubits/project/project_cubit.dart';
 
 class MeetingActionButtons extends StatelessWidget {
   final MeetingDetailsDTO meeting;
@@ -20,6 +22,12 @@ class MeetingActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.read<AuthCubit>().state;
+    final canManage = context.read<ProjectCubit>().canManageMeetings();
+    final isCreator = authState.decodedToken?.userId == meeting.creator?.userId;
+    final isAdmin = authState.isAdmin;
+    final canModify = isAdmin || isCreator || canManage;
+
     developer.log('Meeting status: ${meeting.status}', name: 'MeetingActionButtons');
     return SizedBox(
       width: double.infinity,
@@ -28,7 +36,7 @@ class MeetingActionButtons extends StatelessWidget {
         spacing: 8.w,
         runSpacing: 8.h,
         children: [
-          if (meeting.status == MeetingStatus.scheduled)
+          if (meeting.status == MeetingStatus.scheduled && canModify)
             ElevatedButton.icon(
               icon: const Icon(Icons.play_arrow),
               label: const Text('Start Meeting'),
@@ -39,15 +47,15 @@ class MeetingActionButtons extends StatelessWidget {
                     SnackBar(
                       content: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.white),
+                          const Icon(Icons.check_circle, color: Colors.white),
                           SizedBox(width: 8.w),
-                          Expanded(
+                          const Expanded(
                             child: Text('Meeting started successfully! You can now join the meeting.'),
                           ),
                         ],
                       ),
                       backgroundColor: AppTheme.successGreen,
-                      duration: Duration(seconds: 5),
+                      duration: const Duration(seconds: 5),
                       action: SnackBarAction(
                         label: 'Join Now',
                         textColor: Colors.white,
@@ -92,7 +100,9 @@ class MeetingActionButtons extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
             ),
-          if (meeting.status != MeetingStatus.completed && meeting.status != MeetingStatus.cancelled)
+          if (meeting.status != MeetingStatus.completed && 
+              meeting.status != MeetingStatus.cancelled &&
+              canModify)
             OutlinedButton.icon(
               icon: const Icon(Icons.close),
               label: const Text('Cancel Meeting'),
@@ -120,7 +130,7 @@ class MeetingActionButtons extends StatelessWidget {
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.errorRed,
-                side: BorderSide(color: AppTheme.errorRed),
+                side: const BorderSide(color: AppTheme.errorRed),
               ),
             ),
         ],

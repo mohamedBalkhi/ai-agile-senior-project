@@ -13,7 +13,8 @@ import 'package:agilemeets/widgets/meeting/recurring_meeting_info_dialog.dart';
 import 'package:agilemeets/logic/cubits/meeting/meeting_cubit.dart';
 import 'package:agilemeets/utils/pending_recordings_storage.dart';
 import 'package:agilemeets/screens/meeting/online_meeting_screen.dart';
-import 'package:intl/intl.dart';
+import 'package:agilemeets/logic/cubits/auth/auth_cubit.dart';
+import 'package:agilemeets/logic/cubits/project/project_cubit.dart';
 
 class MeetingCard extends StatefulWidget {
   final MeetingDTO meeting;
@@ -60,7 +61,7 @@ class _MeetingCardState extends State<MeetingCard> {
         borderRadius: BorderRadius.circular(12.r),
         side: BorderSide(
           color: widget.meeting.isRecurring 
-              ? AppTheme.primaryBlue.withOpacity(0.3)
+              ? AppTheme.primaryBlue.withValues(alpha:0.3)
               : AppTheme.cardBorderGrey,
           width: widget.meeting.isRecurring ? 2 : 1,
         ),
@@ -84,10 +85,10 @@ class _MeetingCardState extends State<MeetingCard> {
                   vertical: 6.h,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue.withOpacity(0.05),
+                  color: AppTheme.primaryBlue.withValues(alpha:0.05),
                   border: Border(
                     bottom: BorderSide(
-                      color: AppTheme.primaryBlue.withOpacity(0.1),
+                      color: AppTheme.primaryBlue.withValues(alpha:0.1),
                     ),
                   ),
                 ),
@@ -154,7 +155,7 @@ class _MeetingCardState extends State<MeetingCard> {
                       margin: EdgeInsets.only(bottom: 8.h),
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: AppTheme.warningOrange.withOpacity(0.1),
+                        color: AppTheme.warningOrange.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(4.r),
                         border: Border.all(
                           color: AppTheme.warningOrange,
@@ -181,6 +182,22 @@ class _MeetingCardState extends State<MeetingCard> {
                         ],
                       ),
                     ),
+                  Text(
+                    widget.meeting.title ?? 'Untitled Meeting',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: widget.meeting.status == MeetingStatus.cancelled
+                          ? AppTheme.textGrey
+                          : null,
+                      decoration: widget.meeting.status == MeetingStatus.cancelled
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 12.h),
                   _buildStatusIndicator(),
                   SizedBox(height: 12.h),
                   Row(
@@ -248,8 +265,16 @@ class _MeetingCardState extends State<MeetingCard> {
   }
 
   bool _shouldShowQuickActions() {
-    return widget.meeting.status == MeetingStatus.scheduled || 
-           widget.meeting.status == MeetingStatus.inProgress;
+    final authState = context.read<AuthCubit>().state;
+    final canManage = context.read<ProjectCubit>().canManageMeetings();
+    final isCreator = authState.decodedToken?.userId == widget.meeting.creatorId;
+    final isAdmin = authState.isAdmin;
+
+    final canModify = isAdmin || isCreator || canManage;
+
+    return (widget.meeting.status == MeetingStatus.scheduled || 
+           widget.meeting.status == MeetingStatus.inProgress) &&
+           canModify;
   }
 
   Widget _buildQuickActions(BuildContext context) {
@@ -265,15 +290,15 @@ class _MeetingCardState extends State<MeetingCard> {
                     SnackBar(
                       content: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.white),
+                          const Icon(Icons.check_circle, color: Colors.white),
                           SizedBox(width: 8.w),
-                          Expanded(
+                          const Expanded(
                             child: Text('Meeting started successfully! You can now join the meeting.'),
                           ),
                         ],
                       ),
                       backgroundColor: AppTheme.successGreen,
-                      duration: Duration(seconds: 5),
+                      duration: const Duration(seconds: 5),
                       action: SnackBarAction(
                         label: 'Join Now',
                         textColor: Colors.white,
@@ -303,8 +328,8 @@ class _MeetingCardState extends State<MeetingCard> {
                   );
                 }
               },
-              icon: Icon(Icons.play_arrow_rounded),
-              label: Text('Start'),
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: const Text('Start'),
             ),
           )
         else if (widget.meeting.status == MeetingStatus.inProgress && !_hasPendingRecording)
@@ -331,8 +356,8 @@ class _MeetingCardState extends State<MeetingCard> {
                   );
                 }
               },
-              icon: Icon(Icons.login_rounded),
-              label: Text('Join'),
+              icon: const Icon(Icons.login_rounded),
+              label: const Text('Join'),
             ),
           ),
         if (_hasPendingRecording)
@@ -345,11 +370,11 @@ class _MeetingCardState extends State<MeetingCard> {
                   arguments: widget.meeting.id,
                 );
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.upload_rounded,
                 color: AppTheme.warningOrange,
               ),
-              label: Text(
+              label: const Text(
                 'Upload Recording',
                 style: TextStyle(
                   color: AppTheme.warningOrange,
@@ -366,96 +391,21 @@ class _MeetingCardState extends State<MeetingCard> {
               _showCancelDialog(context);
             }
           },
-          icon: Icon(Icons.close),
-          label: Text('Cancel'),
+          icon: const Icon(Icons.close),
+          label: const Text('Cancel'),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppTheme.errorRed,
-            side: BorderSide(color: AppTheme.errorRed),
+            side: const BorderSide(color: AppTheme.errorRed),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTypeIndicator() {
-    Color color;
-    IconData icon;
-    
-    switch (widget.meeting.type) {
-      case MeetingType.inPerson:
-        color = AppTheme.primaryBlue;
-        icon = Icons.people;
-        break;
-      case MeetingType.online:
-        color = AppTheme.successGreen;
-        icon = Icons.video_call;
-        break;
-      case MeetingType.done:
-        color = AppTheme.textGrey;
-        icon = Icons.history;
-        break;
-    }
 
-    return Container(
-      padding: EdgeInsets.all(8.w),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      child: Icon(
-        icon,
-        color: color,
-        size: 20.w,
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge() {
-    Color color;
-    String text;
-    
-    switch (widget.meeting.status) {
-      case MeetingStatus.scheduled:
-        color = AppTheme.infoBlue;
-        text = 'Scheduled';
-        break;
-      case MeetingStatus.inProgress:
-        color = AppTheme.successGreen;
-        text = 'In Progress';
-        break;
-      case MeetingStatus.completed:
-        color = AppTheme.textGrey;
-        text = 'Completed';
-        break;
-      case MeetingStatus.cancelled:
-        color = AppTheme.errorRed;
-        text = 'Cancelled';
-        break;
-    }
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 8.w,
-        vertical: 4.h,
-      ),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
 
   Widget _buildStatusIndicator() {
     final isOnline = widget.meeting.type == MeetingType.online;
-    final isInProgress = widget.meeting.status == MeetingStatus.inProgress;
     
     return Row(
       children: [
@@ -463,7 +413,7 @@ class _MeetingCardState extends State<MeetingCard> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: AppTheme.primaryBlue.withOpacity(0.1),
+              color: AppTheme.primaryBlue.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
@@ -491,7 +441,7 @@ class _MeetingCardState extends State<MeetingCard> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: _getStatusColor().withOpacity(0.1),
+            color: _getStatusColor().withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: Row(
@@ -528,9 +478,7 @@ class _MeetingCardState extends State<MeetingCard> {
         return AppTheme.textGrey;
       case MeetingStatus.cancelled:
         return AppTheme.errorRed;
-      default:
-        throw Exception("Unknown meeting status");
-    }
+      }
   }
 
   IconData _getStatusIcon() {
@@ -543,9 +491,7 @@ class _MeetingCardState extends State<MeetingCard> {
         return Icons.check_circle;
       case MeetingStatus.cancelled:
         return Icons.cancel;
-      default:
-        throw Exception("Unknown meeting status");
-    }
+      }
   }
 
   String _getStatusText() {
@@ -558,9 +504,7 @@ class _MeetingCardState extends State<MeetingCard> {
         return 'Completed';
       case MeetingStatus.cancelled:
         return 'Cancelled';
-      default:
-        throw Exception("Unknown meeting status");
-    }
+      }
   }
 
   void _showRecurringInfo(BuildContext context) {
@@ -631,6 +575,15 @@ class _MeetingCardState extends State<MeetingCard> {
 
   Future<void> _cancelMeeting(BuildContext context, {bool? applyToSeries}) async {
     try {
+      final authState = context.read<AuthCubit>().state;
+      final canManage = context.read<ProjectCubit>().canManageMeetings();
+      final isCreator = authState.decodedToken?.userId == widget.meeting.creatorId;
+      final isAdmin = authState.isAdmin;
+
+      if (!isAdmin && !isCreator && !canManage) {
+        throw Exception('You do not have permission to cancel this meeting');
+      }
+
       if (widget.meeting.isRecurring && applyToSeries != null) {
         await context.read<MeetingCubit>().modifyRecurringMeeting(
           widget.meeting.id,

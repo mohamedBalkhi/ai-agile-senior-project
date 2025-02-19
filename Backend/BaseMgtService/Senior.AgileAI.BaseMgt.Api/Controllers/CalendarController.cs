@@ -94,16 +94,25 @@ public class CalendarController : ControllerBase
     /// <summary>
     /// Gets the iCalendar feed for a specific subscription token
     /// </summary>
-    [HttpGet("GetCalendarFeed/{token}")]
+    [HttpGet("GetCalendarFeed/{token}/{*timeZoneId}")]
     [AllowAnonymous]
     [Produces("text/calendar")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<>), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetCalendarFeed(string token)
+    public async Task<IActionResult> GetCalendarFeed(string token, string timeZoneId)
     {
-        var query = new GetCalendarFeedQuery(token);
+        // Decode the URL-encoded timezone
+        timeZoneId = Uri.UnescapeDataString(timeZoneId);
+
+        if (string.IsNullOrEmpty(timeZoneId))
+        {
+            return BadRequest(new ApiResponse<string>(
+                StatusCodes.Status400BadRequest,
+                "TimeZone ID is required"));
+        }
+
+        var query = new GetCalendarFeedQuery(token, timeZoneId);
         var result = await _mediator.Send(query);
-        
         if (string.IsNullOrEmpty(result))
         {
             return BadRequest(new ApiResponse<string>(

@@ -51,6 +51,8 @@ public class PostgreSqlAppDbContext : DbContext
                 // options.EnableRetryOnFailure();
             });
         }
+
+        optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
 
     public DbSet<User> Users { get; set; } = null!;

@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../data/repositories/organization_repository.dart';
 import '../../../data/models/create_organization_dto.dart';
-import '../../../data/models/organization/create_org_members_dto.dart';
 import 'organization_state.dart';
 
 class OrganizationCubit extends Cubit<OrganizationState> {

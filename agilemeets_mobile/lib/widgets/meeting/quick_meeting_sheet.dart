@@ -25,6 +25,7 @@ class QuickMeetingSheet extends StatefulWidget {
 class _QuickMeetingSheetState extends State<QuickMeetingSheet> {
   final _titleController = TextEditingController();
   final _goalController = TextEditingController();
+  final _locationController = TextEditingController();
   MeetingType _selectedType = MeetingType.online;
   List<String> _selectedMembers = [];
   bool _isCreating = false;
@@ -34,6 +35,7 @@ class _QuickMeetingSheetState extends State<QuickMeetingSheet> {
   void dispose() {
     _titleController.dispose();
     _goalController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -66,6 +68,13 @@ class _QuickMeetingSheetState extends State<QuickMeetingSheet> {
       return;
     }
 
+    if (_selectedType == MeetingType.inPerson && _locationController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a location for in-person meeting')),
+      );
+      return;
+    }
+
     setState(() => _isCreating = true);
 
     try {
@@ -83,6 +92,7 @@ class _QuickMeetingSheetState extends State<QuickMeetingSheet> {
         projectId: widget.projectId,
         memberIds: _selectedMembers,
         reminderTime: now,
+        location: _selectedType == MeetingType.inPerson ? _locationController.text : null,
       );
     } catch (e) {
       if (mounted) {
@@ -170,6 +180,15 @@ class _QuickMeetingSheetState extends State<QuickMeetingSheet> {
                 ),
               ],
             ),
+            if (_selectedType == MeetingType.inPerson) ...[
+              SizedBox(height: 16.h),
+              CustomTextField(
+                controller: _locationController,
+                label: 'Location*',
+                hint: 'Enter meeting location',
+                prefixIcon: Icons.location_on_outlined,
+              ),
+            ],
             SizedBox(height: 16.h),
             OutlinedButton.icon(
               onPressed: _showMemberSelector,
@@ -269,7 +288,7 @@ class _QuickMeetingSheetState extends State<QuickMeetingSheet> {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryBlue.withOpacity(0.1)
+              ? AppTheme.primaryBlue.withValues(alpha:0.1)
               : Colors.white,
           borderRadius: BorderRadius.circular(8.r),
           border: Border.all(

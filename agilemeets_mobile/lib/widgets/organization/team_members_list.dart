@@ -26,7 +26,7 @@ class TeamMembersList extends StatelessWidget {
               height: 48.w,
               decoration: BoxDecoration(
                 color: member.isActive
-                    ? AppTheme.primaryBlue.withOpacity(0.1)
+                    ? AppTheme.primaryBlue.withValues(alpha:0.1)
                     : AppTheme.cardGrey,
                 borderRadius: BorderRadius.circular(12.r),
               ),
@@ -63,7 +63,7 @@ class TeamMembersList extends StatelessWidget {
                       vertical: 4.h,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.errorRed.withOpacity(0.1),
+                      color: AppTheme.errorRed.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Text(
@@ -99,7 +99,7 @@ class TeamMembersList extends StatelessWidget {
                           vertical: 4.h,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondaryBlue.withOpacity(0.1),
+                          color: AppTheme.secondaryBlue.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Text(
@@ -128,11 +128,11 @@ class TeamMembersList extends StatelessWidget {
     String text;
 
     if (member.isManager) {
-      backgroundColor = AppTheme.warningOrange.withOpacity(0.1);
+      backgroundColor = AppTheme.warningOrange.withValues(alpha:0.1);
       textColor = AppTheme.warningOrange;
       text = 'Owner';
     } else if (member.isAdmin) {
-      backgroundColor = AppTheme.primaryBlue.withOpacity(0.1);
+      backgroundColor = AppTheme.primaryBlue.withValues(alpha:0.1);
       textColor = AppTheme.primaryBlue;
       text = 'Admin';
     } else {

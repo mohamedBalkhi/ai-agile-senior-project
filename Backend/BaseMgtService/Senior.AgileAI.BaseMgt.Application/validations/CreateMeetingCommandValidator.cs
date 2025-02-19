@@ -119,8 +119,8 @@ public class CreateMeetingCommandValidator : AbstractValidator<CreateMeetingComm
         When(x => x.Dto.Type == MeetingType.Done, () => {
             RuleFor(x => x.Dto.AudioFile)
                 .NotNull().WithMessage("Audio file is required for Done meetings")
-                .MustAsync(async (file, ct) => {
-                    return await _audioStorage.ValidateAudioFileAsync(file!,ct);
+                .Must((file) => {
+                    return _audioStorage.ValidateAudioFile(file!);
                 }).WithMessage("Invalid audio file format or size");
         });
 
