@@ -33,7 +33,6 @@ import 'screens/create_organization_screen.dart';
 import 'utils/app_theme.dart';
 import 'dart:developer' as developer;
 import 'utils/route_guard.dart';
-import 'widgets/shared/loading_overlay.dart';
 import 'services/navigation_service.dart';
 import 'data/repositories/requirements_repository.dart';
 import 'logic/cubits/requirements/requirements_cubit.dart';
@@ -47,8 +46,16 @@ import 'package:agilemeets/data/repositories/timezone_repository.dart';
 import 'package:agilemeets/screens/meeting/meeting_details_screen.dart';
 import 'package:agilemeets/screens/meeting/meeting_session_screen.dart';
 import 'package:agilemeets/screens/meeting/create_meeting_screen.dart';
-import 'utils/route_constants.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
+import 'data/repositories/calendar_repository.dart';
+import 'logic/cubits/calendar/calendar_cubit.dart';
+import 'screens/calendar/calendar_screen.dart';
+import 'package:agilemeets/core/service_locator.dart';
+import 'package:agilemeets/services/recording_manager.dart';
+import 'package:agilemeets/services/recording_storage_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:agilemeets/data/models/recording_metadata.dart';
+import 'package:agilemeets/data/models/duration_adapter.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -69,11 +76,9 @@ Future<void> _initializeAndroidAudioSettings() async {
 Future<void> _checkPermissions() async {
   var status = await Permission.bluetooth.request();
   if (status.isPermanentlyDenied) {
-    print('Bluetooth Permission disabled');
   }
   status = await Permission.bluetoothConnect.request();
   if (status.isPermanentlyDenied) {
-    print('Bluetooth Connect Permission disabled');
   }
 }
 
@@ -96,6 +101,23 @@ void main() async {
     
     // Initialize Notification Service
     await NotificationService().initialize();
+
+    // Initialize Hive
+    await Hive.initFlutter();
+    
+    // Register Hive adapters
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(RecordingUploadStatusAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(RecordingMetadataAdapter());
+    }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(DurationAdapter());
+    }
+    
+    // Initialize Service Locator
+    await setupServiceLocator();
     
     // Initialize ApiClient
     HttpOverrides.global = MyHttpOverrides();
@@ -120,10 +142,17 @@ void main() async {
               BlocProvider<MeetingCubit>(
                 create: (context) => MeetingCubit(
                   MeetingRepository(),
+                  getIt<RecordingManager>(),
+                  getIt<RecordingStorageService>(),
                 ),
               ),
               BlocProvider(
                 create: (context) => TimeZoneCubit(TimeZoneRepository()),
+              ),
+              BlocProvider<CalendarCubit>(
+                create: (context) => CalendarCubit(
+                  calendarRepository: CalendarRepository(),
+                ),
               ),
             ],
             child: BlocBuilder<AuthCubit, AuthState>(
@@ -132,7 +161,7 @@ void main() async {
                   title: 'AgileMeets',
                   theme: AppTheme.lightTheme,
                   themeMode: ThemeMode.system,
-                  navigatorKey: NavigationService.navigatorKey,
+                  navigatorKey: getIt<NavigationService>().navigatorKey,
                   builder: (context, child) {
                     return child ?? const SizedBox();
                   },
@@ -309,6 +338,26 @@ Widget _buildRoute(RouteSettings settings, AuthStatus currentStatus) {
         redirectRoute: '/login',
         child: MeetingSessionScreen(meetingId: settings.arguments as String),
       );
+
+    case '/meeting/recording':
+      return RouteGuard(
+        primaryStates: const [AuthStatus.authenticated],
+        redirectRoute: '/login',
+        child: MeetingSessionScreen(
+          meetingId: settings.arguments as String,
+          initialTab: 'recording',
+        ),
+      );
+
+    case '/calendar':
+      return RouteGuard(
+        primaryStates: const [AuthStatus.authenticated],
+        redirectRoute: '/login',
+        child: CalendarScreen(
+          projectId: settings.arguments as String?,
+        ),
+      );
+
     // Default fallback
     default:
       return const SplashScreen();

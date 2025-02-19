@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:agilemeets/data/enums/days_of_week.dart';
 import 'package:agilemeets/widgets/custom_text_field.dart';
+import 'package:agilemeets/widgets/meeting/upload_progress_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -331,9 +332,9 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: isDisabled 
-              ? Colors.grey.withOpacity(0.1)
+              ? Colors.grey.withValues(alpha:0.1)
               : isSelected 
-                  ? AppTheme.primaryBlue.withOpacity(0.1)
+                  ? AppTheme.primaryBlue.withValues(alpha:0.1)
                   : Colors.white,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
@@ -348,9 +349,9 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
                 color: isDisabled
-                    ? Colors.grey.withOpacity(0.1)
+                    ? Colors.grey.withValues(alpha:0.1)
                     : isSelected
-                        ? AppTheme.primaryBlue.withOpacity(0.1)
+                        ? AppTheme.primaryBlue.withValues(alpha:0.1)
                         : AppTheme.cardGrey,
                 borderRadius: BorderRadius.circular(8.r),
               ),
@@ -744,7 +745,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                          backgroundColor: AppTheme.primaryBlue.withValues(alpha:0.1),
                           child: Text(
                             member.name.substring(0, 1).toUpperCase(),
                             style: const TextStyle(
@@ -902,9 +903,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
             ),
           ),
           actions: [
-            
-              if (_currentStep == _steps.length - 1)
-                Padding(
+            if (_currentStep == _steps.length - 1)
+              Padding(
                 padding: EdgeInsets.only(right: 16.w),
                 child: FilledButton(
                   onPressed: _isSubmitting ? null : () {
@@ -923,103 +923,147 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                       _submit();
                     }
                   },
-                  child: _isSubmitting 
-                      ? SizedBox(
+                  child: BlocBuilder<MeetingCubit, MeetingState>(
+                    builder: (context, state) {
+                      final isCreating = state.status == MeetingStateStatus.creating;
+                      if (isCreating && !state.isAudioUploading) {
+                        return SizedBox(
                           width: 20.w,
                           height: 20.w,
                           child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
-                        )
-                      : Text(_form.startTime?.isAfter(DateTime.now()) ?? true 
-                          ? 'Create' 
-                          : 'Start'),
+                        );
+                      } else {
+                        return Text(
+                          _form.startTime?.isAfter(DateTime.now()) ?? true ? 'Create' : 'Start',
+                        );
+                      }
+                    },
+                  ),
                 ),
               ),
           ],
         ),
-        body: Form(
-          key: _formKey,
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: Theme.of(context).colorScheme.copyWith(
-                primary: AppTheme.primaryBlue,
+        body: Stack(
+          children: [
+            Form(
+              key: _formKey,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: Theme.of(context).colorScheme.copyWith(
+                    primary: AppTheme.primaryBlue,
+                  ),
+                ),
+                child: Stepper(
+                  currentStep: _currentStep,
+                  onStepContinue: () {
+                    if (_validateStep(_currentStep)) {
+                      if (_currentStep < _steps.length - 1) {
+                        setState(() => _currentStep++);
+                      } else {
+                        _submit();
+                      }
+                    }
+                  },
+                  onStepCancel: () {
+                    if (_currentStep > 0) {
+                      setState(() => _currentStep--);
+                    }
+                  },
+                  onStepTapped: (step) {
+                    if (step < _currentStep || _validateStep(_currentStep)) {
+                      setState(() => _currentStep = step);
+                    }
+                  },
+                  steps: _steps,
+                  controlsBuilder: (context, details) {
+                    return Padding(
+                      padding: EdgeInsets.only(top: 24.h),
+                      child: Row(
+                        children: [
+                          if (_currentStep > 0)
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: _isSubmitting ? null : details.onStepCancel,
+                                child: const Text('Back'),
+                              ),
+                            ),
+                          if (_currentStep > 0)
+                            SizedBox(width: 16.w),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: _isSubmitting ? null : () {
+                                if (_currentStep < _steps.length - 1) {
+                                  details.onStepContinue?.call();
+                                } else {
+                                  log('Form start time: ${_form.startTime}', name: 'CreateMeetingScreen');
+                                  if ((_form.startTime?.isAfter(DateTime.now()) ?? true) || 
+                                      _form.type == MeetingType.done) {
+                                    log('Submitting meeting', name: 'CreateMeetingScreen');
+                                    _submit();
+                                  } else {
+                                    log('Setting start time to now', name: 'CreateMeetingScreen');
+                                    var duration = _form.endTime!.difference(_form.startTime!);
+                                    _form.startTime = DateTime.now();
+                                    _form.reminderTime = DateTime.now();
+                                    _form.endTime = DateTime.now().add(duration);
+                                    log('Submitting meeting', name: 'CreateMeetingScreen');
+                                    _submit();
+                                  }
+                                }
+                              },
+                              child: Text(
+                                _currentStep < _steps.length - 1 
+                                    ? 'Next' 
+                                    : (_form.startTime?.isAfter(DateTime.now()) ?? true 
+                                        ? 'Create' 
+                                        : 'Start'),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-            child: Stepper(
-              currentStep: _currentStep,
-              onStepContinue: () {
-                if (_validateStep(_currentStep)) {
-                  if (_currentStep < _steps.length - 1) {
-                    setState(() => _currentStep++);
-                  } else {
-                    _submit();
-                  }
-                }
-              },
-              onStepCancel: () {
-                if (_currentStep > 0) {
-                  setState(() => _currentStep--);
-                }
-              },
-              onStepTapped: (step) {
-                if (step < _currentStep || _validateStep(_currentStep)) {
-                  setState(() => _currentStep = step);
-                }
-              },
-              steps: _steps,
-              controlsBuilder: (context, details) {
-                return Padding(
-                  padding: EdgeInsets.only(top: 24.h),
-                  child: Row(
-                    children: [
-                      if (_currentStep > 0)
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _isSubmitting ? null : details.onStepCancel,
-                            child: const Text('Back'),
+            // Upload progress overlay
+            BlocBuilder<MeetingCubit, MeetingState>(
+              buildWhen: (previous, current) =>
+                  previous.isAudioUploading != current.isAudioUploading ||
+                  previous.audioUploadProgress != current.audioUploadProgress,
+              builder: (context, state) {
+                if (state.isAudioUploading) {
+                  return Align(
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 32.w),
+                      child: Material(
+                        elevation: 8,
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
-                        ),
-                      if (_currentStep > 0)
-                        SizedBox(width: 16.w),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: _isSubmitting ? null : () {
-                            if (_currentStep < _steps.length - 1) {
-                              details.onStepContinue?.call();
-                            } else {
-                              log('Form start time: ${_form.startTime}', name: 'CreateMeetingScreen');
-                              if ((_form.startTime?.isAfter(DateTime.now()) ?? true) || 
-                                  _form.type == MeetingType.done) {
-                                log('Submitting meeting', name: 'CreateMeetingScreen');
-                                _submit();
-                              } else {
-                                log('Setting start time to now', name: 'CreateMeetingScreen');
-                                var duration = _form.endTime!.difference(_form.startTime!);
-                                _form.startTime = DateTime.now();
-                                _form.reminderTime = DateTime.now();
-                                _form.endTime = DateTime.now().add(duration);
-                                log('Submitting meeting', name: 'CreateMeetingScreen');
-                                _submit();
-                              }
-                            }
-                          },
-                          child: Text(
-                            _currentStep < _steps.length - 1 
-                                ? 'Next' 
-                                : (_form.startTime?.isAfter(DateTime.now()) ?? true 
-                                    ? 'Create' 
-                                    : 'Start'),
+                          child: UploadProgressWidget(
+                            progress: state.audioUploadProgress ?? 0,
+                            onCancel: () {
+                              context.read<MeetingCubit>().cancelUpload();
+                            },
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                );
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
               },
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -1031,7 +1075,32 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       
       if (_form.isValid) {
         setState(() => _isSubmitting = true);
-        
+
+        if (_form.type == MeetingType.done) {
+        // For past meetings with audio, use the robust upload
+        context.read<MeetingCubit>().createMeetingWithUpload(
+          title: _form.title!,
+          goal: _form.goal,
+          language: _form.language.value,
+          type: _form.type.value,
+          startTime: _form.startTime!,
+          endTime: _form.endTime!,
+          timeZone: _form.timeZoneId!,
+          projectId: _form.projectId,
+          memberIds: _form.memberIds,
+          location: _form.location,
+          reminderTime: _form.reminderTime,
+          audioFile: _form.audioFile!,  // Now required
+          isRecurring: _form.isRecurring,
+          recurringPattern: _form.isRecurring ? {
+            'recurrenceType': _form.recurringPattern!.recurrenceType.value,
+            'interval': _form.recurringPattern!.interval,
+            'recurringEndDate': _form.recurringPattern!.recurringEndDate.toIso8601String(),
+            'daysOfWeek': _form.recurringPattern!.daysOfWeek.value,
+          } : null,
+        );
+        }
+        else {
         context.read<MeetingCubit>().createMeeting(
           title: _form.title!,
           goal: _form.goal,
@@ -1053,6 +1122,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
             'daysOfWeek': _form.recurringPattern!.daysOfWeek.value,
           } : null,
         );
+      }
       }
     }
   }

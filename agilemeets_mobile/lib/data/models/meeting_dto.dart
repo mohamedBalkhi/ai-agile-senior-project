@@ -6,6 +6,7 @@ import '../enums/meeting_status.dart';
 class MeetingDTO {
   final String id;
   final String? title;
+  final String? creatorId;
   final DateTime startTime;
   final DateTime endTime;
   final MeetingType type;
@@ -37,12 +38,14 @@ class MeetingDTO {
     required this.hasAudio,
     this.projectId,
     this.projectName,
+    this.creatorId,
   });
 
   factory MeetingDTO.fromJson(Map<String, dynamic> json) {
     return MeetingDTO(
       id: json['id'] as String,
       title: json['title'] as String?,
+      creatorId: json['creatorId'] as String?,
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
       type: MeetingType.fromInt(json['type'] as int),
