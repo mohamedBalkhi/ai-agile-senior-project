@@ -22,14 +22,13 @@ class AudioWaveform extends StatefulWidget {
 class _AudioWaveformState extends State<AudioWaveform>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  final _random = math.Random();
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 750),
+      duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
   }
 
@@ -94,7 +93,7 @@ class _AudioWaveformPainter extends CustomPainter {
     if (!isRecording) return;
 
     final paint = Paint()
-      ..color = color.withOpacity(0.8)
+      ..color = color.withValues(alpha:0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round;
@@ -107,34 +106,42 @@ class _AudioWaveformPainter extends CustomPainter {
     const int waveCount = 3;
     final path = Path();
     
+    // Amplify the input amplitude for more dramatic effect
+    final amplifiedAmplitude = math.pow(amplitude, 0.7).toDouble() * 1.5;
+    
     // Draw multiple overlapping waves
     for (int wave = 0; wave < waveCount; wave++) {
       path.reset();
       path.moveTo(0, centerY);
       
-      // Wave parameters
-      final frequency = 2.0 + wave * 0.5;  // Different frequency for each wave
-      final phaseShift = wave * math.pi / 4;    // Offset each wave
-      final waveHeight = height * 0.3 * amplitude * (1.0 - wave * 0.2);
+      // Wave parameters - increased frequency range for more dynamic waves
+      final frequency = 1.5 + wave * 0.8;  // More varied frequencies
+      final phaseShift = wave * math.pi / 3;  // Wider phase shifts
+      
+      // Increased wave height and more dramatic scaling based on amplitude
+      final waveHeight = height * 0.4 * amplifiedAmplitude * (1.0 - wave * 0.15);
       
       // Draw points along the wave
-      for (double x = 0; x <= width; x += 2) {
+      for (double x = 0; x <= width; x += 1.5) { // Smaller step for smoother waves
         final progress = x / width;
         final normalizedX = progress * 2 * math.pi * frequency + phaseShift;
         
-        // Combine sine waves for more natural movement
+        // Add complexity to wave movement with compound sine waves
         final y = centerY + 
-                 math.sin(normalizedX) * waveHeight * 
-                 (isPaused ? 0.3 : 1.0);  // Reduce amplitude when paused
+                 (math.sin(normalizedX) * 0.7 + math.sin(normalizedX * 1.5) * 0.3) * 
+                 waveHeight * 
+                 (isPaused ? 0.2 : 1.0);  // More dramatic pause reduction
         
         if (x == 0) {
           path.moveTo(x, y);
         } else {
-          // Use quadratic bezier curve for smoother waves
-          final prevX = x - 2;
+          // Enhanced curve smoothing
+          final prevX = x - 1.5;
           final prevY = centerY + 
-                       math.sin(prevX / width * 2 * math.pi * frequency + phaseShift) * 
-                       waveHeight * (isPaused ? 0.3 : 1.0);
+                       (math.sin((prevX / width * 2 * math.pi * frequency + phaseShift)) * 0.7 + 
+                        math.sin((prevX / width * 2 * math.pi * frequency + phaseShift) * 1.5) * 0.3) * 
+                       waveHeight * 
+                       (isPaused ? 0.2 : 1.0);
           
           final controlX = (x + prevX) / 2;
           final controlY = (y + prevY) / 2;
@@ -143,8 +150,8 @@ class _AudioWaveformPainter extends CustomPainter {
         }
       }
       
-      // Draw the wave with slightly different opacity for each layer
-      paint.color = color.withOpacity(0.8 - wave * 0.2);
+      // Enhanced opacity variation between layers
+      paint.color = color.withValues(alpha: 0.9 - wave * 0.25);
       canvas.drawPath(path, paint);
     }
   }

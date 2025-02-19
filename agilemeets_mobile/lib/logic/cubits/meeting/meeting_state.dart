@@ -1,119 +1,68 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:agilemeets/core/errors/validation_error.dart';
-import 'package:agilemeets/data/models/meeting_dto.dart';
 import 'package:agilemeets/data/models/meeting_details_dto.dart';
 import 'package:agilemeets/data/models/grouped_meetings_response.dart';
 import 'package:agilemeets/data/models/meeting_ai_report_dto.dart';
 import 'package:agilemeets/data/models/join_meeting_response.dart';
+import 'package:agilemeets/data/models/recording_metadata.dart';
+
+part 'meeting_state.freezed.dart';
 
 enum MeetingStateStatus {
   initial,
   loading,
   loaded,
+  error,
   creating,
   created,
   updating,
   updated,
-  error,
   validationError,
-  loadingAIReport,
-  aiReportLoaded,
   joiningMeeting,
   joinedMeeting,
+  loadingAIReport,
+  aiReportLoaded,
+  recording,
+  recordingPaused,
+  recordingStopped,
+  recordingFailed,
+  processingRecording,
+  uploading,
+  uploadCompleted,
+  uploadCancelled,
 }
 
-class MeetingState extends Equatable {
-  final MeetingStateStatus status;
-  final List<MeetingGroupDTO>? groups;
-  final MeetingDetailsDTO? selectedMeeting;
-  final String? error;
-  final List<ValidationError>? validationErrors;
-  final bool isAudioUploading;
-  final double? audioUploadProgress;
-  final String? audioUrl;
-  final bool hasMorePast;
-  final bool hasMoreFuture;
-  final DateTime? oldestMeetingDate;
-  final DateTime? newestMeetingDate;
-  final bool isLoadingMore;
-  final bool isRefreshing;
-  final MeetingAIReportDTO? aiReport;
-  final JoinMeetingResponse? joinMeetingResponse;
-
-  const MeetingState({
-    this.status = MeetingStateStatus.initial,
-    this.groups,
-    this.selectedMeeting,
-    this.error,
-    this.validationErrors,
-    this.isAudioUploading = false,
-    this.audioUploadProgress,
-    this.audioUrl,
-    this.hasMorePast = false,
-    this.hasMoreFuture = false,
-    this.oldestMeetingDate,
-    this.newestMeetingDate,
-    this.isLoadingMore = false,
-    this.isRefreshing = false,
-    this.aiReport,
-    this.joinMeetingResponse,
-  });
-
-  MeetingState copyWith({
-    MeetingStateStatus? status,
+@freezed
+class MeetingState with _$MeetingState {
+  const factory MeetingState({
+    @Default(MeetingStateStatus.initial) MeetingStateStatus status,
     List<MeetingGroupDTO>? groups,
     MeetingDetailsDTO? selectedMeeting,
     String? error,
     List<ValidationError>? validationErrors,
-    bool? isAudioUploading,
+    @Default(false) bool isAudioUploading,
     double? audioUploadProgress,
     String? audioUrl,
-    bool? hasMorePast,
-    bool? hasMoreFuture,
-    DateTime? oldestMeetingDate,
-    DateTime? newestMeetingDate,
-    bool? isLoadingMore,
-    bool? isRefreshing,
+    @Default(false) bool hasMore,
+    String? lastMeetingId,
+    String? pastLastMeetingId,
+    String? upcomingLastMeetingId,
+    DateTime? pastReferenceDate,
+    DateTime? pastNextReferenceDate,
+    DateTime? upcomingReferenceDate,
+    DateTime? upcomingNextReferenceDate,
+    @Default(false) bool isLoadingMore,
+    @Default(false) bool isRefreshing,
     MeetingAIReportDTO? aiReport,
     JoinMeetingResponse? joinMeetingResponse,
-  }) {
-    return MeetingState(
-      status: status ?? this.status,
-      groups: groups ?? this.groups,
-      selectedMeeting: selectedMeeting ?? this.selectedMeeting,
-      error: error,
-      validationErrors: validationErrors,
-      isAudioUploading: isAudioUploading ?? this.isAudioUploading,
-      audioUploadProgress: audioUploadProgress ?? this.audioUploadProgress,
-      audioUrl: audioUrl ?? this.audioUrl,
-      hasMorePast: hasMorePast ?? this.hasMorePast,
-      hasMoreFuture: hasMoreFuture ?? this.hasMoreFuture,
-      oldestMeetingDate: oldestMeetingDate ?? this.oldestMeetingDate,
-      newestMeetingDate: newestMeetingDate ?? this.newestMeetingDate,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      isRefreshing: isRefreshing ?? this.isRefreshing,
-      aiReport: aiReport ?? this.aiReport,
-      joinMeetingResponse: joinMeetingResponse ?? this.joinMeetingResponse,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        status,
-        groups,
-        selectedMeeting,
-        error,
-        validationErrors,
-        isAudioUploading,
-        audioUploadProgress,
-        audioUrl,
-        hasMorePast,
-        hasMoreFuture,
-        oldestMeetingDate,
-        newestMeetingDate,
-        isLoadingMore,
-        isRefreshing,
-        aiReport,
-        joinMeetingResponse,
-      ];
+    String? timeZoneId,
+    @Default(0) int totalMeetingsCount,
+    String? currentRecordingPath,
+    RecordingMetadata? currentRecording,
+    List<RecordingMetadata>? pendingRecordings,
+    Duration? recordingDuration,
+    String? warningMessage,
+    Duration? remainingTime,
+    String? processingMessage,
+  }) = _MeetingState;
 }

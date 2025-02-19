@@ -5,20 +5,22 @@ import '../../utils/app_theme.dart';
 class RecordingControls extends StatelessWidget {
   final bool isRecording;
   final bool isPaused;
+  final bool isProcessing;
   final VoidCallback onStartRecording;
   final VoidCallback onPauseRecording;
   final VoidCallback onResumeRecording;
   final VoidCallback onStopRecording;
 
   const RecordingControls({
-    Key? key,
+    super.key,
     required this.isRecording,
     required this.isPaused,
+    this.isProcessing = false,
     required this.onStartRecording,
     required this.onPauseRecording,
     required this.onResumeRecording,
     required this.onStopRecording,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +34,20 @@ class RecordingControls extends StatelessWidget {
             _buildControlButton(
               onTap: onStartRecording,
               icon: Icons.fiber_manual_record_rounded,
-              backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+              backgroundColor: AppTheme.primaryBlue.withValues(alpha:0.1),
               iconColor: AppTheme.primaryBlue,
               size: 64.r,
               iconSize: 32.r,
+            ),
+          ] else if (isProcessing) ...[
+            // Processing indicator
+            SizedBox(
+              width: 64.r,
+              height: 64.r,
+              child: const CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+              ),
             ),
           ] else ...[
             // Pause/Resume Button
@@ -43,8 +55,8 @@ class RecordingControls extends StatelessWidget {
               onTap: isPaused ? onResumeRecording : onPauseRecording,
               icon: isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
               backgroundColor: isPaused 
-                  ? AppTheme.successGreen.withOpacity(0.1)
-                  : AppTheme.warningYellow.withOpacity(0.1),
+                  ? AppTheme.successGreen.withValues(alpha:0.1)
+                  : AppTheme.warningYellow.withValues(alpha:0.1),
               iconColor: isPaused ? AppTheme.successGreen : AppTheme.warningYellow,
               size: 64.r,
               iconSize: 32.r,
@@ -54,7 +66,7 @@ class RecordingControls extends StatelessWidget {
             _buildControlButton(
               onTap: onStopRecording,
               icon: Icons.stop_rounded,
-              backgroundColor: AppTheme.errorRed.withOpacity(0.1),
+              backgroundColor: AppTheme.errorRed.withValues(alpha:0.1),
               iconColor: AppTheme.errorRed,
               size: 52.r,
               iconSize: 24.r,
@@ -76,7 +88,9 @@ class RecordingControls extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          onTap();
+        },
         borderRadius: BorderRadius.circular(size / 2),
         child: Ink(
           width: size,
@@ -86,9 +100,9 @@ class RecordingControls extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha:0.1),
                 blurRadius: 8,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
