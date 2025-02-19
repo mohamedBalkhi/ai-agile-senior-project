@@ -8,41 +8,72 @@ namespace Senior.AgileAI.BaseMgt.Application.Features.OrgFeatures.CommandHandler
     public class CreateOrganizationCommandHandler : IRequestHandler<CreateOrganizationCommand, Guid>
     {
         private readonly IUnitOfWork _unitOfWork;
-        public CreateOrganizationCommandHandler(IUnitOfWork unitOfWork)
+        private readonly IFileService _fileService;
+
+        public CreateOrganizationCommandHandler(IUnitOfWork unitOfWork, IFileService fileService)
         {
             _unitOfWork = unitOfWork;
+            _fileService = fileService;
         }
+
         public async Task<Guid> Handle(CreateOrganizationCommand command, CancellationToken cancellationToken)
         {
-            var organization = new Organization
+            string? logoPath = null;
+            
+            try
             {
-                Name = command.Dto.Name,
-                Description = command.Dto.Description,
-                Logo = command.Dto.Logo,
-                Status = "Active",
-                IsActive = true,
-                OrganizationManager_IdOrganizationManager = command.Dto.UserId
-            };
+                // Start transaction
+                using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-            await _unitOfWork.Organizations.AddAsync(organization,cancellationToken);
-            // Save the organization first to get its Id because it is a foreign key in the OrganizationMember table.
-            // and it will cause an error if we try to add the organization member without saving the organization first.
-            await _unitOfWork.CompleteAsync();
+                // Save logo file if provided
+                if (command.Dto.LogoFile != null)
+                {
+                    logoPath = await _fileService.SaveFileAsync(
+                        command.Dto.LogoFile, 
+                        "organization-logos", 
+                        cancellationToken
+                    );
+                }
 
-            var organizationMember = new OrganizationMember
+                var organization = new Organization
+                {
+                    Name = command.Dto.Name,
+                    Description = command.Dto.Description,
+                    Logo = logoPath,
+                    Status = "Active",
+                    IsActive = true,
+                    OrganizationManager_IdOrganizationManager = command.Dto.UserId
+                };
+
+                await _unitOfWork.Organizations.AddAsync(organization, cancellationToken);
+                await _unitOfWork.CompleteAsync();
+
+                var organizationMember = new OrganizationMember
+                {
+                    User_IdUser = command.Dto.UserId,
+                    IsManager = true,
+                    HasAdministrativePrivilege = true,
+                    Organization_IdOrganization = organization.Id
+                };
+
+                var user = await _unitOfWork.Users.GetByIdAsync(command.Dto.UserId, cancellationToken);
+                user.IsActive = true;
+                _unitOfWork.Users.Update(user);
+                await _unitOfWork.OrganizationMembers.AddAsync(organizationMember, cancellationToken);
+                await _unitOfWork.CompleteAsync();
+
+                await transaction.CommitAsync(cancellationToken);
+                return organization.Id;
+            }
+            catch (Exception)
             {
-                User_IdUser = command.Dto.UserId, // org manger
-                IsManager = true,
-                HasAdministrativePrivilege = true,
-                Organization_IdOrganization = organization.Id
-            };
-            var user = await _unitOfWork.Users.GetByIdAsync(command.Dto.UserId, cancellationToken);
-            user.IsActive = true; //? complete the flow of sign-up.
-            _unitOfWork.Users.Update(user);
-            await _unitOfWork.OrganizationMembers.AddAsync(organizationMember, cancellationToken);
-            await _unitOfWork.CompleteAsync();
-
-            return organization.Id;
+                // If anything fails, delete the uploaded file
+                if (logoPath != null)
+                {
+                    await _fileService.DeleteFileAsync(logoPath);
+                }
+                throw;
+            }
         }
         //  TODO: send push notification to the user to confirm the organization creation.
     }
