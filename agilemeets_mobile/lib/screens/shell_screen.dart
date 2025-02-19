@@ -1,3 +1,4 @@
+import 'package:agilemeets/screens/calendar/calendar_screen.dart';
 import 'package:agilemeets/screens/home_page.dart';
 import 'package:agilemeets/screens/organization/organization_dashboard_screen.dart';
 import 'package:agilemeets/screens/project/project_list_screen.dart';
@@ -52,19 +53,19 @@ class ShellScreenState extends State<ShellScreen> {
       label: 'Home',
     ),
     const NavigationDestination(
-      icon: Icon(Icons.domain_outlined),
-      selectedIcon: Icon(Icons.domain),
-      label: 'Organization',
-    ),
-    const NavigationDestination(
       icon: Icon(Icons.folder_outlined),
       selectedIcon: Icon(Icons.folder),
       label: 'Projects',
     ),
     const NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: 'Profile',
+      icon: Icon(Icons.calendar_month_outlined),
+      selectedIcon: Icon(Icons.calendar_month),
+      label: 'Calendar',
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.admin_panel_settings_outlined),
+      selectedIcon: Icon(Icons.admin_panel_settings),
+      label: 'Management',
     ),
   ];
 
@@ -98,15 +99,7 @@ class ShellScreenState extends State<ShellScreen> {
           _showCreateMenu(context);
         }
         break;
-      case 1: // Organization (admin only)
-        if (context.read<AuthCubit>().state.isAdmin) {
-          showDialog(
-            context: context,
-            builder: (context) => const AddMembersDialog(),
-          );
-        }
-        break;
-      case 2: // Projects
+      case 1: // Projects
         if (context.read<AuthCubit>().state.isAdmin) {
           showDialog(
             context: context,
@@ -114,8 +107,13 @@ class ShellScreenState extends State<ShellScreen> {
           );
         }
         break;
-      case 3: // Profile
-        // Profile specific action
+      case 3: // Management (admin only)
+        if (context.read<AuthCubit>().state.isAdmin) {
+          showDialog(
+            context: context,
+            builder: (context) => const AddMembersDialog(),
+          );
+        }
         break;
     }
   }
@@ -137,7 +135,7 @@ class ShellScreenState extends State<ShellScreen> {
               width: 40.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha:0.4),
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -199,18 +197,19 @@ class ShellScreenState extends State<ShellScreen> {
         final screens = authState.isAdmin 
           ? [
               const HomePage(),
-              const OrganizationDashboardScreen(),
               const ProjectListScreen(),
-              const ProfileScreen(),
+              const CalendarScreen(),
+              const OrganizationDashboardScreen(),
             ]
           : [
               const HomePage(),
               const ProjectListScreen(),
-              const ProjectListScreen(),
+              const CalendarScreen(),
               const ProfileScreen(),
             ];
         
         return Scaffold(
+         
           body: IndexedStack(
             index: _selectedIndex,
             children: screens,
@@ -225,6 +224,21 @@ class ShellScreenState extends State<ShellScreen> {
         );
       },
     );
+  }
+
+  Widget _getScreenTitle(int index) {
+    switch (index) {
+      case 0:
+        return const Text('Home');
+      case 1:
+        return const Text('Projects');
+      case 2:
+        return const Text('Calendar');
+      case 3:
+        return const Text('Management');
+      default:
+        return const Text('');
+    }
   }
 
   Widget? _buildFAB(ThemeData theme) {
@@ -246,7 +260,7 @@ class ShellScreenState extends State<ShellScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: theme.primaryColor.withOpacity(0.2),
+              color: theme.primaryColor.withValues(alpha:0.2),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
