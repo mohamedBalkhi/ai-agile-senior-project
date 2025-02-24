@@ -29,7 +29,8 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             try
             {
                 var userId = _tokenResolver.ExtractUserId();
-                var command = new GetHomeQuery {
+                var command = new GetHomeQuery
+                {
                     UserId = userId ?? Guid.Empty
                 };
                 var result = await _mediator.Send(command);
@@ -40,5 +41,22 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+
+        [HttpGet("GetAdminDashBoard")]
+        public async Task<ActionResult<ApiResponse<AdminDashboardDto>>> GetAdminDashboard()
+        {
+            try
+            {
+                var command = new GetAdminDashboard();
+                var result = await _mediator.Send(command);
+                return Ok(new ApiResponse(200, "Admin dashboard data fetched successfully", result));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }

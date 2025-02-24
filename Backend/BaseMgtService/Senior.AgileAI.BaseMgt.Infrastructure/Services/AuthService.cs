@@ -39,10 +39,11 @@ public class AuthService : IAuthService
         bool isAdmin = user.IsAdmin ||
                     (user.OrganizationMember?.IsManager ?? false) ||
                     (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
+        bool IsManager = user.IsAdmin;
         var isTrusted = user.IsTrusted;
         var isActive = user.IsActive;
 
-        var accessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive);
+        var accessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, IsManager);
         var refreshToken = GenerateRefreshToken(user.Id);
 
         user.RefreshTokens.Add(refreshToken);
@@ -74,10 +75,11 @@ public class AuthService : IAuthService
         var isAdmin = user.IsAdmin ||
                     (user.OrganizationMember?.IsManager ?? false) ||
                     (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
+        bool IsManager = user.IsAdmin;
         var isTrusted = user.IsTrusted;
         var isActive = user.IsActive;
         //(user.OrganizationMember?.HasAdministrativePrivilege ?? false);
-        var newAccessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive);
+        var newAccessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, IsManager);
 
 
         return new AuthResult
@@ -99,7 +101,7 @@ public class AuthService : IAuthService
         }
     }
 
-    private string GenerateAccessToken(User user, bool isAdmin, bool isTrusted, bool isActive)
+    private string GenerateAccessToken(User user, bool isAdmin, bool isTrusted, bool isActive, bool IsManager)
     {
         var claims = new List<Claim>
         {
@@ -108,7 +110,8 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Name, user.FUllName),
             new Claim("IsAdmin", isAdmin.ToString()),
             new Claim("IsTrusted", isTrusted.ToString()),
-            new Claim ("IsActive", isActive.ToString())
+            new Claim ("IsActive", isActive.ToString()),
+            new Claim ("IsManager", IsManager.ToString())
 
         };
 
