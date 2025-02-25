@@ -36,14 +36,14 @@ public class AuthService : IAuthService
         {
             throw new UnauthorizedAccessException("Invalid credentials");
         }
-        bool isAdmin = user.IsAdmin ||
-                    (user.OrganizationMember?.IsManager ?? false) ||
-                    (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
-        bool IsSuperAdmin = user.IsAdmin;
+        var isAdmin = user.IsAdmin ||
+                      (user.OrganizationMember?.IsManager ?? false) ||
+                      (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
+        bool isSuperAdmin = user is { IsAdmin: true, Organization: null };
         var isTrusted = user.IsTrusted;
         var isActive = user.IsActive;
 
-        var accessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, IsSuperAdmin);
+        var accessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, isSuperAdmin);
         var refreshToken = GenerateRefreshToken(user.Id);
 
         user.RefreshTokens.Add(refreshToken);
@@ -75,11 +75,11 @@ public class AuthService : IAuthService
         var isAdmin = user.IsAdmin ||
                     (user.OrganizationMember?.IsManager ?? false) ||
                     (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
-        bool IsManager = user.IsAdmin;
+        bool isSuperAdmin = user is { IsAdmin: true, Organization: null };
         var isTrusted = user.IsTrusted;
         var isActive = user.IsActive;
         //(user.OrganizationMember?.HasAdministrativePrivilege ?? false);
-        var newAccessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, IsManager);
+        var newAccessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, isSuperAdmin);
 
 
         return new AuthResult
