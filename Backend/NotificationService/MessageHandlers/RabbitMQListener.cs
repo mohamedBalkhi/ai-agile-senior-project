@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Messaging;
 using System.Collections.Generic;
 using MailKit.Net.Smtp;
+using System.Security.Authentication;
 
 namespace NotificationService.MessageHandlers
 {

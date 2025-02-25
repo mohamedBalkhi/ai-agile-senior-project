@@ -12,6 +12,7 @@ using Senior.AgileAI.BaseMgt.Api.Middleware;
 using Senior.AgileAI.BaseMgt.Infrastructure.BackgroundServices;
 using System.Threading.RateLimiting;
 using Polly;
+using Microsoft.AspNetCore.Http.Features;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add HTTP logging configuration
@@ -46,6 +47,21 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddInfrastructureServices(builder.Configuration); // ? DI Of Infrastrcture.
 builder.Services.AddApplicationServices(); // ? DI Of Application.
 builder.Services.AddControllers();
+
+// Add this before other service configurations
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 104857600; // 100MB
+    serverOptions.Limits.MaxRequestBufferSize = 104857600;
+});
+
+// Add form options configuration for file upload
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104857600; // 100MB in bytes
+    options.ValueLengthLimit = 104857600;
+    options.MemoryBufferThreshold = 104857600;
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -103,6 +119,9 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(PolicyConstants.AdminPolicy, policy =>
         policy.RequireClaim(PolicyConstants.IsAdminClaim, "True"));
+
+    options.AddPolicy(PolicyConstants.SuperAdminPolicy, policy =>
+        policy.RequireClaim(PolicyConstants.IsSuperAdminClaim, "True"));
 });
 
 builder.WebHost.UseUrls("http://*:8080");

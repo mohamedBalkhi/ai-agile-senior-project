@@ -37,6 +37,7 @@ public static class InfrastructureDependencyContainer
         services.AddScoped<ITokenResolver, TokenResolver>();
 
         services.AddScoped<IFileParserStrategyFactory, FileParserStrategyFactory>();
+        services.AddScoped<IFileService, FileService>();
 
         // Add hosted services
         services.AddHostedService<CalendarSubscriptionCleanupWorker>();

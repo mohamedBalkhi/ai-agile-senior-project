@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Senior.AgileAI.BaseMgt.Application.Features.Country.Queries;
 using Senior.AgileAI.BaseMgt.Application.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Senior.AgileAI.BaseMgt.Application.Common;
 using Senior.AgileAI.BaseMgt.Application.Common.Utils;
 using Senior.AgileAI.BaseMgt.Application.Features.Home.Queries;
@@ -22,7 +23,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             _mediator = mediator;
             _tokenResolver = tokenResolver;
         }
-
+        [Authorize]
         [HttpGet(Name = "GetHome")]
         public async Task<ActionResult<ApiResponse<HomeDTO>>> GetHome()
         {
@@ -42,7 +43,7 @@ namespace Senior.AgileAI.BaseMgt.Api.Controllers
             }
         }
 
-
+        [Authorize("SuperAdmin")]
         [HttpGet("GetAdminDashBoard")]
         public async Task<ActionResult<ApiResponse<AdminDashboardDto>>> GetAdminDashboard()
         {

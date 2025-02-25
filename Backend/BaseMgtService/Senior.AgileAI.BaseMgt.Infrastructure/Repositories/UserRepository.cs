@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Senior.AgileAI.BaseMgt.Application.Contracts.Infrastructure;
+using Senior.AgileAI.BaseMgt.Application.DTOs;
 using Senior.AgileAI.BaseMgt.Domain.Entities;
 using Senior.AgileAI.BaseMgt.Infrastructure.Data;
 
@@ -103,5 +104,50 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         return user;
     }
 
+    public async Task<List<User>> GetUsersAsync(
+        int pageSize, 
+        int pageNumber, 
+        GetUsersFilter? filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Users
+            .Include(u => u.Country)
+            .Include(u => u.Organization)
+            .Include(u => u.OrganizationMember)
+            .AsQueryable();
 
+        if (filter != null)
+        {
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+            {
+                var searchTerm = filter.SearchTerm.ToLower();
+                query = query.Where(u => 
+                    u.FUllName.ToLower().Contains(searchTerm) || 
+                    u.Email.ToLower().Contains(searchTerm));
+            }
+
+            if (filter.IsActive.HasValue)
+                query = query.Where(u => u.IsActive == filter.IsActive.Value);
+
+            if (filter.IsTrusted.HasValue)
+                query = query.Where(u => u.IsTrusted == filter.IsTrusted.Value);
+
+            if (filter.IsAdmin.HasValue)
+                query = query.Where(u => u.IsAdmin == filter.IsAdmin.Value);
+
+            if (filter.IsManager.HasValue)
+                query = query.Where(u => u.OrganizationMember.IsManager == filter.IsManager.Value);
+
+            if (filter.OrganizationId.HasValue)
+                query = query.Where(u => u.Organization.Id == filter.OrganizationId.Value);
+
+            if (!string.IsNullOrWhiteSpace(filter.Country))
+                query = query.Where(u => u.Country.Name.ToLower().Contains(filter.Country.ToLower()));
+        }
+
+        return await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
 }

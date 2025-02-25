@@ -39,11 +39,11 @@ public class AuthService : IAuthService
         bool isAdmin = user.IsAdmin ||
                     (user.OrganizationMember?.IsManager ?? false) ||
                     (user.OrganizationMember?.HasAdministrativePrivilege ?? false);
-        bool IsManager = user.IsAdmin;
+        bool IsSuperAdmin = user.IsAdmin;
         var isTrusted = user.IsTrusted;
         var isActive = user.IsActive;
 
-        var accessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, IsManager);
+        var accessToken = GenerateAccessToken(user, isAdmin, isTrusted, isActive, IsSuperAdmin);
         var refreshToken = GenerateRefreshToken(user.Id);
 
         user.RefreshTokens.Add(refreshToken);
@@ -101,7 +101,7 @@ public class AuthService : IAuthService
         }
     }
 
-    private string GenerateAccessToken(User user, bool isAdmin, bool isTrusted, bool isActive, bool IsManager)
+    private string GenerateAccessToken(User user, bool isAdmin, bool isTrusted, bool isActive, bool isSuperAdmin)
     {
         var claims = new List<Claim>
         {
@@ -111,7 +111,7 @@ public class AuthService : IAuthService
             new Claim("IsAdmin", isAdmin.ToString()),
             new Claim("IsTrusted", isTrusted.ToString()),
             new Claim ("IsActive", isActive.ToString()),
-            new Claim ("IsManager", IsManager.ToString())
+            new Claim ("IsSuperAdmin", isSuperAdmin.ToString())
 
         };
 

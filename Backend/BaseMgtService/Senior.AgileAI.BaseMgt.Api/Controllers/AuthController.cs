@@ -9,6 +9,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 
 using Senior.AgileAI.BaseMgt.Application.Common.Utils;
+using System.Threading.Tasks;
 
 namespace Senior.AgileAI.BaseMgt.Api.Controllers;
 
@@ -135,7 +136,14 @@ public class AuthController : ControllerBase
     {
         var command = new VerifyEmailCommand(dto);
         var result = await _mediator.Send(command);
-        return Ok(new ApiResponse<bool>(200, "Email verified successfully", result));
+        if (result)
+        {
+            return Ok(new ApiResponse<bool>(200, "Email verified successfully", result));
+        }
+        else
+        {
+            return BadRequest(new ApiResponse<bool>(400, "Email verification failed", result));
+        }
 
     }
 
